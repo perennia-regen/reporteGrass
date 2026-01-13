@@ -2,10 +2,13 @@
 
 import { Canvas } from '@/components/layout/Canvas';
 import { useDashboardStore } from '@/lib/dashboard-store';
+import { mockDashboardData } from '@/lib/mock-data';
+import { Logo } from '@/components/ui/logo';
 import { useEffect } from 'react';
 
 export default function PreviewClient({ id }: { id: string }) {
   const { setIsEditing } = useDashboardStore();
+  const { establecimiento } = mockDashboardData;
 
   // En modo preview, desactivar la edición
   useEffect(() => {
@@ -14,52 +17,49 @@ export default function PreviewClient({ id }: { id: string }) {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      {/* Header simplificado para preview */}
-      <header className="h-16 border-b bg-white px-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-black rounded flex items-center justify-center">
-              <svg
-                viewBox="0 0 40 40"
-                className="w-8 h-8"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M20 5 L20 15 M15 8 L15 18 M25 8 L25 18 M10 12 L10 20 M30 12 L30 20"
-                  stroke="#4CAF50"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <text
-                  x="20"
-                  y="32"
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="8"
-                  fontWeight="bold"
-                >
-                  GRASS
-                </text>
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-[var(--grass-green-dark)]">
-                Informe de Monitoreo
-              </h1>
-              <p className="text-xs text-gray-500">Vista de solo lectura</p>
-            </div>
-          </div>
-        </div>
+      {/* Header compacto con identificacion del predio */}
+      <header className="border-b bg-[var(--grass-green-dark)] text-white px-3 py-2 sm:px-4 sm:py-2.5 shrink-0">
+        <div className="flex items-center gap-3">
+          {/* Logo */}
+          <Logo
+            size="sm"
+            showText={false}
+            logoSrc="/logo-grass.png"
+            className="shrink-0"
+          />
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded">
-            Modo Preview
-          </span>
+          {/* Info izquierda: nombre y fecha */}
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-bold text-white truncate">
+              {establecimiento.nombre}
+            </h1>
+            <p className="text-xs text-white/80">
+              {establecimiento.fecha} | {establecimiento.codigo}
+            </p>
+          </div>
+
+          {/* Separador */}
+          <div className="hidden sm:block h-8 w-px bg-white/30" />
+
+          {/* Info derecha: nodo, tecnico, has */}
+          <div className="hidden sm:flex items-center gap-3 text-xs text-white/90">
+            <span>{establecimiento.nodo}</span>
+            <span className="text-white/50">|</span>
+            <span>{establecimiento.tecnico}</span>
+            <span className="text-white/50">|</span>
+            <span>{establecimiento.areaTotal} has</span>
+          </div>
+
+          {/* Info compacta en movil */}
+          <div className="sm:hidden ml-auto text-xs text-white/80 text-right">
+            <span>{establecimiento.nodo}</span>
+            <span className="mx-1">-</span>
+            <span>{establecimiento.areaTotal} has</span>
+          </div>
         </div>
       </header>
 
-      {/* Contenido sin sidebar (solo lectura) */}
+      {/* Contenido sin sidebar (solo lectura) - Responsive */}
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 bg-gray-50 overflow-auto">
           <Canvas />

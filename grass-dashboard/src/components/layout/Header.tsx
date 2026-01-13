@@ -6,11 +6,14 @@ import { Logo } from '@/components/ui/logo';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { mockDashboardData } from '@/lib/mock-data';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { ProducerPreviewModal } from '@/components/ProducerPreviewModal';
+import { Eye } from 'lucide-react';
 
 export function Header() {
   const { isEditing, setIsEditing, editableContent } = useDashboardStore();
   const { establecimiento } = mockDashboardData;
   const [showPDFPreview, setShowPDFPreview] = useState(false);
+  const [showProducerPreview, setShowProducerPreview] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
 
   const handleExportPDF = () => {
@@ -74,6 +77,15 @@ export function Header() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setShowProducerPreview(true)}
+            className="gap-1"
+          >
+            <Eye className="w-4 h-4" />
+            Vista Productor
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleShare}
             data-tour="share-button"
           >
@@ -102,6 +114,12 @@ export function Header() {
         onClose={() => setShowPDFPreview(false)}
         observacionGeneral={editableContent.observacionGeneral}
         comentarioFinal={editableContent.comentarioFinal}
+      />
+
+      {/* Modal de vista del productor */}
+      <ProducerPreviewModal
+        isOpen={showProducerPreview}
+        onClose={() => setShowProducerPreview(false)}
       />
     </div>
   );

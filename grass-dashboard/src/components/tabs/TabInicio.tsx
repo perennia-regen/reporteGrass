@@ -7,6 +7,8 @@ import { mockDashboardData } from '@/lib/mock-data';
 import { ISE_THRESHOLD } from '@/styles/grass-theme';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
+import { SugerenciasSection } from '@/components/sugerencias';
+import type { WidgetType } from '@/types/dashboard';
 import {
   ArrowRight,
   Map,
@@ -17,10 +19,22 @@ import {
   Layers,
   Plus,
   X,
-  ChevronDown
 } from 'lucide-react';
 
+// Tipos locales para los gráficos predeterminados de la página inicio
 type ChartType = 'evolucion-ise' | 'ise-estrato' | 'procesos' | 'procesos-evolucion';
+
+// Mapa de WidgetType de sidebar a ChartType local (todos los gráficos permitidos)
+const widgetToLocalChart: Partial<Record<WidgetType, ChartType>> = {
+  'ise-estrato-anual': 'ise-estrato',
+  'ise-interanual-establecimiento': 'evolucion-ise',
+  'ise-interanual-estrato': 'evolucion-ise',
+  'procesos-anual': 'procesos',
+  'procesos-interanual': 'procesos-evolucion',
+  'determinantes-interanual': 'procesos', // Usa misma visualización
+  'estratos-distribucion': 'ise-estrato', // Usa misma visualización
+  'estratos-comparativa': 'ise-estrato', // Usa misma visualización
+};
 
 interface ChartOption {
   id: ChartType;
@@ -43,6 +57,7 @@ export function TabInicio() {
   const [chart1, setChart1] = useState<ChartType>('evolucion-ise');
   const [chart2, setChart2] = useState<ChartType>('ise-estrato');
   const [additionalCharts, setAdditionalCharts] = useState<ChartType[]>([]);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const getChartName = (chartType: ChartType) => {
     return chartOptions.find(opt => opt.id === chartType)?.name || '';
@@ -57,15 +72,51 @@ export function TabInicio() {
     return chartOptions.filter(opt => !used.includes(opt.id));
   };
 
-  const addChart = () => {
-    const available = getAvailableCharts();
-    if (available.length > 0) {
-      setAdditionalCharts([...additionalCharts, available[0].id]);
+  const addChart = (chartType?: ChartType) => {
+    if (chartType) {
+      // Si se especifica un tipo, verificar que no esté en uso
+      if (!getUsedCharts().includes(chartType)) {
+        setAdditionalCharts([...additionalCharts, chartType]);
+      }
+    } else {
+      // Si no se especifica, usar el primer disponible
+      const available = getAvailableCharts();
+      if (available.length > 0) {
+        setAdditionalCharts([...additionalCharts, available[0].id]);
+      }
     }
   };
 
   const removeChart = (index: number) => {
     setAdditionalCharts(additionalCharts.filter((_, i) => i !== index));
+  };
+
+  // Handlers para drag & drop
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+
+    const widgetType = e.dataTransfer.getData('widgetType') as WidgetType;
+    if (widgetType) {
+      // Convertir WidgetType de sidebar a ChartType local
+      const localChartType = widgetToLocalChart[widgetType];
+      if (localChartType && !getUsedCharts().includes(localChartType)) {
+        addChart(localChartType);
+      }
+    }
   };
 
   const renderChart = (chartType: ChartType) => {
@@ -253,36 +304,6 @@ export function TabInicio() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Identificación del Predio */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg text-[var(--grass-green-dark)]">
-            Identificación del Predio
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-xs text-gray-500">Establecimiento</p>
-              <p className="font-semibold">{establecimiento.nombre}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Código</p>
-              <p className="font-semibold">{establecimiento.codigo}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Nodo / Técnico</p>
-              <p className="font-semibold">{establecimiento.nodo}</p>
-              <p className="text-sm text-gray-600">{establecimiento.tecnico}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Fecha de Monitoreo</p>
-              <p className="font-semibold">{establecimiento.fecha}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Datos Destacados - KPIs (3 cards) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-white">
@@ -391,16 +412,25 @@ export function TabInicio() {
             </div>
           )}
 
-          {/* Botón agregar gráfico - solo en modo edición */}
+          {/* Zona de drop y botón agregar gráfico - solo en modo edición */}
           {isEditing && getAvailableCharts().length > 0 && (
-            <div className="mt-6 flex justify-center">
+            <div
+              className={`mt-6 flex justify-center p-6 border-2 border-dashed rounded-lg transition-colors ${
+                isDraggingOver
+                  ? 'border-[var(--grass-green)] bg-[var(--grass-green-light)]'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <Button
-                variant="outline"
-                onClick={addChart}
-                className="border-dashed border-2 border-gray-300 hover:border-[var(--grass-green)] hover:bg-[var(--grass-green-light)]"
+                variant="ghost"
+                onClick={() => addChart()}
+                className="text-gray-500 hover:text-[var(--grass-green-dark)]"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Agregar gráfico
+                {isDraggingOver ? 'Soltar aquí para agregar' : 'Agregar gráfico o arrastrar desde la barra lateral'}
               </Button>
             </div>
           )}
@@ -424,6 +454,9 @@ export function TabInicio() {
           />
         </CardContent>
       </Card>
+
+      {/* Sugerencias y Recomendaciones */}
+      <SugerenciasSection />
 
       {/* Fotos del Monitoreo */}
       <Card>
