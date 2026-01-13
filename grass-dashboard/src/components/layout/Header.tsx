@@ -51,7 +51,7 @@ export function Header() {
           logoSrc="/logo-grass.png"
         />
         <div>
-          <h1 className="text-lg font-bold text-[var(--grass-green)]">
+          <h1 className="text-lg font-bold text-black">
             Informe de Monitoreo
           </h1>
           <p className="text-xs text-gray-500">Monitoreo Ambiental GRASS</p>

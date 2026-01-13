@@ -71,7 +71,7 @@ export function TabResultados() {
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Encabezado */}
       <div>
-        <h2 className="text-2xl font-bold text-[var(--grass-green-dark)]">
+        <h2 className="text-2xl font-bold text-black">
           Resultados del Monitoreo
         </h2>
         <p className="text-gray-600 mt-1">

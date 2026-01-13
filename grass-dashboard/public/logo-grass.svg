@@ -1,0 +1,22 @@
+<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo circular verde GRASS -->
+  <circle cx="60" cy="60" r="58" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+  
+  <!-- Icono de pasto/hierba estilizado -->
+  <g transform="translate(60, 60)">
+    <!-- Hojas de pasto -->
+    <path d="M-15,10 Q-10,0 -5,10 L-5,25 Q-10,15 -15,25 Z" fill="#FFFFFF" opacity="0.9"/>
+    <path d="M-5,10 Q0,0 5,10 L5,25 Q0,15 -5,25 Z" fill="#FFFFFF" opacity="0.9"/>
+    <path d="M5,10 Q10,0 15,10 L15,25 Q10,15 5,25 Z" fill="#FFFFFF" opacity="0.9"/>
+    
+    <!-- Tallos -->
+    <line x1="-10" y1="10" x2="-10" y2="25" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+    <line x1="0" y1="10" x2="0" y2="25" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+    <line x1="10" y1="10" x2="10" y2="25" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Texto GRASS -->
+    <text x="0" y="45" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="18" font-weight="bold" letter-spacing="1">
+      GRASS
+    </text>
+  </g>
+</svg>
