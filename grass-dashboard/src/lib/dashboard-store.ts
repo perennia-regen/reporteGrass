@@ -2,6 +2,14 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { WidgetConfig, TabConfig } from '@/types/dashboard';
 
+// Contenido editable del dashboard
+interface EditableContent {
+  observacionGeneral: string;
+  comentarioISE: string;
+  comentarioFinal: string;
+  [key: string]: string; // Para campos dinámicos
+}
+
 interface DashboardState {
   // Tab activa
   activeTab: string;
@@ -18,6 +26,10 @@ interface DashboardState {
   // Configuración de tabs y widgets
   tabs: TabConfig[];
   setTabs: (tabs: TabConfig[]) => void;
+
+  // Contenido editable
+  editableContent: EditableContent;
+  updateContent: (key: string, value: string) => void;
 
   // Acciones sobre widgets
   addWidget: (tabId: string, widget: WidgetConfig) => void;
@@ -64,6 +76,13 @@ const defaultTabs: TabConfig[] = [
   },
 ];
 
+// Contenido editable por defecto
+const defaultEditableContent: EditableContent = {
+  observacionGeneral: 'La evaluación muestra avances diferenciados entre los estratos. El estrato Loma continúa siendo el más limitado en su salud ecosistémica, aunque presenta mejoras puntuales en la cobertura del suelo. En Media Loma, los procesos básicos se mantienen estables, pero se observa una pérdida de diversidad vegetal y un deterioro en las pasturas. El estrato Bajo evidencia la evolución más positiva, con mejoras sostenidas en la cobertura, diversidad funcional y funcionamiento del ecosistema.',
+  comentarioISE: 'El Índice de Salud Ecosistémica (ISE) muestra una ligera disminución respecto al año anterior, principalmente debido a las condiciones climáticas. Se recomienda continuar con las prácticas de manejo regenerativo.',
+  comentarioFinal: 'El establecimiento muestra un compromiso sostenido con la regeneración del ecosistema. Se sugiere continuar con el monitoreo anual para evaluar la evolución de los indicadores.',
+};
+
 export const useDashboardStore = create<DashboardState>()(
   persist(
     (set, get) => ({
@@ -78,6 +97,17 @@ export const useDashboardStore = create<DashboardState>()(
 
       tabs: defaultTabs,
       setTabs: (tabs) => set({ tabs }),
+
+      editableContent: defaultEditableContent,
+      updateContent: (key, value) => {
+        const { editableContent } = get();
+        set({
+          editableContent: {
+            ...editableContent,
+            [key]: value,
+          },
+        });
+      },
 
       addWidget: (tabId, widget) => {
         const { tabs } = get();
@@ -148,7 +178,7 @@ export const useDashboardStore = create<DashboardState>()(
         });
       },
 
-      resetDashboard: () => set({ tabs: defaultTabs, activeTab: 'inicio', selectedWidget: null }),
+      resetDashboard: () => set({ tabs: defaultTabs, activeTab: 'inicio', selectedWidget: null, editableContent: defaultEditableContent }),
     }),
     {
       name: 'grass-dashboard-storage',

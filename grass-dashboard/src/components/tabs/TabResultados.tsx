@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/table';
 import { mockDashboardData } from '@/lib/mock-data';
 import { ISE_THRESHOLD } from '@/styles/grass-theme';
+import { useDashboardStore } from '@/lib/dashboard-store';
+import { EditableText } from '@/components/editor';
 import {
   BarChart,
   Bar,
@@ -27,6 +29,7 @@ import {
 
 export function TabResultados() {
   const { ise, procesos, procesosHistorico, recomendaciones, estratos } = mockDashboardData;
+  const { editableContent, updateContent } = useDashboardStore();
 
   // Preparar datos para gráfico ISE por estrato
   const iseEstratoData = Object.entries(ise.porEstrato).map(([nombre, valor]) => ({
@@ -260,6 +263,22 @@ export function TabResultados() {
                 })}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+
+        {/* Comentario Final */}
+        <Card className="mt-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Comentario Final del Técnico</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EditableText
+              value={editableContent.comentarioFinal}
+              onChange={(value) => updateContent('comentarioFinal', value)}
+              placeholder="Ingrese un comentario final sobre los resultados..."
+              className="text-gray-700 leading-relaxed"
+              multiline
+            />
           </CardContent>
         </Card>
       </section>

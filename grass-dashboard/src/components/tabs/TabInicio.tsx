@@ -3,9 +3,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockDashboardData } from '@/lib/mock-data';
 import { ISE_THRESHOLD } from '@/styles/grass-theme';
+import { useDashboardStore } from '@/lib/dashboard-store';
+import { GridEditor, EditableText } from '@/components/editor';
 
 export function TabInicio() {
-  const { establecimiento, ise, estratos, eventos, observacionGeneral, fotos } = mockDashboardData;
+  const { establecimiento, ise, estratos, eventos, fotos } = mockDashboardData;
+  const { tabs, isEditing, editableContent, updateContent } = useDashboardStore();
+  const currentTab = tabs.find((t) => t.id === 'inicio');
+  const customWidgets = currentTab?.widgets || [];
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -141,7 +146,13 @@ export function TabInicio() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-700 leading-relaxed">{observacionGeneral}</p>
+          <EditableText
+            value={editableContent.observacionGeneral}
+            onChange={(value) => updateContent('observacionGeneral', value)}
+            placeholder="Ingrese una observación general del monitoreo..."
+            className="text-gray-700 leading-relaxed"
+            multiline
+          />
         </CardContent>
       </Card>
 
@@ -227,6 +238,16 @@ export function TabInicio() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Área de widgets personalizables */}
+      {(isEditing || customWidgets.length > 0) && (
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-[var(--grass-green-dark)] mb-4">
+            {isEditing ? 'Widgets Personalizables' : 'Contenido Adicional'}
+          </h3>
+          <GridEditor widgets={customWidgets} tabId="inicio" />
+        </div>
+      )}
     </div>
   );
 }
