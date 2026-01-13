@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { mockDashboardData } from '@/lib/mock-data';
 import { ISE_THRESHOLD } from '@/styles/grass-theme';
-import { useDashboardStore } from '@/lib/dashboard-store';
+import { useDashboardStore, type KPIType } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
 import { SugerenciasSection } from '@/components/sugerencias';
 import { PhotoGalleryModal } from '@/components/PhotoGalleryModal';
@@ -39,14 +39,47 @@ const chartOptions: ChartOption[] = [
   { id: 'procesos-evolucion', name: 'Evolución Procesos', description: 'Tendencia de procesos' },
 ];
 
+// Opciones de KPIs (el tipo viene del store)
+interface KPIOption {
+  id: KPIType;
+  name: string;
+  shortName: string;
+  requiresInteranual: boolean;
+}
+
+const kpiOptions: KPIOption[] = [
+  { id: 'ise-promedio', name: 'ISE Promedio del campo', shortName: 'ISE Promedio', requiresInteranual: false },
+  { id: 'ise-evolucion', name: '% Evolución ISE', shortName: 'Evol. ISE', requiresInteranual: true },
+  { id: 'hectareas', name: 'Hectáreas Totales monitoreadas', shortName: 'Hectáreas', requiresInteranual: false },
+  { id: 'sitios-mcp', name: 'Número de Sitios MCP', shortName: 'Sitios MCP', requiresInteranual: false },
+  { id: 'procesos-evolucion-prom', name: '% Evolución Procesos Ecosistémicos (promedio)', shortName: 'Evol. Procesos', requiresInteranual: true },
+  { id: 'ciclo-agua', name: 'Ciclo del Agua', shortName: 'Ciclo Agua', requiresInteranual: false },
+  { id: 'ciclo-agua-evolucion', name: '% Evolución Ciclo del Agua', shortName: 'Evol. Ciclo Agua', requiresInteranual: true },
+  { id: 'dinamica-comunidades', name: 'Dinámica de las Comunidades', shortName: 'Dinámica Com.', requiresInteranual: false },
+  { id: 'dinamica-evolucion', name: '% Evolución Dinámica de Comunidades', shortName: 'Evol. Dinámica', requiresInteranual: true },
+  { id: 'ciclo-nutrientes', name: 'Ciclo de Nutrientes', shortName: 'Ciclo Nutrientes', requiresInteranual: false },
+  { id: 'ciclo-nutrientes-evolucion', name: '% Evolución Ciclo de Nutrientes', shortName: 'Evol. Nutrientes', requiresInteranual: true },
+  { id: 'flujo-energia', name: 'Flujo de Energía', shortName: 'Flujo Energía', requiresInteranual: false },
+  { id: 'flujo-energia-evolucion', name: '% Evolución Flujo de Energía', shortName: 'Evol. Energía', requiresInteranual: true },
+];
+
+// Función para calcular evolución porcentual
+const calcularEvolucion = (actual: number, anterior: number): number => {
+  if (anterior === 0) return actual > 0 ? 100 : 0;
+  return ((actual - anterior) / Math.abs(anterior)) * 100;
+};
+
 export function TabInicio() {
-  const { establecimiento, ise, estratos, fotos } = mockDashboardData;
-  const { isEditing, editableContent, updateContent, setActiveTab } = useDashboardStore();
+  const { establecimiento, ise, estratos, fotos, procesos, procesosHistorico } = mockDashboardData;
+  const { isEditing, editableContent, updateContent, setActiveTab, selectedKPIs, updateKPI } = useDashboardStore();
 
   // Estado para los gráficos principales (siempre 2) y adicionales (máximo 2 más = 4 total)
   const [chart1, setChart1] = useState<ChartType>('evolucion-ise');
   const [chart2, setChart2] = useState<ChartType>('ise-estrato');
   const [additionalCharts, setAdditionalCharts] = useState<ChartType[]>([]);
+
+  // KPIs del store (persistidos)
+  const [kpi1, kpi2, kpi3] = selectedKPIs;
 
   // Estado para la galería de fotos
   const [showGallery, setShowGallery] = useState(false);
@@ -97,6 +130,203 @@ export function TabInicio() {
 
   // Ubicación para mostrar en la galería
   const ubicacionStr = `${establecimiento.ubicacion.distrito}, ${establecimiento.ubicacion.departamento}`;
+
+  // Función para obtener los datos de un KPI
+  const getKPIData = (type: KPIType): { value: string; label: string; sublabel: string; color: string; isPositive?: boolean } => {
+    const lastISE = ise.historico[ise.historico.length - 1];
+    const prevISE = ise.historico[ise.historico.length - 2];
+    const lastProcesos = procesosHistorico[procesosHistorico.length - 1];
+    const prevProcesos = procesosHistorico[procesosHistorico.length - 2];
+
+    switch (type) {
+      case 'ise-promedio':
+        return {
+          value: ise.promedio.toFixed(1),
+          label: 'ISE Promedio',
+          sublabel: ise.promedio >= ISE_THRESHOLD ? 'Deseable' : `${(ISE_THRESHOLD - ise.promedio).toFixed(1)} pts bajo umbral`,
+          color: 'var(--grass-green-dark)',
+        };
+
+      case 'ise-evolucion': {
+        const evol = calcularEvolucion(lastISE.valor, prevISE.valor);
+        return {
+          value: `${evol > 0 ? '+' : ''}${evol.toFixed(1)}%`,
+          label: 'Evolución ISE',
+          sublabel: `vs ${prevISE.fecha}`,
+          color: evol >= 0 ? 'var(--grass-green-dark)' : 'var(--grass-brown)',
+          isPositive: evol >= 0,
+        };
+      }
+
+      case 'hectareas':
+        return {
+          value: establecimiento.areaTotal.toString(),
+          label: 'Hectáreas',
+          sublabel: 'Área total monitoreada',
+          color: 'var(--grass-brown)',
+        };
+
+      case 'sitios-mcp':
+        return {
+          value: estratos.reduce((sum, e) => sum + e.estaciones, 0).toString(),
+          label: 'Sitios MCP',
+          sublabel: 'Puntos de monitoreo',
+          color: 'var(--estrato-loma)',
+        };
+
+      case 'procesos-evolucion-prom': {
+        const promActual = (lastProcesos.valores.cicloAgua + lastProcesos.valores.cicloMineral + lastProcesos.valores.flujoEnergia + lastProcesos.valores.dinamicaComunidades) / 4;
+        const promAnterior = (prevProcesos.valores.cicloAgua + prevProcesos.valores.cicloMineral + prevProcesos.valores.flujoEnergia + prevProcesos.valores.dinamicaComunidades) / 4;
+        const evol = calcularEvolucion(promActual, promAnterior);
+        return {
+          value: `${evol > 0 ? '+' : ''}${evol.toFixed(1)}%`,
+          label: 'Evol. Procesos',
+          sublabel: `Promedio vs ${prevProcesos.fecha}`,
+          color: evol >= 0 ? 'var(--grass-green-dark)' : 'var(--grass-brown)',
+          isPositive: evol >= 0,
+        };
+      }
+
+      case 'ciclo-agua':
+        return {
+          value: `${procesos.cicloAgua}%`,
+          label: 'Ciclo del Agua',
+          sublabel: 'Proceso ecosistémico',
+          color: '#3B82F6',
+        };
+
+      case 'ciclo-agua-evolucion': {
+        const evol = calcularEvolucion(lastProcesos.valores.cicloAgua, prevProcesos.valores.cicloAgua);
+        return {
+          value: `${evol > 0 ? '+' : ''}${evol.toFixed(1)}%`,
+          label: 'Evol. Ciclo Agua',
+          sublabel: `vs ${prevProcesos.fecha}`,
+          color: evol >= 0 ? 'var(--grass-green-dark)' : 'var(--grass-brown)',
+          isPositive: evol >= 0,
+        };
+      }
+
+      case 'dinamica-comunidades':
+        return {
+          value: `${procesos.dinamicaComunidades}%`,
+          label: 'Dinámica Comunidades',
+          sublabel: 'Proceso ecosistémico',
+          color: '#10B981',
+        };
+
+      case 'dinamica-evolucion': {
+        const evol = calcularEvolucion(lastProcesos.valores.dinamicaComunidades, prevProcesos.valores.dinamicaComunidades);
+        return {
+          value: `${evol > 0 ? '+' : ''}${evol.toFixed(1)}%`,
+          label: 'Evol. Dinámica',
+          sublabel: `vs ${prevProcesos.fecha}`,
+          color: evol >= 0 ? 'var(--grass-green-dark)' : 'var(--grass-brown)',
+          isPositive: evol >= 0,
+        };
+      }
+
+      case 'ciclo-nutrientes':
+        return {
+          value: `${procesos.cicloMineral}%`,
+          label: 'Ciclo Nutrientes',
+          sublabel: 'Proceso ecosistémico',
+          color: '#8B5CF6',
+        };
+
+      case 'ciclo-nutrientes-evolucion': {
+        const evol = calcularEvolucion(lastProcesos.valores.cicloMineral, prevProcesos.valores.cicloMineral);
+        return {
+          value: `${evol > 0 ? '+' : ''}${evol.toFixed(1)}%`,
+          label: 'Evol. Nutrientes',
+          sublabel: `vs ${prevProcesos.fecha}`,
+          color: evol >= 0 ? 'var(--grass-green-dark)' : 'var(--grass-brown)',
+          isPositive: evol >= 0,
+        };
+      }
+
+      case 'flujo-energia':
+        return {
+          value: `${procesos.flujoEnergia}%`,
+          label: 'Flujo de Energía',
+          sublabel: 'Proceso ecosistémico',
+          color: '#F59E0B',
+        };
+
+      case 'flujo-energia-evolucion': {
+        const evol = calcularEvolucion(lastProcesos.valores.flujoEnergia, prevProcesos.valores.flujoEnergia);
+        return {
+          value: `${evol > 0 ? '+' : ''}${evol.toFixed(1)}%`,
+          label: 'Evol. Flujo Energía',
+          sublabel: `vs ${prevProcesos.fecha}`,
+          color: evol >= 0 ? 'var(--grass-green-dark)' : 'var(--grass-brown)',
+          isPositive: evol >= 0,
+        };
+      }
+
+      default:
+        return {
+          value: '-',
+          label: 'Sin datos',
+          sublabel: '',
+          color: 'gray',
+        };
+    }
+  };
+
+  // Componente KPICard configurable
+  const KPICard = ({
+    value,
+    onChange,
+    usedKPIs,
+  }: {
+    value: KPIType;
+    onChange: (v: KPIType) => void;
+    usedKPIs: KPIType[];
+  }) => {
+    const data = getKPIData(value);
+    const option = kpiOptions.find(o => o.id === value);
+
+    return (
+      <Card className="bg-white">
+        <CardContent className="pt-6">
+          {isEditing && (
+            <div className="mb-3">
+              <select
+                value={value}
+                onChange={(e) => onChange(e.target.value as KPIType)}
+                className="w-full text-xs border rounded px-2 py-1.5 bg-gray-50 text-gray-700"
+              >
+                {kpiOptions.map((opt) => (
+                  <option
+                    key={opt.id}
+                    value={opt.id}
+                    disabled={usedKPIs.includes(opt.id) && opt.id !== value}
+                  >
+                    {opt.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="text-center">
+            <p
+              className="text-3xl font-bold"
+              style={{ color: data.color }}
+            >
+              {data.value}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">{data.label}</p>
+            <p className={`text-xs mt-2 ${data.isPositive === false ? 'text-orange-500' : data.isPositive === true ? 'text-green-600' : 'text-gray-400'}`}>
+              {data.sublabel}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // KPIs actualmente en uso
+  const getUsedKPIs = () => [kpi1, kpi2, kpi3];
 
   const renderChart = (chartType: ChartType) => {
     switch (chartType) {
@@ -283,47 +513,11 @@ export function TabInicio() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Datos Destacados - KPIs (3 cards) */}
+      {/* Datos Destacados - KPIs configurables (3 cards) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-[var(--grass-green-dark)]">
-                {ise.promedio.toFixed(1)}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">ISE Promedio</p>
-              <div className="mt-2 text-xs">
-                <span className={ise.promedio >= ISE_THRESHOLD ? 'text-green-600' : 'text-orange-500'}>
-                  {ise.promedio >= ISE_THRESHOLD ? 'Deseable' : `${(ISE_THRESHOLD - ise.promedio).toFixed(1)} pts bajo umbral`}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-[var(--grass-brown)]">
-                {establecimiento.areaTotal}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">Hectáreas</p>
-              <p className="text-xs text-gray-400 mt-2">Área total monitoreada</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-[var(--estrato-loma)]">
-                {estratos.reduce((sum, e) => sum + e.estaciones, 0)}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">Sitios MCP</p>
-              <p className="text-xs text-gray-400 mt-2">Puntos de monitoreo</p>
-            </div>
-          </CardContent>
-        </Card>
+        <KPICard value={kpi1} onChange={(v) => updateKPI(0, v)} usedKPIs={getUsedKPIs()} />
+        <KPICard value={kpi2} onChange={(v) => updateKPI(1, v)} usedKPIs={getUsedKPIs()} />
+        <KPICard value={kpi3} onChange={(v) => updateKPI(2, v)} usedKPIs={getUsedKPIs()} />
       </div>
 
       {/* Principales Resultados - Gráficos */}

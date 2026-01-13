@@ -20,6 +20,22 @@ interface EditableContent {
   [key: string]: string; // Para campos dinámicos
 }
 
+// Tipos de KPIs disponibles
+export type KPIType =
+  | 'ise-promedio'
+  | 'ise-evolucion'
+  | 'hectareas'
+  | 'sitios-mcp'
+  | 'procesos-evolucion-prom'
+  | 'ciclo-agua'
+  | 'ciclo-agua-evolucion'
+  | 'dinamica-comunidades'
+  | 'dinamica-evolucion'
+  | 'ciclo-nutrientes'
+  | 'ciclo-nutrientes-evolucion'
+  | 'flujo-energia'
+  | 'flujo-energia-evolucion';
+
 interface DashboardState {
   // Tab activa
   activeTab: string;
@@ -28,6 +44,11 @@ interface DashboardState {
   // Modo de edición
   isEditing: boolean;
   setIsEditing: (editing: boolean) => void;
+
+  // KPIs configurables (3 tarjetas en inicio)
+  selectedKPIs: [KPIType, KPIType, KPIType];
+  setSelectedKPIs: (kpis: [KPIType, KPIType, KPIType]) => void;
+  updateKPI: (index: 0 | 1 | 2, kpi: KPIType) => void;
 
   // Widget seleccionado para editar
   selectedWidget: string | null;
@@ -127,6 +148,16 @@ export const useDashboardStore = create<DashboardState>()(
 
       isEditing: true,
       setIsEditing: (editing) => set({ isEditing: editing, selectedWidget: editing ? get().selectedWidget : null }),
+
+      // KPIs configurables - valores por defecto
+      selectedKPIs: ['ise-promedio', 'hectareas', 'sitios-mcp'] as [KPIType, KPIType, KPIType],
+      setSelectedKPIs: (kpis) => set({ selectedKPIs: kpis }),
+      updateKPI: (index, kpi) => {
+        const { selectedKPIs } = get();
+        const newKPIs = [...selectedKPIs] as [KPIType, KPIType, KPIType];
+        newKPIs[index] = kpi;
+        set({ selectedKPIs: newKPIs });
+      },
 
       selectedWidget: null,
       setSelectedWidget: (widgetId) => set({ selectedWidget: widgetId }),
@@ -228,6 +259,7 @@ export const useDashboardStore = create<DashboardState>()(
         sidebarCollapsed: false,
         tourCompleted: false,
         sugerenciaItems: [],
+        selectedKPIs: ['ise-promedio', 'hectareas', 'sitios-mcp'] as [KPIType, KPIType, KPIType],
       }),
 
       // Sugerencias y recomendaciones
