@@ -3,15 +3,16 @@
 import { useState } from 'react';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Activity, Leaf, Layers, Map } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Activity, Leaf, Layers, Map, Lightbulb, Type, Table2, TableProperties } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ChartThumbnail } from './ChartThumbnail';
-import type { WidgetType } from '@/types/dashboard';
+import type { WidgetType, SugerenciaWidgetType } from '@/types/dashboard';
 import type { LucideIcon } from 'lucide-react';
 
 interface ChartOption {
-  type: WidgetType;
+  type: WidgetType | SugerenciaWidgetType;
   label: string;
+  icon?: LucideIcon;
 }
 
 interface ChartCategory {
@@ -58,6 +59,16 @@ const chartCategories: ChartCategory[] = [
       { type: 'estratos-comparativa', label: 'Comparativa por variable' },
     ],
   },
+  {
+    id: 'sugerencias',
+    nombre: 'Sugerencias',
+    icon: Lightbulb,
+    charts: [
+      { type: 'text-block-sugerencia', label: 'Cuadro de texto', icon: Type },
+      { type: 'tabla-estrato', label: 'Tabla por estrato', icon: Table2 },
+      { type: 'tabla-personalizable', label: 'Tabla personalizable', icon: TableProperties },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -67,6 +78,7 @@ export function Sidebar() {
     procesos: true,
     determinantes: true,
     estratos: true,
+    sugerencias: true,
   });
 
   if (!isEditing) {
@@ -146,20 +158,31 @@ export function Sidebar() {
                 {/* Category charts */}
                 {!sidebarCollapsed && isExpanded && (
                   <div className="px-3 pb-3 space-y-2">
-                    {category.charts.map((chart) => (
-                      <div
-                        key={chart.type}
-                        className="cursor-grab active:cursor-grabbing"
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('widgetType', chart.type);
-                          e.dataTransfer.effectAllowed = 'copy';
-                        }}
-                      >
-                        <p className="text-xs text-gray-600 mb-1">{chart.label}</p>
-                        <ChartThumbnail chartType={chart.type} title={chart.label} />
-                      </div>
-                    ))}
+                    {category.charts.map((chart) => {
+                      const ChartIcon = chart.icon;
+                      const isSugerenciaWidget = ['text-block-sugerencia', 'tabla-estrato', 'tabla-personalizable'].includes(chart.type);
+
+                      return (
+                        <div
+                          key={chart.type}
+                          className="cursor-grab active:cursor-grabbing"
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('widgetType', chart.type);
+                            e.dataTransfer.effectAllowed = 'copy';
+                          }}
+                        >
+                          <p className="text-xs text-gray-600 mb-1">{chart.label}</p>
+                          {isSugerenciaWidget && ChartIcon ? (
+                            <div className="h-16 bg-gray-50 rounded-md border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                              <ChartIcon className="w-6 h-6 text-gray-400" />
+                            </div>
+                          ) : (
+                            <ChartThumbnail chartType={chart.type as WidgetType} title={chart.label} />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

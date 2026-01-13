@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { WidgetConfig, TabConfig } from '@/types/dashboard';
+import type { WidgetConfig, TabConfig, SugerenciaItem } from '@/types/dashboard';
 
 // Contenido editable del dashboard
 interface EditableContent {
@@ -11,6 +11,12 @@ interface EditableContent {
   recomendacion_loma: string;
   recomendacion_media_loma: string;
   recomendacion_bajo: string;
+  // Comentarios de gráficos en Resultados
+  comentarioISEEstrato: string;
+  comentarioEvolucionISE: string;
+  comentarioEvolucionISEEstrato: string;
+  comentarioProcesosActual: string;
+  comentarioEvolucionProcesos: string;
   [key: string]: string; // Para campos dinámicos
 }
 
@@ -52,6 +58,14 @@ interface DashboardState {
 
   // Reset
   resetDashboard: () => void;
+
+  // Sugerencias y recomendaciones
+  sugerenciaItems: SugerenciaItem[];
+  addSugerenciaItem: (item: SugerenciaItem) => void;
+  updateSugerenciaItem: (id: string, updates: Partial<SugerenciaItem>) => void;
+  removeSugerenciaItem: (id: string) => void;
+  reorderSugerenciaItems: (fromIndex: number, toIndex: number) => void;
+  setSugerenciaItems: (items: SugerenciaItem[]) => void;
 }
 
 // Configuración inicial de tabs
@@ -97,6 +111,12 @@ const defaultEditableContent: EditableContent = {
   recomendacion_loma: 'Mantener e incorporar prácticas agrícolas alineadas con el propósito de regeneración, tales como el uso de cultivos de cobertura, intersiembras y rotaciones que contribuyan a mejorar la cobertura del suelo y reducir el impacto sobre los procesos ecológicos.',
   recomendacion_media_loma: 'Sostener la planificación del pastoreo, ajustando los tiempos de recuperación según la época del año y evaluando la carga animal. Promover la incorporación y mantenimiento de especies perennes, así como asegurar remanentes post-pastoreo suficientemente altos y voluminosos.',
   recomendacion_bajo: 'Priorizar la acumulación de cobertura, aprovechando los buenos resultados observados para consolidar las mejoras en el funcionamiento de los procesos ecosistémicos.',
+  // Comentarios de gráficos en Resultados
+  comentarioISEEstrato: 'El valor promedio del ISE fue de 34,6, por debajo del umbral deseable de 70 puntos. El estrato Loma presenta la menor puntuación (14,3), reflejando el impacto del uso intensivo para agricultura.',
+  comentarioEvolucionISE: 'Se observa una marcada disminución inicial por sequía severa (2023), con recuperación parcial posterior. Este comportamiento refleja una tendencia general negativa en la salud ecosistémica.',
+  comentarioEvolucionISEEstrato: 'Al analizar la evolución por estratos, se identifican situaciones diferenciadas. El estrato Bajo muestra una leve mejora, mientras que Media Loma presenta una tendencia negativa más marcada.',
+  comentarioProcesosActual: 'A nivel de todo el establecimiento, se observa un funcionamiento relativamente adecuado del ciclo del agua (56%), y un desempeño intermedio en el ciclo mineral (48%) y el flujo de energía (46%).',
+  comentarioEvolucionProcesos: 'En los tres años evaluados, se observa una relativa estabilidad en los ciclos del agua y mineral. El flujo de energía mostró una fuerte caída inicial, con recuperación parcial posterior.',
 };
 
 export const useDashboardStore = create<DashboardState>()(
@@ -207,7 +227,54 @@ export const useDashboardStore = create<DashboardState>()(
         editableContent: defaultEditableContent,
         sidebarCollapsed: false,
         tourCompleted: false,
+        sugerenciaItems: [],
       }),
+
+      // Sugerencias y recomendaciones
+      sugerenciaItems: [],
+
+      addSugerenciaItem: (item) => {
+        const { sugerenciaItems } = get();
+        if (sugerenciaItems.length < 6) {
+          set({ sugerenciaItems: [...sugerenciaItems, item] });
+        }
+      },
+
+      updateSugerenciaItem: (id, updates) => {
+        const { sugerenciaItems } = get();
+        set({
+          sugerenciaItems: sugerenciaItems.map((item) =>
+            item.id === id ? { ...item, ...updates } : item
+          ),
+        });
+      },
+
+      removeSugerenciaItem: (id) => {
+        const { sugerenciaItems, editableContent } = get();
+        const newContent = { ...editableContent };
+        // Limpiar contenido editable asociado
+        Object.keys(newContent).forEach((key) => {
+          if (key.includes(id)) {
+            delete newContent[key];
+          }
+        });
+        set({
+          sugerenciaItems: sugerenciaItems.filter((item) => item.id !== id),
+          editableContent: newContent,
+        });
+      },
+
+      reorderSugerenciaItems: (fromIndex, toIndex) => {
+        const { sugerenciaItems } = get();
+        const newItems = [...sugerenciaItems];
+        const [removed] = newItems.splice(fromIndex, 1);
+        newItems.splice(toIndex, 0, removed);
+        set({ sugerenciaItems: newItems });
+      },
+
+      setSugerenciaItems: (items) => {
+        set({ sugerenciaItems: items });
+      },
     }),
     {
       name: 'grass-dashboard-storage',

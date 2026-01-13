@@ -7,22 +7,23 @@ import { ChartByType, ChartPreviewModal } from './ChartPreviewModal';
 interface ChartThumbnailProps {
   chartType: string;
   title: string;
+  showAxes?: boolean;
 }
 
-export function ChartThumbnail({ chartType, title }: ChartThumbnailProps) {
+export function ChartThumbnail({ chartType, title, showAxes = true }: ChartThumbnailProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   return (
     <>
       <div
-        className="relative w-full h-20 bg-white rounded border border-gray-200 overflow-hidden cursor-pointer"
+        className="relative w-full h-full min-h-[120px] bg-white rounded border border-gray-200 overflow-hidden cursor-pointer"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Mini chart */}
+        {/* Mini chart - showAxes determina si se muestra en modo compacto o con ejes visibles */}
         <div className="w-full h-full p-1 pointer-events-none">
-          <ChartByType chartType={chartType} showLabels={false} compact />
+          <ChartByType chartType={chartType} showLabels={false} compact={!showAxes} />
         </div>
 
         {/* Hover overlay with eye icon */}

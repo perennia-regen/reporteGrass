@@ -9,7 +9,7 @@ import {
   pdf,
   Image,
 } from '@react-pdf/renderer';
-import { mockDashboardData } from './mock-data';
+import { mockDashboardData, mockComunidadData } from './mock-data';
 import { ISE_THRESHOLD, grassTheme } from '@/styles/grass-theme';
 
 // Estilos para el PDF
@@ -198,12 +198,21 @@ export function ReportePDF({ observacionGeneral, comentarioFinal, selectedSectio
   // Si no se especifican secciones, mostrar todas
   const sections = selectedSections || PDF_SECTIONS.map(s => s.id);
   const { establecimiento, ise, estratos, procesos, recomendaciones } = mockDashboardData;
+  const { estadisticas } = mockComunidadData;
+
+  // Calcular totales para Plan de Monitoreo
+  const totalSuperficie = estratos.reduce((sum, e) => sum + e.superficie, 0);
+  const totalEstaciones = estratos.reduce((sum, e) => sum + e.estaciones, 0);
 
   // Determinar qué páginas mostrar según las secciones seleccionadas
   const showPage1 = sections.some(s => ['identificacion', 'kpis', 'iseEstrato', 'observacionGeneral'].includes(s));
+  const showPagePlan = sections.some(s => ['planResumen', 'planEstratos'].includes(s));
   const showPage2 = sections.some(s => ['procesos', 'estratificacion', 'recomendaciones', 'comentarioFinal'].includes(s));
-  const totalPages = (showPage1 ? 1 : 0) + (showPage2 ? 1 : 0);
-  let currentPage = 0;
+  const showPageGrass = sections.some(s => ['sobreGrassIntro', 'sobreGrassISE'].includes(s));
+  const showPageComunidad = sections.some(s => ['comunidadEstadisticas'].includes(s));
+
+  const totalPages = [showPage1, showPagePlan, showPage2, showPageGrass, showPageComunidad].filter(Boolean).length;
+  let pageNumber = 0;
 
   return (
     <Document>
@@ -336,15 +345,97 @@ export function ReportePDF({ observacionGeneral, comentarioFinal, selectedSectio
             <Text style={styles.footerText}>
               Protocolo GRASS - Monitoreo de Pastizales Regenerativos
             </Text>
-            <Text style={styles.footerText}>Página {++currentPage} de {totalPages}</Text>
+            <Text style={styles.footerText}>Página {++pageNumber} de {totalPages}</Text>
           </View>
         </Page>
       )}
 
-      {/* Página 2: Resultados y Recomendaciones */}
+      {/* Página: Plan de Monitoreo */}
+      {showPagePlan && (
+        <Page size="A4" style={styles.page}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>Plan de Monitoreo</Text>
+              <Text style={styles.headerSubtitle}>{establecimiento.nombre} - {establecimiento.fecha}</Text>
+            </View>
+          </View>
+
+          {/* Resumen del Plan */}
+          {sections.includes('planResumen') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Resumen del Plan</Text>
+              <View style={styles.kpiContainer}>
+                <View style={styles.kpiCard}>
+                  <Text style={styles.kpiValue}>{establecimiento.areaTotal}</Text>
+                  <Text style={styles.kpiLabel}>Área Total (has)</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiValue, { color: grassTheme.colors.estratos.loma }]}>
+                    {totalSuperficie}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Área Monitoreo (has)</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiValue, { color: grassTheme.colors.procesos.cicloAgua }]}>
+                    {totalEstaciones}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Sitios MCP</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiValue, { color: grassTheme.colors.estratos.bajo }]}>
+                    {estratos.length}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Estratos</Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 10, color: '#666666', marginTop: 10 }}>
+                El plan de monitoreo incluyó {totalEstaciones} sitios de MCP para monitoreo de los procesos ecosistémicos.
+              </Text>
+            </View>
+          )}
+
+          {/* Tabla de Estratos */}
+          {sections.includes('planEstratos') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Estratificación por Ambientes</Text>
+              <View style={styles.table}>
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Estrato</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Superficie</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '15%' }]}>%</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Estaciones</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Ha/Est.</Text>
+                </View>
+                {estratos.map((estrato) => (
+                  <View key={estrato.id} style={styles.tableRow}>
+                    <Text style={[styles.tableCell, { width: '25%' }]}>{estrato.nombre}</Text>
+                    <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.superficie} has</Text>
+                    <Text style={[styles.tableCell, { width: '15%' }]}>{estrato.porcentaje}%</Text>
+                    <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.estaciones}</Text>
+                    <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.areaPorEstacion}</Text>
+                  </View>
+                ))}
+                <View style={[styles.tableRow, { backgroundColor: '#F3F4F6' }]}>
+                  <Text style={[styles.tableCell, { width: '25%', fontFamily: 'Helvetica-Bold' }]}>Total</Text>
+                  <Text style={[styles.tableCell, { width: '20%', fontFamily: 'Helvetica-Bold' }]}>{totalSuperficie} has</Text>
+                  <Text style={[styles.tableCell, { width: '15%', fontFamily: 'Helvetica-Bold' }]}>100%</Text>
+                  <Text style={[styles.tableCell, { width: '20%', fontFamily: 'Helvetica-Bold' }]}>{totalEstaciones}</Text>
+                  <Text style={[styles.tableCell, { width: '20%' }]}>-</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Protocolo GRASS - Monitoreo de Pastizales Regenerativos</Text>
+            <Text style={styles.footerText}>Página {++pageNumber} de {totalPages}</Text>
+          </View>
+        </Page>
+      )}
+
+      {/* Página: Resultados y Recomendaciones */}
       {showPage2 && (
         <Page size="A4" style={styles.page}>
-          {/* Header */}
           <View style={styles.header}>
             <View>
               <Text style={styles.headerTitle}>Resultados y Recomendaciones</Text>
@@ -352,7 +443,6 @@ export function ReportePDF({ observacionGeneral, comentarioFinal, selectedSectio
             </View>
           </View>
 
-          {/* Procesos Ecosistémicos */}
           {sections.includes('procesos') && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Procesos del Ecosistema</Text>
@@ -377,7 +467,6 @@ export function ReportePDF({ observacionGeneral, comentarioFinal, selectedSectio
             </View>
           )}
 
-          {/* Tabla de Estratificación */}
           {sections.includes('estratificacion') && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Estratificación</Text>
@@ -402,7 +491,6 @@ export function ReportePDF({ observacionGeneral, comentarioFinal, selectedSectio
             </View>
           )}
 
-          {/* Recomendaciones */}
           {sections.includes('recomendaciones') && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Recomendaciones por Estrato</Text>
@@ -419,7 +507,6 @@ export function ReportePDF({ observacionGeneral, comentarioFinal, selectedSectio
             </View>
           )}
 
-          {/* Comentario Final */}
           {sections.includes('comentarioFinal') && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Comentario Final</Text>
@@ -427,12 +514,142 @@ export function ReportePDF({ observacionGeneral, comentarioFinal, selectedSectio
             </View>
           )}
 
-          {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Generado con GRASS Dashboard Builder - Ovis21
-            </Text>
-            <Text style={styles.footerText}>Página {showPage1 ? 2 : 1} de {totalPages}</Text>
+            <Text style={styles.footerText}>Generado con GRASS Dashboard Builder - Ovis21</Text>
+            <Text style={styles.footerText}>Página {++pageNumber} de {totalPages}</Text>
+          </View>
+        </Page>
+      )}
+
+      {/* Página: Sobre GRASS */}
+      {showPageGrass && (
+        <Page size="A4" style={styles.page}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>Sobre GRASS</Text>
+              <Text style={styles.headerSubtitle}>Protocolo de Monitoreo Ambiental</Text>
+            </View>
+          </View>
+
+          {sections.includes('sobreGrassIntro') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Introducción al GRASS</Text>
+              <Text style={styles.paragraph}>
+                El protocolo de monitoreo ambiental GRASS es una herramienta diseñada para realizar el seguimiento
+                ecosistémico en establecimientos agropecuarios. Permite diagnosticar el funcionamiento de los
+                procesos ecológicos y cuantificar el grado de regeneración de las tierras.
+              </Text>
+              <View style={{ marginTop: 15 }}>
+                <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', marginBottom: 8 }}>
+                  El GRASS se aplica con tres procedimientos:
+                </Text>
+                <View style={{ marginLeft: 10 }}>
+                  <Text style={{ fontSize: 10, marginBottom: 6 }}>
+                    1. Estratificación del campo y diseño de un plan de muestreo
+                  </Text>
+                  <Text style={{ fontSize: 10, marginBottom: 6 }}>
+                    2. Monitoreo de Corto Plazo (MCP) - realizado anualmente
+                  </Text>
+                  <Text style={{ fontSize: 10, marginBottom: 6 }}>
+                    3. Monitoreo de Largo Plazo (MLP) - biodiversidad, infiltración y carbono
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {sections.includes('sobreGrassISE') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Índice de Salud Ecosistémica (ISE)</Text>
+              <Text style={styles.paragraph}>
+                La salud del ecosistema depende del óptimo funcionamiento de los procesos ecosistémicos como
+                el ciclo del agua, el ciclo de los minerales, el flujo de energía y la dinámica de las comunidades.
+              </Text>
+              <Text style={{ ...styles.paragraph, marginTop: 10 }}>
+                El ISE es un método expeditivo y económico para evaluar la situación de dichos procesos
+                ecosistémicos, comparando 16 indicadores biológicos con el potencial de la Ecorregión.
+              </Text>
+              <View style={{ backgroundColor: '#E8F5E9', padding: 10, marginTop: 10, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10, color: '#2E7D32' }}>
+                  Si el ISE aumenta a lo largo del tiempo, puede considerarse que el manejo es adecuado.
+                </Text>
+              </View>
+              <View style={{ backgroundColor: '#FFF3E0', padding: 10, marginTop: 8, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10, color: '#E65100' }}>
+                  Si el ISE no aumenta o disminuye, es una señal de alerta que sugiere revisar las prácticas de manejo.
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Protocolo GRASS - Monitoreo de Pastizales Regenerativos</Text>
+            <Text style={styles.footerText}>Página {++pageNumber} de {totalPages}</Text>
+          </View>
+        </Page>
+      )}
+
+      {/* Página: Comunidad */}
+      {showPageComunidad && (
+        <Page size="A4" style={styles.page}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>Comunidad GRASS</Text>
+              <Text style={styles.headerSubtitle}>Red de establecimientos monitoreando con el protocolo GRASS</Text>
+            </View>
+          </View>
+
+          {sections.includes('comunidadEstadisticas') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Estadísticas de la Comunidad</Text>
+              <View style={styles.kpiContainer}>
+                <View style={styles.kpiCard}>
+                  <Text style={styles.kpiValue}>{estadisticas.totalEstablecimientos}</Text>
+                  <Text style={styles.kpiLabel}>Establecimientos</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiValue, { color: grassTheme.colors.estratos.loma }]}>
+                    {estadisticas.totalHectareas.toLocaleString()}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Hectáreas Totales</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiValue, { color: grassTheme.colors.procesos.cicloAgua }]}>
+                    {estadisticas.isePromedio.toFixed(1)}
+                  </Text>
+                  <Text style={styles.kpiLabel}>ISE Promedio</Text>
+                </View>
+              </View>
+              <View style={styles.card}>
+                <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', marginBottom: 8 }}>
+                  Comparación con tu establecimiento
+                </Text>
+                <View style={styles.row}>
+                  <Text style={{ ...styles.label, width: 150 }}>Tu ISE:</Text>
+                  <Text style={styles.value}>{ise.promedio}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={{ ...styles.label, width: 150 }}>Promedio Comunidad:</Text>
+                  <Text style={styles.value}>{estadisticas.isePromedio.toFixed(1)}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={{ ...styles.label, width: 150 }}>Diferencia:</Text>
+                  <Text style={[styles.value, {
+                    color: ise.promedio >= estadisticas.isePromedio
+                      ? grassTheme.colors.primary.green
+                      : '#E65100'
+                  }]}>
+                    {ise.promedio >= estadisticas.isePromedio ? '+' : ''}
+                    {(ise.promedio - estadisticas.isePromedio).toFixed(1)} puntos
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Generado con GRASS Dashboard Builder - Ovis21</Text>
+            <Text style={styles.footerText}>Página {++pageNumber} de {totalPages}</Text>
           </View>
         </Page>
       )}

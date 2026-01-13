@@ -8,7 +8,8 @@ import { ISE_THRESHOLD } from '@/styles/grass-theme';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
 import { SugerenciasSection } from '@/components/sugerencias';
-import type { WidgetType } from '@/types/dashboard';
+import { PhotoGalleryModal } from '@/components/PhotoGalleryModal';
+import type { FotoMonitoreo } from '@/types/dashboard';
 import {
   ArrowRight,
   Map,
@@ -19,22 +20,11 @@ import {
   Layers,
   Plus,
   X,
+  Camera,
 } from 'lucide-react';
 
 // Tipos locales para los gráficos predeterminados de la página inicio
 type ChartType = 'evolucion-ise' | 'ise-estrato' | 'procesos' | 'procesos-evolucion';
-
-// Mapa de WidgetType de sidebar a ChartType local (todos los gráficos permitidos)
-const widgetToLocalChart: Partial<Record<WidgetType, ChartType>> = {
-  'ise-estrato-anual': 'ise-estrato',
-  'ise-interanual-establecimiento': 'evolucion-ise',
-  'ise-interanual-estrato': 'evolucion-ise',
-  'procesos-anual': 'procesos',
-  'procesos-interanual': 'procesos-evolucion',
-  'determinantes-interanual': 'procesos', // Usa misma visualización
-  'estratos-distribucion': 'ise-estrato', // Usa misma visualización
-  'estratos-comparativa': 'ise-estrato', // Usa misma visualización
-};
 
 interface ChartOption {
   id: ChartType;
@@ -53,11 +43,15 @@ export function TabInicio() {
   const { establecimiento, ise, estratos, fotos } = mockDashboardData;
   const { isEditing, editableContent, updateContent, setActiveTab } = useDashboardStore();
 
-  // Estado para los gráficos principales (siempre 2) y adicionales
+  // Estado para los gráficos principales (siempre 2) y adicionales (máximo 2 más = 4 total)
   const [chart1, setChart1] = useState<ChartType>('evolucion-ise');
   const [chart2, setChart2] = useState<ChartType>('ise-estrato');
   const [additionalCharts, setAdditionalCharts] = useState<ChartType[]>([]);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // Estado para la galería de fotos
+  const [showGallery, setShowGallery] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  const [localFotos, setLocalFotos] = useState<FotoMonitoreo[]>(fotos);
 
   const getChartName = (chartType: ChartType) => {
     return chartOptions.find(opt => opt.id === chartType)?.name || '';
@@ -91,33 +85,18 @@ export function TabInicio() {
     setAdditionalCharts(additionalCharts.filter((_, i) => i !== index));
   };
 
-  // Handlers para drag & drop
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingOver(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingOver(false);
-
-    const widgetType = e.dataTransfer.getData('widgetType') as WidgetType;
-    if (widgetType) {
-      // Convertir WidgetType de sidebar a ChartType local
-      const localChartType = widgetToLocalChart[widgetType];
-      if (localChartType && !getUsedCharts().includes(localChartType)) {
-        addChart(localChartType);
-      }
+  // Handler para seleccionar foto de la galería
+  const handlePhotoSelect = (foto: FotoMonitoreo) => {
+    if (selectedPhotoIndex !== null) {
+      const newFotos = [...localFotos];
+      newFotos[selectedPhotoIndex] = foto;
+      setLocalFotos(newFotos);
     }
+    setSelectedPhotoIndex(null);
   };
+
+  // Ubicación para mostrar en la galería
+  const ubicacionStr = `${establecimiento.ubicacion.distrito}, ${establecimiento.ubicacion.departamento}`;
 
   const renderChart = (chartType: ChartType) => {
     switch (chartType) {
@@ -412,25 +391,16 @@ export function TabInicio() {
             </div>
           )}
 
-          {/* Zona de drop y botón agregar gráfico - solo en modo edición */}
-          {isEditing && getAvailableCharts().length > 0 && (
-            <div
-              className={`mt-6 flex justify-center p-6 border-2 border-dashed rounded-lg transition-colors ${
-                isDraggingOver
-                  ? 'border-[var(--grass-green)] bg-[var(--grass-green-light)]'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
+          {/* Botón agregar gráfico - solo en modo edición y máximo 4 gráficos totales */}
+          {isEditing && getAvailableCharts().length > 0 && additionalCharts.length < 2 && (
+            <div className="mt-6 flex justify-center p-6 border-2 border-dashed rounded-lg border-gray-300 hover:border-gray-400 transition-colors">
               <Button
                 variant="ghost"
                 onClick={() => addChart()}
                 className="text-gray-500 hover:text-[var(--grass-green-dark)]"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {isDraggingOver ? 'Soltar aquí para agregar' : 'Agregar gráfico o arrastrar desde la barra lateral'}
+                Agregar gráfico ({2 + additionalCharts.length}/4)
               </Button>
             </div>
           )}
@@ -467,9 +437,20 @@ export function TabInicio() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {fotos.map((foto, index) => (
+            {localFotos.map((foto, index) => (
               <div key={index} className="group">
-                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 relative overflow-hidden">
+                {/* Foto con opción de cambiar en modo edición */}
+                <div
+                  className={`aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 relative overflow-hidden ${
+                    isEditing ? 'cursor-pointer hover:bg-gray-200 transition-colors' : ''
+                  }`}
+                  onClick={() => {
+                    if (isEditing) {
+                      setSelectedPhotoIndex(index);
+                      setShowGallery(true);
+                    }
+                  }}
+                >
                   <div className="text-center">
                     <svg
                       className="w-8 h-8 mx-auto mb-2"
@@ -485,11 +466,23 @@ export function TabInicio() {
                       />
                     </svg>
                   </div>
+                  {/* Overlay de edición */}
+                  {isEditing && (
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-colors">
+                      <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
                 </div>
-                {/* Pie de foto */}
+                {/* Pie de foto con comentario editable */}
                 <div className="mt-2">
                   <p className="text-sm font-medium text-[var(--grass-green-dark)]">{foto.sitio}</p>
-                  <p className="text-xs text-gray-500">{foto.comentario}</p>
+                  <p className="text-xs text-gray-400 mb-1">{ubicacionStr}</p>
+                  <EditableText
+                    value={editableContent[`foto_comentario_${index}`] || foto.comentario}
+                    onChange={(value) => updateContent(`foto_comentario_${index}`, value)}
+                    placeholder="Agregar comentario..."
+                    className="text-xs text-gray-500"
+                  />
                 </div>
               </div>
             ))}
@@ -497,33 +490,45 @@ export function TabInicio() {
         </CardContent>
       </Card>
 
-      {/* Botones de Quick Action */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg text-[var(--grass-green-dark)] flex items-center gap-2">
-            <Layers className="w-5 h-5" />
-            Explorar Secciones
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Button
-                  key={action.id}
-                  variant="outline"
-                  className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-gray-50 border-2 transition-all hover:border-[var(--grass-green)]"
-                  onClick={() => setActiveTab(action.id)}
+      {/* Footer con Quick Actions */}
+      <div className="mt-8 pt-6 border-t-2 border-gray-100">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <Layers className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-500 font-medium">Explorar Secciones</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Button
+                key={action.id}
+                variant="ghost"
+                className="h-auto py-3 flex flex-col items-center gap-1.5 hover:bg-gray-50 rounded-xl transition-all group"
+                onClick={() => setActiveTab(action.id)}
+              >
+                <div
+                  className="p-2 rounded-lg transition-colors"
+                  style={{ backgroundColor: `${action.color}15` }}
                 >
-                  <Icon className="w-6 h-6" style={{ color: action.color }} />
-                  <span className="text-sm font-medium">{action.name}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                  <Icon className="w-5 h-5" style={{ color: action.color }} />
+                </div>
+                <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900">{action.name}</span>
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Modal de galería de fotos */}
+      <PhotoGalleryModal
+        isOpen={showGallery}
+        onClose={() => {
+          setShowGallery(false);
+          setSelectedPhotoIndex(null);
+        }}
+        onSelect={handlePhotoSelect}
+        currentPhotoUrl={selectedPhotoIndex !== null ? localFotos[selectedPhotoIndex]?.url : undefined}
+      />
     </div>
   );
 }

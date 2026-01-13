@@ -12,6 +12,7 @@ interface EditableTextProps {
   placeholder?: string;
   className?: string;
   multiline?: boolean;
+  showPencilOnHover?: boolean;
 }
 
 export function EditableText({
@@ -20,6 +21,7 @@ export function EditableText({
   placeholder = 'Click para editar...',
   className = '',
   multiline = false,
+  showPencilOnHover = false,
 }: EditableTextProps) {
   const { isEditing } = useDashboardStore();
   const [isLocalEditing, setIsLocalEditing] = useState(false);
@@ -54,7 +56,26 @@ export function EditableText({
     }
   };
 
+  // Modo lectura - sin edición global activa
   if (!isEditing) {
+    // Si showPencilOnHover está activo, mostrar lápiz centrado al hover
+    if (showPencilOnHover) {
+      return (
+        <div
+          className={cn('relative group cursor-pointer', className)}
+          onClick={() => {
+            // Activar modo edición global y local
+            useDashboardStore.getState().setIsEditing(true);
+            setIsLocalEditing(true);
+          }}
+        >
+          <span>{value || <span className="text-gray-400 italic">{placeholder}</span>}</span>
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 rounded">
+            <Pencil className="w-4 h-4 text-gray-500" />
+          </div>
+        </div>
+      );
+    }
     return <span className={className}>{value || placeholder}</span>;
   }
 

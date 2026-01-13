@@ -182,3 +182,34 @@ export interface ComunidadData {
     isePromedio: number;
   };
 }
+
+// Tipos para la sección de Sugerencias y Recomendaciones
+export type SugerenciaWidgetType =
+  | WidgetType
+  | 'text-block-sugerencia'
+  | 'tabla-estrato'
+  | 'tabla-personalizable';
+
+export interface TableRow {
+  id: string;
+  estrato?: {
+    nombre: string;
+    color: string;
+  };
+  values: Record<string, string>;
+}
+
+export type SugerenciaLayout = 1 | 2 | 3; // 1=full, 2=half, 3=third
+
+export interface SugerenciaItem {
+  id: string;
+  type: SugerenciaWidgetType;
+  content?: string;
+  tableConfig?: {
+    columns: string[];
+    rows: TableRow[];
+  };
+  chartType?: WidgetType;
+  colSpan?: SugerenciaLayout; // Cuántas columnas ocupa (1=full, 2=mitad, 3=tercio)
+  order?: number; // Para reordenar
+}
