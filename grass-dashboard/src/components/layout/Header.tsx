@@ -5,24 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { mockDashboardData } from '@/lib/mock-data';
-import { generatePDF } from '@/lib/export-pdf';
-import { EditorBanner } from './EditorBanner';
+import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 
 export function Header() {
   const { isEditing, setIsEditing, editableContent } = useDashboardStore();
   const { establecimiento } = mockDashboardData;
-  const [isExporting, setIsExporting] = useState(false);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
 
-  const handleExportPDF = async () => {
-    setIsExporting(true);
-    try {
-      await generatePDF(editableContent.observacionGeneral, editableContent.comentarioFinal);
-    } catch (error) {
-      console.error('Error al exportar PDF:', error);
-    } finally {
-      setIsExporting(false);
-    }
+  const handleExportPDF = () => {
+    setShowPDFPreview(true);
   };
 
   const handleShare = () => {
@@ -91,9 +83,8 @@ export function Header() {
             variant="outline"
             size="sm"
             onClick={handleExportPDF}
-            disabled={isExporting}
           >
-            {isExporting ? 'Exportando...' : 'Exportar PDF'}
+            Exportar PDF
           </Button>
 
           {/* Toast de link copiado */}
@@ -105,8 +96,13 @@ export function Header() {
         </div>
       </header>
 
-      {/* Banner de modo edición */}
-      {isEditing && <EditorBanner />}
+      {/* Modal de preview del PDF */}
+      <PDFPreviewModal
+        isOpen={showPDFPreview}
+        onClose={() => setShowPDFPreview(false)}
+        observacionGeneral={editableContent.observacionGeneral}
+        comentarioFinal={editableContent.comentarioFinal}
+      />
     </div>
   );
 }

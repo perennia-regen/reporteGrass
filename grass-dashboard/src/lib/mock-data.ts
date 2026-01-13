@@ -165,10 +165,10 @@ export const mockDashboardData: DashboardData = {
   observacionGeneral: 'La evaluación muestra avances diferenciados entre los estratos. El estrato Loma continúa siendo el más limitado en su salud ecosistémica, aunque presenta mejoras puntuales en la cobertura del suelo. En Media Loma, los procesos básicos se mantienen estables, pero se observa una pérdida de diversidad vegetal y un deterioro en las pasturas. El estrato Bajo evidencia la evolución más positiva, con mejoras sostenidas en la cobertura, diversidad funcional y funcionamiento del ecosistema.',
 
   fotos: [
-    '/placeholder-foto-1.jpg',
-    '/placeholder-foto-2.jpg',
-    '/placeholder-foto-3.jpg',
-    '/placeholder-foto-4.jpg',
+    { url: '/placeholder-foto-1.jpg', sitio: 'Loma AG-01', comentario: 'Vista general del estrato loma' },
+    { url: '/placeholder-foto-2.jpg', sitio: 'Media Loma ML-03', comentario: 'Cobertura vegetal en recuperación' },
+    { url: '/placeholder-foto-3.jpg', sitio: 'Bajo BD-02', comentario: 'Abundante mantillo observado' },
+    { url: '/placeholder-foto-4.jpg', sitio: 'Loma AG-05', comentario: 'Pastos perennes de verano' },
   ],
 };
 

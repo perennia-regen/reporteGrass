@@ -155,234 +155,303 @@ const styles = StyleSheet.create({
   },
 });
 
+// Secciones disponibles para el PDF
+export type PDFSection =
+  | 'identificacion'
+  | 'kpis'
+  | 'iseEstrato'
+  | 'observacionGeneral'
+  | 'planResumen'
+  | 'planEstratos'
+  | 'procesos'
+  | 'estratificacion'
+  | 'recomendaciones'
+  | 'comentarioFinal'
+  | 'sobreGrassIntro'
+  | 'sobreGrassISE'
+  | 'comunidadEstadisticas';
+
+export const PDF_SECTIONS: { id: PDFSection; label: string; tab: string }[] = [
+  { id: 'identificacion', label: 'Identificación del Predio', tab: 'Inicio' },
+  { id: 'kpis', label: 'Datos Destacados', tab: 'Inicio' },
+  { id: 'iseEstrato', label: 'ISE por Estrato', tab: 'Inicio' },
+  { id: 'observacionGeneral', label: 'Observación General', tab: 'Inicio' },
+  { id: 'planResumen', label: 'Resumen del Plan', tab: 'Plan de Monitoreo' },
+  { id: 'planEstratos', label: 'Tabla de Estratos', tab: 'Plan de Monitoreo' },
+  { id: 'procesos', label: 'Procesos del Ecosistema', tab: 'Resultados' },
+  { id: 'estratificacion', label: 'Estratificación', tab: 'Resultados' },
+  { id: 'recomendaciones', label: 'Recomendaciones', tab: 'Resultados' },
+  { id: 'comentarioFinal', label: 'Comentario Final', tab: 'Resultados' },
+  { id: 'sobreGrassIntro', label: 'Introducción GRASS', tab: 'Sobre GRASS' },
+  { id: 'sobreGrassISE', label: 'Explicación ISE', tab: 'Sobre GRASS' },
+  { id: 'comunidadEstadisticas', label: 'Estadísticas Comunidad', tab: 'Comunidad' },
+];
+
 // Componente del documento PDF
 interface ReportePDFProps {
   observacionGeneral: string;
   comentarioFinal: string;
+  selectedSections?: PDFSection[];
 }
 
-function ReportePDF({ observacionGeneral, comentarioFinal }: ReportePDFProps) {
+export function ReportePDF({ observacionGeneral, comentarioFinal, selectedSections }: ReportePDFProps) {
+  // Si no se especifican secciones, mostrar todas
+  const sections = selectedSections || PDF_SECTIONS.map(s => s.id);
   const { establecimiento, ise, estratos, procesos, recomendaciones } = mockDashboardData;
+
+  // Determinar qué páginas mostrar según las secciones seleccionadas
+  const showPage1 = sections.some(s => ['identificacion', 'kpis', 'iseEstrato', 'observacionGeneral'].includes(s));
+  const showPage2 = sections.some(s => ['procesos', 'estratificacion', 'recomendaciones', 'comentarioFinal'].includes(s));
+  const totalPages = (showPage1 ? 1 : 0) + (showPage2 ? 1 : 0);
+  let currentPage = 0;
 
   return (
     <Document>
       {/* Página 1: Resumen Ejecutivo */}
-      <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>
-              GRASS - Monitoreo Ambiental
-            </Text>
-            <Text style={styles.headerSubtitle}>
-              Informe de Salud Ecosistémica
-            </Text>
+      {showPage1 && (
+        <Page size="A4" style={styles.page}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>
+                GRASS - Monitoreo Ambiental
+              </Text>
+              <Text style={styles.headerSubtitle}>
+                Informe de Salud Ecosistémica
+              </Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold' }}>
+                {establecimiento.nombre}
+              </Text>
+              <Text style={{ fontSize: 9, color: '#666666' }}>
+                {establecimiento.fecha}
+              </Text>
+            </View>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold' }}>
-              {establecimiento.nombre}
-            </Text>
-            <Text style={{ fontSize: 9, color: '#666666' }}>
-              {establecimiento.fecha}
-            </Text>
-          </View>
-        </View>
 
-        {/* Identificación del Predio */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Identificación del Predio</Text>
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Text style={styles.label}>Establecimiento:</Text>
-              <Text style={styles.value}>{establecimiento.nombre}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Código:</Text>
-              <Text style={styles.value}>{establecimiento.codigo}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Nodo:</Text>
-              <Text style={styles.value}>{establecimiento.nodo}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Técnico:</Text>
-              <Text style={styles.value}>{establecimiento.tecnico}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>Ubicación:</Text>
-              <Text style={styles.value}>
-                {establecimiento.ubicacion.provincia}, {establecimiento.ubicacion.departamento}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* KPIs */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Datos Destacados</Text>
-          <View style={styles.kpiContainer}>
-            <View style={styles.kpiCard}>
-              <Text style={styles.kpiValue}>{ise.promedio.toFixed(1)}</Text>
-              <Text style={styles.kpiLabel}>ISE Promedio</Text>
-            </View>
-            <View style={styles.kpiCard}>
-              <Text style={[styles.kpiValue, { color: grassTheme.colors.estratos.loma }]}>
-                {establecimiento.areaTotal}
-              </Text>
-              <Text style={styles.kpiLabel}>Hectáreas</Text>
-            </View>
-            <View style={styles.kpiCard}>
-              <Text style={[styles.kpiValue, { color: grassTheme.colors.procesos.cicloAgua }]}>
-                {estratos.reduce((sum, e) => sum + e.estaciones, 0)}
-              </Text>
-              <Text style={styles.kpiLabel}>Sitios MCP</Text>
-            </View>
-            <View style={styles.kpiCard}>
-              <Text style={[styles.kpiValue, { color: grassTheme.colors.estratos.bajo }]}>
-                {estratos.length}
-              </Text>
-              <Text style={styles.kpiLabel}>Estratos</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* ISE por Estrato */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ISE por Estrato</Text>
-          {Object.entries(ise.porEstrato).map(([estrato, valor]) => (
-            <View key={estrato} style={{ marginBottom: 8 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
-                <Text style={{ fontSize: 10 }}>{estrato}</Text>
-                <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold' }}>{valor.toFixed(1)}</Text>
-              </View>
-              <View style={styles.iseBar}>
-                <View
-                  style={[
-                    styles.iseBarFill,
-                    {
-                      width: `${Math.max(valor, 0)}%`,
-                      backgroundColor: valor >= ISE_THRESHOLD
-                        ? grassTheme.colors.primary.green
-                        : grassTheme.colors.estratos.bajo,
-                    },
-                  ]}
-                />
+          {/* Identificación del Predio */}
+          {sections.includes('identificacion') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Identificación del Predio</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Establecimiento:</Text>
+                  <Text style={styles.value}>{establecimiento.nombre}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Código:</Text>
+                  <Text style={styles.value}>{establecimiento.codigo}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Nodo:</Text>
+                  <Text style={styles.value}>{establecimiento.nodo}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Técnico:</Text>
+                  <Text style={styles.value}>{establecimiento.tecnico}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Ubicación:</Text>
+                  <Text style={styles.value}>
+                    {establecimiento.ubicacion.provincia}, {establecimiento.ubicacion.departamento}
+                  </Text>
+                </View>
               </View>
             </View>
-          ))}
-          <Text style={{ fontSize: 8, color: '#666666', marginTop: 4 }}>
-            Umbral deseable: {ISE_THRESHOLD} puntos
-          </Text>
-        </View>
+          )}
 
-        {/* Observación General */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Observación General</Text>
-          <Text style={styles.paragraph}>{observacionGeneral}</Text>
-        </View>
+          {/* KPIs */}
+          {sections.includes('kpis') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Datos Destacados</Text>
+              <View style={styles.kpiContainer}>
+                <View style={styles.kpiCard}>
+                  <Text style={styles.kpiValue}>{ise.promedio.toFixed(1)}</Text>
+                  <Text style={styles.kpiLabel}>ISE Promedio</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiValue, { color: grassTheme.colors.estratos.loma }]}>
+                    {establecimiento.areaTotal}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Hectáreas</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiValue, { color: grassTheme.colors.procesos.cicloAgua }]}>
+                    {estratos.reduce((sum, e) => sum + e.estaciones, 0)}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Sitios MCP</Text>
+                </View>
+                <View style={styles.kpiCard}>
+                  <Text style={[styles.kpiValue, { color: grassTheme.colors.estratos.bajo }]}>
+                    {estratos.length}
+                  </Text>
+                  <Text style={styles.kpiLabel}>Estratos</Text>
+                </View>
+              </View>
+            </View>
+          )}
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Protocolo GRASS - Monitoreo de Pastizales Regenerativos
-          </Text>
-          <Text style={styles.footerText}>Página 1 de 2</Text>
-        </View>
-      </Page>
+          {/* ISE por Estrato */}
+          {sections.includes('iseEstrato') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>ISE por Estrato</Text>
+              {Object.entries(ise.porEstrato).map(([estrato, valor]) => (
+                <View key={estrato} style={{ marginBottom: 8 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                    <Text style={{ fontSize: 10 }}>{estrato}</Text>
+                    <Text style={{ fontSize: 10, fontFamily: 'Helvetica-Bold' }}>{valor.toFixed(1)}</Text>
+                  </View>
+                  <View style={styles.iseBar}>
+                    <View
+                      style={[
+                        styles.iseBarFill,
+                        {
+                          width: `${Math.max(valor, 0)}%`,
+                          backgroundColor: valor >= ISE_THRESHOLD
+                            ? grassTheme.colors.primary.green
+                            : grassTheme.colors.estratos.bajo,
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              ))}
+              <Text style={{ fontSize: 8, color: '#666666', marginTop: 4 }}>
+                Umbral deseable: {ISE_THRESHOLD} puntos
+              </Text>
+            </View>
+          )}
+
+          {/* Observación General */}
+          {sections.includes('observacionGeneral') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Observación General</Text>
+              <Text style={styles.paragraph}>{observacionGeneral}</Text>
+            </View>
+          )}
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Protocolo GRASS - Monitoreo de Pastizales Regenerativos
+            </Text>
+            <Text style={styles.footerText}>Página {++currentPage} de {totalPages}</Text>
+          </View>
+        </Page>
+      )}
 
       {/* Página 2: Resultados y Recomendaciones */}
-      <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>Resultados y Recomendaciones</Text>
-            <Text style={styles.headerSubtitle}>{establecimiento.nombre} - {establecimiento.fecha}</Text>
-          </View>
-        </View>
-
-        {/* Procesos Ecosistémicos */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Procesos del Ecosistema</Text>
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Text style={{ ...styles.label, width: 150 }}>Ciclo del Agua:</Text>
-              <Text style={styles.value}>{procesos.cicloAgua}%</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={{ ...styles.label, width: 150 }}>Ciclo de los Minerales:</Text>
-              <Text style={styles.value}>{procesos.cicloMineral}%</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={{ ...styles.label, width: 150 }}>Flujo de Energía:</Text>
-              <Text style={styles.value}>{procesos.flujoEnergia}%</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={{ ...styles.label, width: 150 }}>Dinámica de Comunidades:</Text>
-              <Text style={styles.value}>{procesos.dinamicaComunidades}%</Text>
+      {showPage2 && (
+        <Page size="A4" style={styles.page}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>Resultados y Recomendaciones</Text>
+              <Text style={styles.headerSubtitle}>{establecimiento.nombre} - {establecimiento.fecha}</Text>
             </View>
           </View>
-        </View>
 
-        {/* Tabla de Estratificación */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Estratificación</Text>
-          <View style={styles.table}>
-            <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Estrato</Text>
-              <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Superficie</Text>
-              <Text style={[styles.tableHeaderCell, { width: '15%' }]}>%</Text>
-              <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Estaciones</Text>
-              <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Ha/Est.</Text>
-            </View>
-            {estratos.map((estrato) => (
-              <View key={estrato.id} style={styles.tableRow}>
-                <Text style={[styles.tableCell, { width: '25%' }]}>{estrato.nombre}</Text>
-                <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.superficie} has</Text>
-                <Text style={[styles.tableCell, { width: '15%' }]}>{estrato.porcentaje}%</Text>
-                <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.estaciones}</Text>
-                <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.areaPorEstacion}</Text>
+          {/* Procesos Ecosistémicos */}
+          {sections.includes('procesos') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Procesos del Ecosistema</Text>
+              <View style={styles.card}>
+                <View style={styles.row}>
+                  <Text style={{ ...styles.label, width: 150 }}>Ciclo del Agua:</Text>
+                  <Text style={styles.value}>{procesos.cicloAgua}%</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={{ ...styles.label, width: 150 }}>Ciclo de los Minerales:</Text>
+                  <Text style={styles.value}>{procesos.cicloMineral}%</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={{ ...styles.label, width: 150 }}>Flujo de Energía:</Text>
+                  <Text style={styles.value}>{procesos.flujoEnergia}%</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text style={{ ...styles.label, width: 150 }}>Dinámica de Comunidades:</Text>
+                  <Text style={styles.value}>{procesos.dinamicaComunidades}%</Text>
+                </View>
               </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Recomendaciones */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recomendaciones por Estrato</Text>
-          {recomendaciones.map((rec) => (
-            <View key={rec.estrato} style={{ marginBottom: 10 }}>
-              <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', marginBottom: 4 }}>
-                {rec.estrato}
-              </Text>
-              <Text style={{ fontSize: 9, lineHeight: 1.4, color: '#374151' }}>
-                {rec.sugerencia}
-              </Text>
             </View>
-          ))}
-        </View>
+          )}
 
-        {/* Comentario Final */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Comentario Final</Text>
-          <Text style={styles.paragraph}>{comentarioFinal}</Text>
-        </View>
+          {/* Tabla de Estratificación */}
+          {sections.includes('estratificacion') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Estratificación</Text>
+              <View style={styles.table}>
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.tableHeaderCell, { width: '25%' }]}>Estrato</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Superficie</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '15%' }]}>%</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Estaciones</Text>
+                  <Text style={[styles.tableHeaderCell, { width: '20%' }]}>Ha/Est.</Text>
+                </View>
+                {estratos.map((estrato) => (
+                  <View key={estrato.id} style={styles.tableRow}>
+                    <Text style={[styles.tableCell, { width: '25%' }]}>{estrato.nombre}</Text>
+                    <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.superficie} has</Text>
+                    <Text style={[styles.tableCell, { width: '15%' }]}>{estrato.porcentaje}%</Text>
+                    <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.estaciones}</Text>
+                    <Text style={[styles.tableCell, { width: '20%' }]}>{estrato.areaPorEstacion}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Generado con GRASS Dashboard Builder - Ovis21
-          </Text>
-          <Text style={styles.footerText}>Página 2 de 2</Text>
-        </View>
-      </Page>
+          {/* Recomendaciones */}
+          {sections.includes('recomendaciones') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Recomendaciones por Estrato</Text>
+              {recomendaciones.map((rec) => (
+                <View key={rec.estrato} style={{ marginBottom: 10 }}>
+                  <Text style={{ fontSize: 11, fontFamily: 'Helvetica-Bold', marginBottom: 4 }}>
+                    {rec.estrato}
+                  </Text>
+                  <Text style={{ fontSize: 9, lineHeight: 1.4, color: '#374151' }}>
+                    {rec.sugerencia}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Comentario Final */}
+          {sections.includes('comentarioFinal') && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Comentario Final</Text>
+              <Text style={styles.paragraph}>{comentarioFinal}</Text>
+            </View>
+          )}
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              Generado con GRASS Dashboard Builder - Ovis21
+            </Text>
+            <Text style={styles.footerText}>Página {showPage1 ? 2 : 1} de {totalPages}</Text>
+          </View>
+        </Page>
+      )}
     </Document>
   );
 }
 
 // Función para generar y descargar el PDF
-export async function generatePDF(observacionGeneral: string, comentarioFinal: string): Promise<void> {
+export async function generatePDF(
+  observacionGeneral: string,
+  comentarioFinal: string,
+  selectedSections?: PDFSection[]
+): Promise<void> {
   const blob = await pdf(
-    <ReportePDF observacionGeneral={observacionGeneral} comentarioFinal={comentarioFinal} />
+    <ReportePDF
+      observacionGeneral={observacionGeneral}
+      comentarioFinal={comentarioFinal}
+      selectedSections={selectedSections}
+    />
   ).toBlob();
 
   const url = URL.createObjectURL(blob);

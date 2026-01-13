@@ -84,8 +84,15 @@ export interface Recomendacion {
   sugerencia: string;
 }
 
+export interface FotoMonitoreo {
+  url: string;
+  sitio: string;
+  comentario: string;
+}
+
 // Tipos para el editor de dashboard
 export type WidgetType =
+  // Tipos genéricos (legacy)
   | 'bar-chart'
   | 'line-chart'
   | 'pie-chart'
@@ -94,7 +101,19 @@ export type WidgetType =
   | 'text-block'
   | 'map-widget'
   | 'photo-carousel'
-  | 'timeline';
+  | 'timeline'
+  // ISE
+  | 'ise-estrato-anual'
+  | 'ise-interanual-establecimiento'
+  | 'ise-interanual-estrato'
+  // Procesos del ecosistema
+  | 'procesos-anual'
+  | 'procesos-interanual'
+  // Determinantes
+  | 'determinantes-interanual'
+  // Estratos
+  | 'estratos-distribucion'
+  | 'estratos-comparativa';
 
 export interface WidgetConfig {
   id: string;
@@ -141,7 +160,7 @@ export interface DashboardData {
   eventos: EventoMonitoreo[];
   recomendaciones: Recomendacion[];
   observacionGeneral: string;
-  fotos: string[];
+  fotos: FotoMonitoreo[];
 }
 
 // Para la comunidad

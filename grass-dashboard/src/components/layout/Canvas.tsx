@@ -144,6 +144,18 @@ function getDefaultTitle(type: WidgetType): string {
     'map-widget': 'Mapa',
     'photo-carousel': 'Galería',
     'timeline': 'Historial',
+    // ISE
+    'ise-estrato-anual': 'ISE por Estrato (Anual)',
+    'ise-interanual-establecimiento': 'ISE Interanual del Establecimiento',
+    'ise-interanual-estrato': 'ISE Interanual por Estrato',
+    // Procesos
+    'procesos-anual': 'Procesos Ecosistémicos (Anual)',
+    'procesos-interanual': 'Procesos Interanual',
+    // Determinantes
+    'determinantes-interanual': 'Determinantes Interanual',
+    // Estratos
+    'estratos-distribucion': 'Distribución de Estratos',
+    'estratos-comparativa': 'Comparativa de Estratos',
   };
   return titles[type];
 }
@@ -159,6 +171,18 @@ function getDefaultConfig(type: WidgetType): Record<string, unknown> {
     'map-widget': { showEstratos: true, showMonitores: true },
     'photo-carousel': { images: [] },
     'timeline': { events: [] },
+    // ISE
+    'ise-estrato-anual': { showLegend: true },
+    'ise-interanual-establecimiento': { showLegend: true },
+    'ise-interanual-estrato': { showLegend: true },
+    // Procesos
+    'procesos-anual': { showLegend: true },
+    'procesos-interanual': { showLegend: true },
+    // Determinantes
+    'determinantes-interanual': { showLegend: true },
+    // Estratos
+    'estratos-distribucion': { showLegend: true },
+    'estratos-comparativa': { showLegend: true },
   };
   return configs[type];
 }

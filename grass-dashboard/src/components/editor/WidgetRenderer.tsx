@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockDashboardData } from '@/lib/mock-data';
 import { ISE_THRESHOLD } from '@/styles/grass-theme';
 import type { WidgetConfig } from '@/types/dashboard';
+import { ChartByType } from '@/components/layout/ChartPreviewModal';
 import {
   BarChart,
   Bar,
@@ -19,6 +20,18 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+
+// Mapa de tipos de widget a títulos por defecto
+const widgetTitles: Record<string, string> = {
+  'ise-estrato-anual': 'ISE del año por estrato',
+  'ise-interanual-establecimiento': 'ISE interanual establecimiento',
+  'ise-interanual-estrato': 'ISE interanual por estrato',
+  'procesos-anual': 'Procesos del año de monitoreo',
+  'procesos-interanual': 'Procesos interanual',
+  'determinantes-interanual': 'Determinantes interanual',
+  'estratos-distribucion': 'Distribución de área por estrato',
+  'estratos-comparativa': 'Comparativa por estrato',
+};
 
 interface WidgetRendererProps {
   widget: WidgetConfig;
@@ -45,6 +58,26 @@ export function WidgetRenderer({ widget }: WidgetRendererProps) {
 
     case 'data-table':
       return <DataTableWidget widget={widget} />;
+
+    // Nuevos tipos de gráficos por categoría
+    case 'ise-estrato-anual':
+    case 'ise-interanual-establecimiento':
+    case 'ise-interanual-estrato':
+    case 'procesos-anual':
+    case 'procesos-interanual':
+    case 'determinantes-interanual':
+    case 'estratos-distribucion':
+    case 'estratos-comparativa':
+      return (
+        <Card className="h-full">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">{widget.title || widgetTitles[widget.type]}</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[calc(100%-60px)]">
+            <ChartByType chartType={widget.type} showLabels />
+          </CardContent>
+        </Card>
+      );
 
     default:
       return (
