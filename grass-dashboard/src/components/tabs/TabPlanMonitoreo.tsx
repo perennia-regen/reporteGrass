@@ -42,8 +42,7 @@ export function TabPlanMonitoreo() {
       </div>
 
       {/* Resumen de área */}
-      <div className="flex justify-center">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full max-w-4xl">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6 text-center">
               <p className="text-2xl font-bold text-[var(--grass-green-dark)]">
@@ -76,7 +75,6 @@ export function TabPlanMonitoreo() {
               <p className="text-sm text-gray-500">Estratos</p>
             </CardContent>
           </Card>
-        </div>
       </div>
 
       {/* Mapa y tabla lado a lado */}
