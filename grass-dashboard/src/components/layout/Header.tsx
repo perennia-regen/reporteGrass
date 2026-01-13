@@ -6,7 +6,7 @@ import { Logo } from '@/components/ui/logo';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { mockDashboardData } from '@/lib/mock-data';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
-import { Eye, Send, Printer, ChevronDown, Link2, Pencil, Check, ExternalLink } from 'lucide-react';
+import { Eye, Send, Printer, ChevronDown, Link2, Pencil, Check, ExternalLink, Home } from 'lucide-react';
 import NextLink from 'next/link';
 
 export function Header() {
@@ -66,8 +66,20 @@ export function Header() {
   return (
     <div className="shrink-0">
       <header className="h-16 border-b bg-white px-4 flex items-center justify-between">
-        {/* Logo y título */}
+        {/* Volver y Logo */}
         <div className="flex items-center gap-4">
+          <NextLink href="/">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-gray-500 hover:text-gray-900"
+            >
+              <Home className="w-4 h-4" />
+            </Button>
+          </NextLink>
+
+          <div className="h-8 w-px bg-gray-200" />
+
           <Logo
             size="xl"
             showText={false}
@@ -75,7 +87,7 @@ export function Header() {
           />
           <div>
             <h1 className="text-lg font-bold text-black">
-              Informe de Monitoreo
+              Editor de Informe
             </h1>
             <p className="text-xs text-gray-500">Monitoreo Ambiental GRASS</p>
           </div>
