@@ -244,9 +244,14 @@ export function TabResultados() {
               <TableBody>
                 {recomendaciones.map((rec) => {
                   const estrato = estratos.find((e) => e.nombre === rec.estrato);
+                  // Mapear nombre de estrato a clave del store
+                  const estratoKey = rec.estrato === 'Media Loma' ? 'media_loma' : rec.estrato.toLowerCase();
+                  const contentKey = `recomendacion_${estratoKey}`;
+                  const editableValue = editableContent[contentKey] || rec.sugerencia;
+
                   return (
                     <TableRow key={rec.estrato}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium align-top pt-4">
                         <div className="flex items-center gap-2">
                           <div
                             className="w-3 h-3 rounded"
@@ -256,7 +261,13 @@ export function TabResultados() {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-gray-700">
-                        {rec.sugerencia}
+                        <EditableText
+                          value={editableValue}
+                          onChange={(value) => updateContent(contentKey, value)}
+                          placeholder="Ingrese sugerencias de manejo..."
+                          className="leading-relaxed"
+                          multiline
+                        />
                       </TableCell>
                     </TableRow>
                   );

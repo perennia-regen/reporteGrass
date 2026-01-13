@@ -7,6 +7,10 @@ interface EditableContent {
   observacionGeneral: string;
   comentarioISE: string;
   comentarioFinal: string;
+  // Recomendaciones por estrato
+  recomendacion_loma: string;
+  recomendacion_media_loma: string;
+  recomendacion_bajo: string;
   [key: string]: string; // Para campos dinámicos
 }
 
@@ -30,6 +34,14 @@ interface DashboardState {
   // Contenido editable
   editableContent: EditableContent;
   updateContent: (key: string, value: string) => void;
+
+  // Sidebar colapsable
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+
+  // Tour guiado
+  tourCompleted: boolean;
+  setTourCompleted: (completed: boolean) => void;
 
   // Acciones sobre widgets
   addWidget: (tabId: string, widget: WidgetConfig) => void;
@@ -81,6 +93,10 @@ const defaultEditableContent: EditableContent = {
   observacionGeneral: 'La evaluación muestra avances diferenciados entre los estratos. El estrato Loma continúa siendo el más limitado en su salud ecosistémica, aunque presenta mejoras puntuales en la cobertura del suelo. En Media Loma, los procesos básicos se mantienen estables, pero se observa una pérdida de diversidad vegetal y un deterioro en las pasturas. El estrato Bajo evidencia la evolución más positiva, con mejoras sostenidas en la cobertura, diversidad funcional y funcionamiento del ecosistema.',
   comentarioISE: 'El Índice de Salud Ecosistémica (ISE) muestra una ligera disminución respecto al año anterior, principalmente debido a las condiciones climáticas. Se recomienda continuar con las prácticas de manejo regenerativo.',
   comentarioFinal: 'El establecimiento muestra un compromiso sostenido con la regeneración del ecosistema. Se sugiere continuar con el monitoreo anual para evaluar la evolución de los indicadores.',
+  // Recomendaciones por estrato
+  recomendacion_loma: 'Mantener e incorporar prácticas agrícolas alineadas con el propósito de regeneración, tales como el uso de cultivos de cobertura, intersiembras y rotaciones que contribuyan a mejorar la cobertura del suelo y reducir el impacto sobre los procesos ecológicos.',
+  recomendacion_media_loma: 'Sostener la planificación del pastoreo, ajustando los tiempos de recuperación según la época del año y evaluando la carga animal. Promover la incorporación y mantenimiento de especies perennes, así como asegurar remanentes post-pastoreo suficientemente altos y voluminosos.',
+  recomendacion_bajo: 'Priorizar la acumulación de cobertura, aprovechando los buenos resultados observados para consolidar las mejoras en el funcionamiento de los procesos ecosistémicos.',
 };
 
 export const useDashboardStore = create<DashboardState>()(
@@ -108,6 +124,12 @@ export const useDashboardStore = create<DashboardState>()(
           },
         });
       },
+
+      sidebarCollapsed: false,
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+
+      tourCompleted: false,
+      setTourCompleted: (completed) => set({ tourCompleted: completed }),
 
       addWidget: (tabId, widget) => {
         const { tabs } = get();
@@ -178,7 +200,14 @@ export const useDashboardStore = create<DashboardState>()(
         });
       },
 
-      resetDashboard: () => set({ tabs: defaultTabs, activeTab: 'inicio', selectedWidget: null, editableContent: defaultEditableContent }),
+      resetDashboard: () => set({
+        tabs: defaultTabs,
+        activeTab: 'inicio',
+        selectedWidget: null,
+        editableContent: defaultEditableContent,
+        sidebarCollapsed: false,
+        tourCompleted: false,
+      }),
     }),
     {
       name: 'grass-dashboard-storage',

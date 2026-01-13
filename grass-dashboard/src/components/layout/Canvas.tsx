@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useDashboardStore, generateWidgetId } from '@/lib/dashboard-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+import { Download } from 'lucide-react';
 import type { WidgetConfig, WidgetType } from '@/types/dashboard';
 import { TabInicio } from '@/components/tabs/TabInicio';
 import { TabPlanMonitoreo } from '@/components/tabs/TabPlanMonitoreo';
@@ -11,9 +14,11 @@ import { TabComunidad } from '@/components/tabs/TabComunidad';
 
 export function Canvas() {
   const { activeTab, setActiveTab, tabs, addWidget, isEditing } = useDashboardStore();
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    setIsDraggingOver(false);
     const widgetType = e.dataTransfer.getData('widgetType') as WidgetType;
 
     if (widgetType) {
@@ -35,11 +40,34 @@ export function Canvas() {
     e.dataTransfer.dropEffect = 'copy';
   };
 
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (isEditing) {
+      setIsDraggingOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    // Only set to false if we're leaving the main container
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setIsDraggingOver(false);
+    }
+  };
+
   return (
     <main
-      className="flex-1 overflow-auto bg-gray-50"
+      data-tour="canvas"
+      className={cn(
+        'flex-1 overflow-auto bg-gray-50 transition-all duration-200',
+        isDraggingOver && isEditing && 'bg-[var(--grass-green)]/5 ring-2 ring-inset ring-[var(--grass-green)] ring-opacity-50'
+      )}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
         {/* Tabs de navegación */}
@@ -80,10 +108,24 @@ export function Canvas() {
           </TabsContent>
         </div>
 
-        {/* Indicador de modo edición */}
+        {/* Indicador de modo edición / drop zone */}
         {isEditing && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[var(--grass-green)] text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-            Modo edición activo - Arrastra componentes aquí
+          <div
+            className={cn(
+              'absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full text-sm font-medium shadow-lg transition-all',
+              isDraggingOver
+                ? 'bg-[var(--grass-green)] text-white scale-110'
+                : 'bg-[var(--grass-green)] text-white'
+            )}
+          >
+            {isDraggingOver ? (
+              <span className="flex items-center gap-2">
+                <Download className="w-4 h-4 animate-bounce" />
+                Suelta aquí para agregar
+              </span>
+            ) : (
+              'Modo edición activo - Arrastra componentes aquí'
+            )}
           </div>
         )}
       </Tabs>
