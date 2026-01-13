@@ -99,21 +99,26 @@ export function SugerenciaWidget({
         // Es un gráfico con comentario editable
         if (item.chartType || item.type) {
           const chartType = item.chartType || item.type;
+          const commentValue = editableContent[`sugerencia_comment_${item.id}`] || '';
+          const showCommentSection = isEditing || commentValue.trim() !== '';
+
           return (
             <div className="p-3">
               <div className="h-[200px]">
                 <ChartThumbnail chartType={chartType} title={chartLabels[chartType] || 'Gráfico'} />
               </div>
-              {/* Comentario editable del gráfico */}
-              <div className="mt-3 pt-3 border-t">
-                <EditableText
-                  value={editableContent[`sugerencia_comment_${item.id}`] || ''}
-                  onChange={(value) => updateContent(`sugerencia_comment_${item.id}`, value)}
-                  placeholder="Agregue un comentario sobre este gráfico..."
-                  multiline
-                  className="text-gray-600 text-sm"
-                />
-              </div>
+              {/* Comentario editable del gráfico - solo mostrar si hay contenido o estamos editando */}
+              {showCommentSection && (
+                <div className="mt-3 pt-3 border-t">
+                  <EditableText
+                    value={commentValue}
+                    onChange={(value) => updateContent(`sugerencia_comment_${item.id}`, value)}
+                    placeholder="Agregue un comentario sobre este gráfico..."
+                    multiline
+                    className="text-gray-600 text-sm"
+                  />
+                </div>
+              )}
             </div>
           );
         }
