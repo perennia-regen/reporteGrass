@@ -6,7 +6,7 @@ import { mockDashboardData } from '@/lib/mock-data';
 import { Logo } from '@/components/ui/logo';
 import { useEffect } from 'react';
 
-export default function PreviewClient({ id }: { id: string }) {
+export default function PreviewClient({ }: { id: string }) {
   const { setIsEditing } = useDashboardStore();
   const { establecimiento } = mockDashboardData;
 
@@ -18,43 +18,49 @@ export default function PreviewClient({ id }: { id: string }) {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Header compacto con identificacion del predio */}
-      <header className="border-b bg-[var(--grass-green-dark)] text-white px-3 py-2 sm:px-4 sm:py-2.5 shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="h-16 border-b bg-white px-4 flex items-center shrink-0">
+        <div className="flex items-center gap-4 w-full">
           {/* Logo */}
           <Logo
-            size="sm"
+            size="xl"
             showText={false}
             logoSrc="/logo-grass.png"
             className="shrink-0"
           />
 
-          {/* Info izquierda: nombre y fecha */}
-          <div className="min-w-0">
-            <h1 className="text-sm sm:text-base font-bold text-white truncate">
-              {establecimiento.nombre}
+          {/* Titulo e info */}
+          <div>
+            <h1 className="text-lg font-bold text-black">
+              Informe de Monitoreo
             </h1>
-            <p className="text-xs text-white/80">
-              {establecimiento.fecha} | {establecimiento.codigo}
-            </p>
+            <p className="text-xs text-gray-500">Monitoreo Ambiental GRASS</p>
           </div>
 
           {/* Separador */}
-          <div className="hidden sm:block h-8 w-px bg-white/30" />
+          <div className="hidden sm:block h-8 w-px bg-gray-200" />
 
-          {/* Info derecha: nodo, tecnico, has */}
-          <div className="hidden sm:flex items-center gap-3 text-xs text-white/90">
+          {/* Info del establecimiento */}
+          <div className="hidden sm:block">
+            <p className="font-semibold text-gray-900">{establecimiento.nombre}</p>
+            <p className="text-xs text-gray-500">{establecimiento.fecha}</p>
+          </div>
+
+          {/* Separador */}
+          <div className="hidden md:block h-8 w-px bg-gray-200" />
+
+          {/* Info adicional: nodo, tecnico, has */}
+          <div className="hidden md:flex items-center gap-3 text-xs text-gray-500">
             <span>{establecimiento.nodo}</span>
-            <span className="text-white/50">|</span>
+            <span className="text-gray-300">|</span>
             <span>{establecimiento.tecnico}</span>
-            <span className="text-white/50">|</span>
+            <span className="text-gray-300">|</span>
             <span>{establecimiento.areaTotal} has</span>
           </div>
 
           {/* Info compacta en movil */}
-          <div className="sm:hidden ml-auto text-xs text-white/80 text-right">
-            <span>{establecimiento.nodo}</span>
-            <span className="mx-1">-</span>
-            <span>{establecimiento.areaTotal} has</span>
+          <div className="sm:hidden ml-auto text-xs text-gray-500 text-right">
+            <p className="font-semibold text-gray-900">{establecimiento.nombre}</p>
+            <span>{establecimiento.nodo} - {establecimiento.areaTotal} has</span>
           </div>
         </div>
       </header>

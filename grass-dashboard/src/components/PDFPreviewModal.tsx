@@ -48,6 +48,13 @@ export function PDFPreviewModal({
     return grouped;
   }, []);
 
+  const handleApplyChanges = useCallback(() => {
+    setAppliedSections([...pendingSections]);
+  }, [pendingSections]);
+
+  // Key estable para el PDFViewer basado en las secciones aplicadas
+  const pdfKey = useMemo(() => appliedSections.sort().join(','), [appliedSections]);
+
   if (!isOpen) return null;
 
   const handleToggleSection = (sectionId: PDFSection) => {
@@ -77,10 +84,6 @@ export function PDFPreviewModal({
     setPendingSections([]);
   };
 
-  const handleApplyChanges = useCallback(() => {
-    setAppliedSections([...pendingSections]);
-  }, [pendingSections]);
-
   const handleDownload = async () => {
     if (appliedSections.length === 0) return;
 
@@ -107,9 +110,6 @@ export function PDFPreviewModal({
     const selectedCount = tabSections.filter(s => pendingSections.includes(s.id)).length;
     return selectedCount > 0 && selectedCount < tabSections.length;
   };
-
-  // Key estable para el PDFViewer basado en las secciones aplicadas
-  const pdfKey = useMemo(() => appliedSections.sort().join(','), [appliedSections]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">

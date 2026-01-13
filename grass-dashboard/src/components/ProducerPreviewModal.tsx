@@ -137,39 +137,42 @@ function ProducerView({
   return (
     <div className="min-h-full">
       {/* Header compacto con identificacion del predio */}
-      <header className="bg-[var(--grass-green-dark)] text-white px-3 py-2">
-        <div className="flex items-center gap-3">
+      <header className={`border-b bg-white flex items-center ${isMobile ? 'px-3 py-2' : 'h-14 px-4'}`}>
+        <div className="flex items-center gap-3 w-full">
           <Logo
-            size="sm"
+            size={isMobile ? 'sm' : 'md'}
             showText={false}
             logoSrc="/logo-grass.png"
             className="shrink-0"
           />
-          <div className="min-w-0 flex-1">
-            <h1 className={`font-bold text-white truncate ${isMobile ? 'text-sm' : 'text-base'}`}>
-              {establecimiento.nombre}
+          <div className="min-w-0">
+            <h1 className={`font-bold text-black truncate ${isMobile ? 'text-sm' : 'text-base'}`}>
+              Informe de Monitoreo
             </h1>
-            <p className="text-xs text-white/80">
-              {establecimiento.fecha} | {establecimiento.codigo}
+            <p className={`text-gray-500 ${isMobile ? 'text-xs' : 'text-xs'}`}>
+              {establecimiento.nombre}
             </p>
           </div>
           {!isMobile && (
             <>
-              <div className="h-8 w-px bg-white/30" />
-              <div className="flex items-center gap-3 text-xs text-white/90">
+              <div className="h-8 w-px bg-gray-200" />
+              <div className="text-xs text-gray-500">
+                <p className="font-semibold text-gray-900">{establecimiento.fecha}</p>
+                <p>{establecimiento.codigo}</p>
+              </div>
+              <div className="h-8 w-px bg-gray-200" />
+              <div className="flex items-center gap-3 text-xs text-gray-500">
                 <span>{establecimiento.nodo}</span>
-                <span className="text-white/50">|</span>
+                <span className="text-gray-300">|</span>
                 <span>{establecimiento.tecnico}</span>
-                <span className="text-white/50">|</span>
+                <span className="text-gray-300">|</span>
                 <span>{establecimiento.areaTotal} has</span>
               </div>
             </>
           )}
           {isMobile && (
-            <div className="text-xs text-white/80 text-right">
-              <span>{establecimiento.nodo}</span>
-              <span className="mx-1">-</span>
-              <span>{establecimiento.areaTotal} has</span>
+            <div className="ml-auto text-xs text-gray-500 text-right">
+              <span>{establecimiento.fecha}</span>
             </div>
           )}
         </div>

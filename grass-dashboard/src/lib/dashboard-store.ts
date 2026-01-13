@@ -125,7 +125,7 @@ export const useDashboardStore = create<DashboardState>()(
       activeTab: 'inicio',
       setActiveTab: (tabId) => set({ activeTab: tabId }),
 
-      isEditing: false,
+      isEditing: true,
       setIsEditing: (editing) => set({ isEditing: editing, selectedWidget: editing ? get().selectedWidget : null }),
 
       selectedWidget: null,
