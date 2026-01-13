@@ -87,6 +87,9 @@ interface DashboardState {
   removeSugerenciaItem: (id: string) => void;
   reorderSugerenciaItems: (fromIndex: number, toIndex: number) => void;
   setSugerenciaItems: (items: SugerenciaItem[]) => void;
+
+  // Reordenar widgets
+  reorderWidgets: (tabId: string, fromIndex: number, toIndex: number) => void;
 }
 
 // Configuración inicial de tabs
@@ -306,6 +309,23 @@ export const useDashboardStore = create<DashboardState>()(
 
       setSugerenciaItems: (items) => {
         set({ sugerenciaItems: items });
+      },
+
+      reorderWidgets: (tabId, fromIndex, toIndex) => {
+        const { tabs } = get();
+        const newTabs = tabs.map((tab) => {
+          if (tab.id === tabId) {
+            const newWidgets = [...tab.widgets];
+            const [removed] = newWidgets.splice(fromIndex, 1);
+            newWidgets.splice(toIndex, 0, removed);
+            return {
+              ...tab,
+              widgets: newWidgets,
+            };
+          }
+          return tab;
+        });
+        set({ tabs: newTabs });
       },
     }),
     {

@@ -28,7 +28,7 @@ interface GridEditorProps {
 }
 
 export function GridEditor({ widgets, tabId }: GridEditorProps) {
-  const { isEditing, updateWidget, selectedWidget, setSelectedWidget } = useDashboardStore();
+  const { isEditing, reorderWidgets, selectedWidget, setSelectedWidget } = useDashboardStore();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -51,17 +51,11 @@ export function GridEditor({ widgets, tabId }: GridEditorProps) {
     setActiveId(null);
 
     if (over && active.id !== over.id) {
-      // Intercambiar posiciones
-      const activeWidget = widgets.find((w) => w.id === active.id);
-      const overWidget = widgets.find((w) => w.id === over.id);
+      const oldIndex = widgets.findIndex((w) => w.id === active.id);
+      const newIndex = widgets.findIndex((w) => w.id === over.id);
 
-      if (activeWidget && overWidget) {
-        updateWidget(tabId, activeWidget.id, {
-          gridPosition: { ...overWidget.gridPosition },
-        });
-        updateWidget(tabId, overWidget.id, {
-          gridPosition: { ...activeWidget.gridPosition },
-        });
+      if (oldIndex !== -1 && newIndex !== -1) {
+        reorderWidgets(tabId, oldIndex, newIndex);
       }
     }
   };
