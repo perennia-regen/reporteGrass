@@ -4,10 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Colores base del sistema */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -37,6 +36,26 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  
+  /* Colores GRASS personalizados - Modifica estos valores */
+  --color-grass-green: var(--grass-green);
+  --color-grass-green-dark: var(--grass-green-dark);
+  --color-grass-green-light: var(--grass-green-light);
+  --color-grass-orange: var(--grass-orange);
+  --color-grass-brown: var(--grass-brown);
+  --color-grass-yellow: var(--grass-yellow);
+  
+  /* Colores de estratos */
+  --color-estrato-loma: var(--estrato-loma);
+  --color-estrato-media-loma: var(--estrato-media-loma);
+  --color-estrato-bajo: var(--estrato-bajo);
+  
+  /* Tipografías - Modifica estas variables */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display, var(--font-geist-sans));
+  
+  /* Border radius */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -47,7 +66,14 @@
 }
 
 :root {
+  /* ============================================
+     CONFIGURACIÓN PERSONALIZABLE - MODIFICA AQUÍ
+     ============================================ */
+  
+  /* Border radius base */
   --radius: 0.625rem;
+  
+  /* Colores base del sistema */
   --background: oklch(0.98 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -57,18 +83,21 @@
   --primary: oklch(0.55 0.15 145);
   --primary-foreground: oklch(0.985 0 0);
 
-  /* GRASS Theme Colors */
-  --grass-green: #4CAF50;
-  --grass-green-dark: #2E7D32;
-  --grass-green-light: #81C784;
-  --grass-orange: #E65100;
-  --grass-brown: #8D6E63;
-  --grass-yellow: #FFC107;
+  /* ============================================
+     PALETA DE COLORES GRASS
+     Modifica estos valores para cambiar los colores
+     ============================================ */
+  --grass-green: #8aca53;           /* Verde principal del logo */
+  --grass-green-dark: #507531;      /* Verde oscuro para títulos */
+  --grass-green-light: #b1ff6d;      /* Verde claro para acentos */
+  --grass-orange: #ff5900;          /* Naranja para procesos */
+  --grass-brown: #252525;           /* Marrón para ciclos minerales */
+  --grass-yellow: #FFC107;          /* Amarillo para flujo de energía */
 
-  /* Estratos */
-  --estrato-loma: #1565C0;
-  --estrato-media-loma: #42A5F5;
-  --estrato-bajo: #EF9A9A;
+  /* Colores de estratos */
+  --estrato-loma: #313b2e;          /* Azul oscuro - Loma */
+  --estrato-media-loma: #6cb460;    /* Azul claro - Media loma */
+  --estrato-bajo: #75e192;          /* Rosa claro - Bajo */
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
