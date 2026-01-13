@@ -17,7 +17,7 @@ export function ChartThumbnail({ chartType, title, showAxes = true }: ChartThumb
   return (
     <>
       <div
-        className="relative w-full h-full min-h-[120px] bg-white rounded border border-gray-200 overflow-hidden cursor-pointer"
+        className="relative w-full h-[120px] bg-white rounded border border-gray-200 overflow-hidden cursor-pointer"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
