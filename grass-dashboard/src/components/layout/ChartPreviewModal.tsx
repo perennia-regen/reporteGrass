@@ -3,6 +3,7 @@
 import { X } from 'lucide-react';
 import { mockDashboardData } from '@/lib/mock-data';
 import { grassTheme, ISE_THRESHOLD } from '@/styles/grass-theme';
+import { getEstratoColor } from '@/lib/utils';
 import {
   BarChart,
   Bar,
@@ -84,6 +85,7 @@ export function ChartByType({ chartType, showLabels = true, compact = false }: C
       const data = Object.entries(ise.porEstrato).map(([nombre, valor]) => ({
         nombre,
         ISE: valor,
+        color: getEstratoColor(nombre),
       }));
       return (
         <ResponsiveContainer width="100%" height="100%">
@@ -98,7 +100,11 @@ export function ChartByType({ chartType, showLabels = true, compact = false }: C
             />
             {showLabels && <Tooltip />}
             <ReferenceLine x={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" />
-            <Bar dataKey="ISE" fill={grassTheme.colors.estratos.mediaLoma} radius={[0, 4, 4, 0]} />
+            <Bar dataKey="ISE" radius={[0, 4, 4, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={index} fill={entry.color} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       );

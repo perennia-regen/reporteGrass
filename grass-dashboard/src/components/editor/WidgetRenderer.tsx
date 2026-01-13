@@ -2,9 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockDashboardData } from '@/lib/mock-data';
-import { ISE_THRESHOLD } from '@/styles/grass-theme';
+import { ISE_THRESHOLD, grassTheme } from '@/styles/grass-theme';
 import type { WidgetConfig } from '@/types/dashboard';
 import { ChartByType } from '@/components/layout/ChartPreviewModal';
+import { getEstratoColor } from '@/lib/utils';
 import {
   BarChart,
   Bar,
@@ -95,6 +96,7 @@ function BarChartWidget({ widget, ise }: { widget: WidgetConfig; ise: typeof moc
   const data = Object.entries(ise.porEstrato).map(([nombre, valor]) => ({
     nombre,
     ISE: valor,
+    color: getEstratoColor(nombre),
   }));
 
   return (
@@ -110,7 +112,11 @@ function BarChartWidget({ widget, ise }: { widget: WidgetConfig; ise: typeof moc
             <YAxis dataKey="nombre" type="category" width={70} fontSize={12} />
             <Tooltip />
             <ReferenceLine x={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" />
-            <Bar dataKey="ISE" fill="#8D6E63" radius={[0, 4, 4, 0]} />
+            <Bar dataKey="ISE" radius={[0, 4, 4, 0]}>
+              {data.map((entry, index) => (
+                <Cell key={index} fill={entry.color} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
@@ -146,10 +152,10 @@ function LineChartWidget({
             <XAxis dataKey="fecha" fontSize={10} />
             <YAxis domain={[0, 100]} fontSize={10} />
             <Tooltip />
-            <Line type="monotone" dataKey="Ciclo Agua" stroke="#E65100" strokeWidth={2} dot={{ r: 3 }} />
-            <Line type="monotone" dataKey="Ciclo Mineral" stroke="#8D6E63" strokeWidth={2} dot={{ r: 3 }} />
-            <Line type="monotone" dataKey="Flujo Energía" stroke="#2E7D32" strokeWidth={2} dot={{ r: 3 }} />
-            <Line type="monotone" dataKey="Din. Comunidades" stroke="#FFC107" strokeWidth={2} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="Ciclo Agua" stroke={grassTheme.colors.procesos.cicloAgua} strokeWidth={2} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="Ciclo Mineral" stroke={grassTheme.colors.procesos.cicloMineral} strokeWidth={2} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="Flujo Energía" stroke={grassTheme.colors.procesos.flujoEnergia} strokeWidth={2} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="Din. Comunidades" stroke={grassTheme.colors.procesos.dinamicaComunidades} strokeWidth={2} dot={{ r: 3 }} />
           </LineChart>
         </ResponsiveContainer>
       </CardContent>

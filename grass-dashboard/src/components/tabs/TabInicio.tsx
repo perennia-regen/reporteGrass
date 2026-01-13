@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { mockDashboardData } from '@/lib/mock-data';
-import { ISE_THRESHOLD } from '@/styles/grass-theme';
+import { ISE_THRESHOLD, grassTheme } from '@/styles/grass-theme';
 import { useDashboardStore, type KPIType } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
+import { getEstratoColor } from '@/lib/utils';
 import { SugerenciasSection } from '@/components/sugerencias';
 import { PhotoGalleryModal } from '@/components/PhotoGalleryModal';
 import type { FotoMonitoreo } from '@/types/dashboard';
@@ -328,9 +329,28 @@ export function TabInicio() {
   // KPIs actualmente en uso
   const getUsedKPIs = () => [kpi1, kpi2, kpi3];
 
+  // Función para calcular color de gradiente basado en valor ISE (0-100)
+  // Verde brillante (#22c55e) para valores altos → Verde oscuro (#14532d) para valores bajos
+  const getISEGradientColor = (valor: number): string => {
+    // Normalizar valor entre 0 y 100
+    const normalized = Math.max(0, Math.min(100, valor)) / 100;
+
+    // Colores: verde brillante (alto) → verde oscuro (bajo)
+    // #22c55e (RGB: 34, 197, 94) → #14532d (RGB: 20, 83, 45)
+    const r = Math.round(20 + (34 - 20) * normalized);
+    const g = Math.round(83 + (197 - 83) * normalized);
+    const b = Math.round(45 + (94 - 45) * normalized);
+
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
   const renderChart = (chartType: ChartType) => {
     switch (chartType) {
       case 'evolucion-ise':
+        // Encontrar el valor máximo y mínimo para la leyenda del gradiente
+        const maxISE = Math.max(...ise.historico.map(p => p.valor));
+        const minISE = Math.min(...ise.historico.map(p => p.valor));
+
         return (
           <div className="h-48">
             <div className="flex items-end justify-between h-full gap-2 px-4 pb-4">
@@ -340,7 +360,7 @@ export function TabInicio() {
                     className="w-full rounded-t transition-all duration-500"
                     style={{
                       height: `${Math.max(punto.valor * 1.5, 10)}px`,
-                      backgroundColor: punto.valor >= ISE_THRESHOLD ? 'var(--grass-green)' : 'var(--grass-brown)',
+                      backgroundColor: getISEGradientColor(punto.valor),
                     }}
                   />
                   <span className="text-xs mt-2 text-gray-600">{punto.fecha}</span>
@@ -350,10 +370,15 @@ export function TabInicio() {
             </div>
             <div className="px-4 mt-2 border-t pt-2">
               <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-                <div className="w-3 h-3 bg-[var(--grass-green)] rounded" />
-                <span>≥ {ISE_THRESHOLD} (Deseable)</span>
-                <div className="w-3 h-3 bg-[var(--grass-brown)] rounded ml-4" />
-                <span>&lt; {ISE_THRESHOLD}</span>
+                <div
+                  className="w-16 h-3 rounded"
+                  style={{
+                    background: `linear-gradient(to right, ${getISEGradientColor(0)}, ${getISEGradientColor(50)}, ${getISEGradientColor(100)})`
+                  }}
+                />
+                <span>0</span>
+                <span className="mx-1">→</span>
+                <span>100 (Mayor = Mejor)</span>
               </div>
             </div>
           </div>
@@ -372,7 +397,7 @@ export function TabInicio() {
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${Math.max(porcentaje, 0)}%`,
-                        backgroundColor: valor >= ISE_THRESHOLD ? 'var(--grass-green)' : 'var(--grass-brown)',
+                        backgroundColor: getEstratoColor(estrato),
                       }}
                     />
                     <div
@@ -393,10 +418,10 @@ export function TabInicio() {
       case 'procesos':
         const procesos = mockDashboardData.procesos;
         const procesosLabels = [
-          { key: 'cicloAgua', label: 'Ciclo del Agua', color: '#3B82F6' },
-          { key: 'cicloMineral', label: 'Ciclo Mineral', color: '#8B5CF6' },
-          { key: 'flujoEnergia', label: 'Flujo de Energía', color: '#F59E0B' },
-          { key: 'dinamicaComunidades', label: 'Dinámica Comunidades', color: '#10B981' },
+          { key: 'cicloAgua', label: 'Ciclo del Agua', color: grassTheme.colors.procesos.cicloAgua },
+          { key: 'cicloMineral', label: 'Ciclo Mineral', color: grassTheme.colors.procesos.cicloMineral },
+          { key: 'flujoEnergia', label: 'Flujo de Energía', color: grassTheme.colors.procesos.flujoEnergia },
+          { key: 'dinamicaComunidades', label: 'Dinámica Comunidades', color: grassTheme.colors.procesos.dinamicaComunidades },
         ];
         return (
           <div className="space-y-3 p-4">
@@ -427,23 +452,35 @@ export function TabInicio() {
                 <div key={index} className="flex flex-col items-center flex-1">
                   <div className="flex items-end gap-0.5 h-32">
                     <div
-                      className="w-3 rounded-t bg-blue-500"
-                      style={{ height: `${punto.valores.cicloAgua}%` }}
+                      className="w-3 rounded-t"
+                      style={{ 
+                        height: `${punto.valores.cicloAgua}%`,
+                        backgroundColor: grassTheme.colors.procesos.cicloAgua
+                      }}
                       title="Ciclo Agua"
                     />
                     <div
-                      className="w-3 rounded-t bg-purple-500"
-                      style={{ height: `${punto.valores.cicloMineral}%` }}
+                      className="w-3 rounded-t"
+                      style={{ 
+                        height: `${punto.valores.cicloMineral}%`,
+                        backgroundColor: grassTheme.colors.procesos.cicloMineral
+                      }}
                       title="Ciclo Mineral"
                     />
                     <div
-                      className="w-3 rounded-t bg-amber-500"
-                      style={{ height: `${punto.valores.flujoEnergia}%` }}
+                      className="w-3 rounded-t"
+                      style={{ 
+                        height: `${punto.valores.flujoEnergia}%`,
+                        backgroundColor: grassTheme.colors.procesos.flujoEnergia
+                      }}
                       title="Flujo Energía"
                     />
                     <div
-                      className="w-3 rounded-t bg-emerald-500"
-                      style={{ height: `${punto.valores.dinamicaComunidades}%` }}
+                      className="w-3 rounded-t"
+                      style={{ 
+                        height: `${punto.valores.dinamicaComunidades}%`,
+                        backgroundColor: grassTheme.colors.procesos.dinamicaComunidades
+                      }}
                       title="Dinámica"
                     />
                   </div>

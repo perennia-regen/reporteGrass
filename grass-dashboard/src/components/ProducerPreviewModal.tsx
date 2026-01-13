@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
 import { mockDashboardData } from '@/lib/mock-data';
 import { useDashboardStore } from '@/lib/dashboard-store';
-import { ISE_THRESHOLD } from '@/styles/grass-theme';
+import { ISE_THRESHOLD, grassTheme } from '@/styles/grass-theme';
+import { getEstratoColor } from '@/lib/utils';
 import { X, Smartphone, Monitor } from 'lucide-react';
 
 interface ProducerPreviewModalProps {
@@ -185,33 +186,35 @@ function ProducerView({
           <h3 className={`font-semibold text-[var(--grass-green-dark)] mb-3 ${isMobile ? 'text-sm' : 'text-base'}`}>
             Datos Destacados
           </h3>
-          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-4 gap-3'}`}>
-            <KPICard
-              value={ise.promedio.toFixed(1)}
-              label="ISE Promedio"
-              color="var(--grass-green-dark)"
-              sublabel={ise.promedio >= ISE_THRESHOLD ? 'Deseable' : `${(ISE_THRESHOLD - ise.promedio).toFixed(1)} pts bajo umbral`}
-              isDesirable={ise.promedio >= ISE_THRESHOLD}
-              isMobile={isMobile}
-            />
-            <KPICard
-              value={String(establecimiento.areaTotal)}
-              label="Hectareas"
-              color="var(--grass-brown)"
-              isMobile={isMobile}
-            />
-            <KPICard
-              value={estratos.reduce((sum, e) => sum + e.estaciones, 0).toString()}
-              label="Sitios MCP"
-              color="var(--estrato-loma)"
-              isMobile={isMobile}
-            />
-            <KPICard
-              value={estratos.length.toString()}
-              label="Estratos"
-              color="var(--grass-orange)"
-              isMobile={isMobile}
-            />
+          <div className={`flex justify-center ${isMobile ? '' : ''}`}>
+            <div className={`grid ${isMobile ? 'grid-cols-2 gap-2 w-full' : 'grid-cols-4 gap-3 max-w-4xl'}`}>
+              <KPICard
+                value={ise.promedio.toFixed(1)}
+                label="ISE Promedio"
+                color="var(--grass-green-dark)"
+                sublabel={ise.promedio >= ISE_THRESHOLD ? 'Deseable' : `${(ISE_THRESHOLD - ise.promedio).toFixed(1)} pts bajo umbral`}
+                isDesirable={ise.promedio >= ISE_THRESHOLD}
+                isMobile={isMobile}
+              />
+              <KPICard
+                value={String(establecimiento.areaTotal)}
+                label="Hectareas"
+                color="var(--grass-brown)"
+                isMobile={isMobile}
+              />
+              <KPICard
+                value={estratos.reduce((sum, e) => sum + e.estaciones, 0).toString()}
+                label="Sitios MCP"
+                color="var(--estrato-loma)"
+                isMobile={isMobile}
+              />
+              <KPICard
+                value={estratos.length.toString()}
+                label="Estratos"
+                color="var(--grass-orange)"
+                isMobile={isMobile}
+              />
+            </div>
           </div>
         </section>
 
@@ -232,7 +235,7 @@ function ProducerView({
                     className="h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${Math.max(valor, 0)}%`,
-                      backgroundColor: valor >= ISE_THRESHOLD ? 'var(--grass-green)' : 'var(--grass-brown)',
+                      backgroundColor: getEstratoColor(estrato),
                     }}
                   />
                   <div
@@ -255,10 +258,10 @@ function ProducerView({
           </h3>
           <div className="space-y-2">
             {[
-              { key: 'cicloAgua', label: 'Ciclo del Agua', color: '#3B82F6' },
-              { key: 'cicloMineral', label: 'Ciclo Mineral', color: '#8B5CF6' },
-              { key: 'flujoEnergia', label: 'Flujo de Energia', color: '#F59E0B' },
-              { key: 'dinamicaComunidades', label: 'Dinamica Comunidades', color: '#10B981' },
+              { key: 'cicloAgua', label: 'Ciclo del Agua', color: grassTheme.colors.procesos.cicloAgua },
+              { key: 'cicloMineral', label: 'Ciclo Mineral', color: grassTheme.colors.procesos.cicloMineral },
+              { key: 'flujoEnergia', label: 'Flujo de Energia', color: grassTheme.colors.procesos.flujoEnergia },
+              { key: 'dinamicaComunidades', label: 'Dinamica Comunidades', color: grassTheme.colors.procesos.dinamicaComunidades },
             ].map(({ key, label, color }) => (
               <div key={key}>
                 <div className="flex justify-between items-center mb-1">

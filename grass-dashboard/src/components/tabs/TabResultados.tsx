@@ -20,6 +20,7 @@ import { mockDashboardData } from '@/lib/mock-data';
 import { ISE_THRESHOLD, grassTheme } from '@/styles/grass-theme';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
+import { getEstratoColor } from '@/lib/utils';
 import {
   BarChart,
   Bar,
@@ -32,6 +33,7 @@ import {
   ReferenceLine,
   LineChart,
   Line,
+  Cell,
 } from 'recharts';
 
 // Mapeo de abreviaciones a descripciones completas para tooltips
@@ -76,15 +78,6 @@ const indicadoresConfig = [
   { key: 'estructuraSuelo', abbr: 'Est.S', name: 'Estructura del Suelo' },
 ];
 
-// Helper para obtener color de estrato por nombre
-const getEstratoColor = (nombre: string) => {
-  const map: Record<string, string> = {
-    'Loma': grassTheme.colors.estratos.loma,
-    'Media Loma': grassTheme.colors.estratos.mediaLoma,
-    'Bajo': grassTheme.colors.estratos.bajo,
-  };
-  return map[nombre] || '#888';
-};
 
 // Configuración de indicadores por proceso ecosistémico
 const procesosDeterminantes = {
@@ -414,7 +407,7 @@ export function TabResultados() {
   const iseEstratoData = Object.entries(ise.porEstrato).map(([nombre, valor]) => ({
     nombre,
     ISE: valor,
-    fill: valor >= ISE_THRESHOLD ? '#4CAF50' : '#8D6E63',
+    color: getEstratoColor(nombre),
   }));
 
   // Preparar datos para evolución ISE
@@ -431,10 +424,10 @@ export function TabResultados() {
 
   // Preparar datos para procesos ecosistémicos
   const procesosData = [
-    { proceso: 'Ciclo del Agua', valor: procesos.cicloAgua, fill: '#E65100' },
-    { proceso: 'Ciclo Mineral', valor: procesos.cicloMineral, fill: '#8D6E63' },
-    { proceso: 'Flujo de Energía', valor: procesos.flujoEnergia, fill: '#2E7D32' },
-    { proceso: 'Din. Comunidades', valor: procesos.dinamicaComunidades, fill: '#FFC107' },
+    { proceso: 'Ciclo del Agua', valor: procesos.cicloAgua, fill: grassTheme.colors.procesos.cicloAgua },
+    { proceso: 'Ciclo Mineral', valor: procesos.cicloMineral, fill: grassTheme.colors.procesos.cicloMineral },
+    { proceso: 'Flujo de Energía', valor: procesos.flujoEnergia, fill: grassTheme.colors.procesos.flujoEnergia },
+    { proceso: 'Din. Comunidades', valor: procesos.dinamicaComunidades, fill: grassTheme.colors.procesos.dinamicaComunidades },
   ];
 
   // Preparar datos para evolución de procesos
@@ -479,7 +472,11 @@ export function TabResultados() {
                   <Tooltip />
                   <ReferenceLine x={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" label={{ value: 'Deseable', position: 'top' }} />
                   <ReferenceLine x={ise.promedio} stroke="#E65100" strokeDasharray="3 3" label={{ value: `Prom: ${ise.promedio}`, position: 'bottom' }} />
-                  <Bar dataKey="ISE" fill="#8D6E63" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="ISE" radius={[0, 4, 4, 0]}>
+                    {iseEstratoData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
               <EditableText
@@ -506,7 +503,7 @@ export function TabResultados() {
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
                   <ReferenceLine y={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" label="Deseable" />
-                  <Bar dataKey="ISE" fill="#8D6E63" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="ISE" fill={grassTheme.colors.primary.green} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
               <EditableText

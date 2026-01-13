@@ -42,39 +42,41 @@ export function TabPlanMonitoreo() {
       </div>
 
       {/* Resumen de área */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-2xl font-bold text-[var(--grass-green-dark)]">
-              {establecimiento.areaTotal} has
-            </p>
-            <p className="text-sm text-gray-500">Área Total</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-2xl font-bold text-[var(--estrato-loma)]">
-              {totalSuperficie.toFixed(0)} has
-            </p>
-            <p className="text-sm text-gray-500">Área de Monitoreo</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-2xl font-bold text-[var(--grass-brown)]">
-              {totalEstaciones}
-            </p>
-            <p className="text-sm text-gray-500">Sitios MCP</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-2xl font-bold text-[var(--grass-orange)]">
-              {estratos.length}
-            </p>
-            <p className="text-sm text-gray-500">Estratos</p>
-          </CardContent>
-        </Card>
+      <div className="flex justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full max-w-4xl">
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-2xl font-bold text-[var(--grass-green-dark)]">
+                {establecimiento.areaTotal} has
+              </p>
+              <p className="text-sm text-gray-500">Área Total</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-2xl font-bold text-[var(--estrato-loma)]">
+                {totalSuperficie.toFixed(0)} has
+              </p>
+              <p className="text-sm text-gray-500">Área de Monitoreo</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-2xl font-bold text-[var(--grass-brown)]">
+                {totalEstaciones}
+              </p>
+              <p className="text-sm text-gray-500">Sitios MCP</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-2xl font-bold text-[var(--grass-orange)]">
+                {estratos.length}
+              </p>
+              <p className="text-sm text-gray-500">Estratos</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Mapa y tabla lado a lado */}
