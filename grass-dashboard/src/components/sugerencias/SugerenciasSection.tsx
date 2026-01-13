@@ -271,20 +271,24 @@ export function SugerenciasSection() {
           <div className="grid grid-cols-6 gap-4">
             {sugerenciaItems.map((item, index) => {
               const isDragging = draggedIndex === index;
-              const isDropTarget = dragOverIndex === index && draggedIndex !== index;
+              const isDropTarget = dragOverIndex === index && draggedIndex !== null && draggedIndex !== index;
 
               return (
                 <div
                   key={item.id}
-                  className={`${getGridClass(item.colSpan)} transition-all duration-200 ${
-                    isDragging ? 'opacity-40 scale-95' : ''
-                  } ${isDropTarget ? 'ring-2 ring-[var(--grass-green)] ring-offset-2' : ''}`}
+                  className={`${getGridClass(item.colSpan)} transition-opacity duration-150 relative ${
+                    isDragging ? 'opacity-40' : ''
+                  }`}
                   draggable={isEditing}
                   onDragStart={(e) => handleWidgetDragStart(e, index)}
                   onDragOver={(e) => handleWidgetDragOver(e, index)}
                   onDrop={handleWidgetDrop}
                   onDragEnd={handleWidgetDragEnd}
                 >
+                  {/* Indicador de drop a la izquierda */}
+                  {isDropTarget && (
+                    <div className="absolute -left-2 top-0 bottom-0 w-1 bg-[var(--grass-green)] rounded-full z-20" />
+                  )}
                   <SugerenciaWidget
                     item={item}
                     onRemove={() => removeSugerenciaItem(item.id)}
