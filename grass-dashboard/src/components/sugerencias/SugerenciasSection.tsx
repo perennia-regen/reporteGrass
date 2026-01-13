@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useDashboardStore } from '@/lib/dashboard-store';
@@ -64,17 +64,6 @@ export function SugerenciasSection() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Calcular el orden visual con preview del drag
-  const displayItems = useMemo(() => {
-    if (draggedIndex === null || dragOverIndex === null || draggedIndex === dragOverIndex) {
-      return sugerenciaItems;
-    }
-
-    const items = [...sugerenciaItems];
-    const [draggedItem] = items.splice(draggedIndex, 1);
-    items.splice(dragOverIndex, 0, draggedItem);
-    return items;
-  }, [sugerenciaItems, draggedIndex, dragOverIndex]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -148,13 +137,17 @@ export function SugerenciasSection() {
 
   const handleWidgetDragOver = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
     if (draggedIndex !== null && targetIndex !== dragOverIndex) {
       setDragOverIndex(targetIndex);
     }
   };
 
-  const handleWidgetDrop = () => {
+  const handleWidgetDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     // Calcular el nuevo orden directamente desde sugerenciaItems
     if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
       const items = [...sugerenciaItems];
@@ -273,21 +266,21 @@ export function SugerenciasSection() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* Grid de items con layout dinámico y preview visual */}
+        {/* Grid de items con layout dinámico */}
         {sugerenciaItems.length > 0 && (
           <div className="grid grid-cols-6 gap-4">
-            {displayItems.map((item, index) => {
-              const originalIndex = sugerenciaItems.findIndex(i => i.id === item.id);
-              const isDragging = draggedIndex === originalIndex;
+            {sugerenciaItems.map((item, index) => {
+              const isDragging = draggedIndex === index;
+              const isDropTarget = dragOverIndex === index && draggedIndex !== index;
 
               return (
                 <div
                   key={item.id}
                   className={`${getGridClass(item.colSpan)} transition-all duration-200 ${
                     isDragging ? 'opacity-40 scale-95' : ''
-                  }`}
+                  } ${isDropTarget ? 'ring-2 ring-[var(--grass-green)] ring-offset-2' : ''}`}
                   draggable={isEditing}
-                  onDragStart={(e) => handleWidgetDragStart(e, originalIndex)}
+                  onDragStart={(e) => handleWidgetDragStart(e, index)}
                   onDragOver={(e) => handleWidgetDragOver(e, index)}
                   onDrop={handleWidgetDrop}
                   onDragEnd={handleWidgetDragEnd}
