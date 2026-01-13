@@ -1,31 +1,41 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { mockDashboardData } from '@/lib/mock-data';
 import { PDFPreviewModal } from '@/components/PDFPreviewModal';
+import { createShareUrl, type ShareableState } from '@/lib/url-state';
 import { Eye, Send, Printer, ChevronDown, Link2, Pencil, Check, ExternalLink, Home } from 'lucide-react';
 import NextLink from 'next/link';
 
 export function Header() {
-  const { isEditing, setIsEditing, editableContent } = useDashboardStore();
+  const { isEditing, setIsEditing, editableContent, selectedKPIs, sugerenciaItems } = useDashboardStore();
   const { establecimiento } = mockDashboardData;
   const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [showSendDropdown, setShowSendDropdown] = useState(false);
   const [showToast, setShowToast] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Generar ID para preview
-  const previewId = btoa(JSON.stringify({
-    timestamp: Date.now(),
-    establecimiento: establecimiento.nombre,
-  })).substring(0, 12);
+  // Crear estado compartible con la configuración actual
+  const shareableState: ShareableState = useMemo(() => ({
+    kpis: selectedKPIs,
+    content: editableContent,
+    sug: sugerenciaItems,
+    v: 1, // versión del formato
+  }), [selectedKPIs, editableContent, sugerenciaItems]);
 
-  const shareUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/preview/${previewId}`
-    : `/preview/${previewId}`;
+  // Generar URL con estado incluido
+  const shareUrl = useMemo(() => {
+    if (typeof window === 'undefined') return '/preview/';
+    return createShareUrl(window.location.origin, shareableState, establecimiento.nombre);
+  }, [shareableState, establecimiento.nombre]);
+
+  // ID corto para el path
+  const previewId = useMemo(() => {
+    return btoa(establecimiento.nombre).substring(0, 8);
+  }, [establecimiento.nombre]);
 
   // Cerrar dropdown al hacer click afuera
   useEffect(() => {

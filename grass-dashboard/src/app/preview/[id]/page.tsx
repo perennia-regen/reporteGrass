@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import PreviewClient from './preview-client';
 
 type PageProps = {
@@ -22,5 +23,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function PreviewPage({ params }: PageProps) {
   const { id } = await params;
 
-  return <PreviewClient id={id} />;
+  return (
+    <Suspense fallback={<div className="h-screen flex items-center justify-center">Cargando...</div>}>
+      <PreviewClient id={id} />
+    </Suspense>
+  );
 }

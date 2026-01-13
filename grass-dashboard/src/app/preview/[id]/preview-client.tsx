@@ -5,15 +5,41 @@ import { useDashboardStore } from '@/lib/dashboard-store';
 import { mockDashboardData } from '@/lib/mock-data';
 import { Logo } from '@/components/ui/logo';
 import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { deserializeState } from '@/lib/url-state';
 
 export default function PreviewClient({ }: { id: string }) {
-  const { setIsEditing } = useDashboardStore();
+  const { setIsEditing, setSelectedKPIs, setSugerenciaItems } = useDashboardStore();
+  const updateContent = useDashboardStore((state) => state.updateContent);
   const { establecimiento } = mockDashboardData;
+  const searchParams = useSearchParams();
 
-  // En modo preview, desactivar la edición
+  // En modo preview: desactivar edición y cargar estado desde URL
   useEffect(() => {
     setIsEditing(false);
-  }, [setIsEditing]);
+
+    // Leer estado de la URL
+    const stateParam = searchParams.get('s');
+    if (stateParam) {
+      const state = deserializeState(stateParam);
+      if (state) {
+        // Aplicar KPIs
+        if (state.kpis) {
+          setSelectedKPIs(state.kpis);
+        }
+        // Aplicar contenido editable
+        if (state.content) {
+          Object.entries(state.content).forEach(([key, value]) => {
+            updateContent(key, value);
+          });
+        }
+        // Aplicar sugerencias
+        if (state.sug) {
+          setSugerenciaItems(state.sug);
+        }
+      }
+    }
+  }, [setIsEditing, searchParams, setSelectedKPIs, updateContent, setSugerenciaItems]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
