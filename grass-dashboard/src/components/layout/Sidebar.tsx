@@ -2,6 +2,9 @@
 
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { WidgetType } from '@/types/dashboard';
 
 interface WidgetOption {
@@ -96,48 +99,86 @@ const widgetOptions: WidgetOption[] = [
 ];
 
 export function Sidebar() {
-  const { isEditing } = useDashboardStore();
+  const { isEditing, sidebarCollapsed, setSidebarCollapsed } = useDashboardStore();
 
   if (!isEditing) {
     return null;
   }
 
   return (
-    <aside className="w-64 border-r bg-white p-4 overflow-y-auto shrink-0">
-      <h2 className="font-semibold text-gray-900 mb-4">Componentes</h2>
-      <p className="text-xs text-gray-500 mb-4">
-        Arrastra los componentes al dashboard
-      </p>
+    <aside
+      data-tour="sidebar"
+      className={cn(
+        'border-r bg-white overflow-y-auto shrink-0 transition-all duration-300 relative',
+        sidebarCollapsed ? 'w-16' : 'w-64'
+      )}
+    >
+      {/* Toggle button */}
+      <Button
+        variant="outline"
+        size="icon-sm"
+        className="absolute -right-3 top-4 z-10 rounded-full shadow-md bg-white"
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+      >
+        {sidebarCollapsed ? (
+          <ChevronRight className="w-4 h-4" />
+        ) : (
+          <ChevronLeft className="w-4 h-4" />
+        )}
+      </Button>
 
-      <div className="space-y-2">
-        {widgetOptions.map((widget) => (
-          <Card
-            key={widget.type}
-            className="p-3 cursor-grab hover:bg-gray-50 transition-colors"
-            draggable
-            onDragStart={(e) => {
-              e.dataTransfer.setData('widgetType', widget.type);
-              e.dataTransfer.effectAllowed = 'copy';
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div className="text-[var(--grass-green-dark)]">{widget.icon}</div>
-              <div>
-                <p className="font-medium text-sm">{widget.name}</p>
-                <p className="text-xs text-gray-500">{widget.description}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <div className="p-4">
+        {!sidebarCollapsed && (
+          <>
+            <h2 className="font-semibold text-gray-900 mb-2">Componentes</h2>
+            <p className="text-xs text-gray-500 mb-4">
+              Arrastra los componentes al dashboard
+            </p>
+          </>
+        )}
 
-      <div className="mt-6 pt-4 border-t">
-        <h3 className="font-medium text-sm text-gray-700 mb-2">Consejos</h3>
-        <ul className="text-xs text-gray-500 space-y-1">
-          <li>- Arrastra para agregar</li>
-          <li>- Click para seleccionar</li>
-          <li>- Bordes para redimensionar</li>
-        </ul>
+        <div className={cn('space-y-2', sidebarCollapsed && 'mt-8')}>
+          {widgetOptions.map((widget) => (
+            <Card
+              key={widget.type}
+              className={cn(
+                'cursor-grab hover:bg-gray-50 transition-colors',
+                sidebarCollapsed ? 'p-2' : 'p-3'
+              )}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData('widgetType', widget.type);
+                e.dataTransfer.effectAllowed = 'copy';
+              }}
+              title={sidebarCollapsed ? widget.name : undefined}
+            >
+              {sidebarCollapsed ? (
+                <div className="flex items-center justify-center text-[var(--grass-green-dark)]">
+                  {widget.icon}
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="text-[var(--grass-green-dark)]">{widget.icon}</div>
+                  <div>
+                    <p className="font-medium text-sm">{widget.name}</p>
+                    <p className="text-xs text-gray-500">{widget.description}</p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+
+        {!sidebarCollapsed && (
+          <div className="mt-6 pt-4 border-t">
+            <h3 className="font-medium text-sm text-gray-700 mb-2">Consejos</h3>
+            <ul className="text-xs text-gray-500 space-y-1">
+              <li>- Arrastra para agregar</li>
+              <li>- Click para seleccionar</li>
+              <li>- Bordes para redimensionar</li>
+            </ul>
+          </div>
+        )}
       </div>
     </aside>
   );
