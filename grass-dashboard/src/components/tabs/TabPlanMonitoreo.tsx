@@ -1,6 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -10,6 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { mockDashboardData } from '@/lib/mock-data';
+import { useDashboardStore } from '@/lib/dashboard-store';
 import dynamic from 'next/dynamic';
 
 // Importar el mapa dinámicamente para evitar SSR issues con Leaflet
@@ -24,6 +26,14 @@ const MapaEstratos = dynamic(() => import('@/components/widgets/MapaEstratos'), 
 
 export function TabPlanMonitoreo() {
   const { establecimiento, estratos, monitores } = mockDashboardData;
+  const { setActiveTab } = useDashboardStore();
+
+  const quickActions = [
+    { id: 'inicio', name: 'Inicio' },
+    { id: 'resultados', name: 'Resultados' },
+    { id: 'sobre-grass', name: 'Sobre GRASS' },
+    { id: 'comunidad', name: 'Comunidad' },
+  ];
 
   // Calcular totales
   const totalSuperficie = estratos.reduce((sum, e) => sum + e.superficie, 0);
@@ -44,7 +54,7 @@ export function TabPlanMonitoreo() {
       {/* Resumen de área */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
-            <CardContent className="pt-6 text-center">
+            <CardContent className="py-6 flex flex-col items-center justify-center">
               <p className="text-2xl font-bold text-[var(--grass-green-dark)]">
                 {establecimiento.areaTotal} has
               </p>
@@ -52,24 +62,24 @@ export function TabPlanMonitoreo() {
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6 text-center">
-              <p className="text-2xl font-bold text-[var(--estrato-loma)]">
+            <CardContent className="py-6 flex flex-col items-center justify-center">
+              <p className="text-2xl font-bold text-[var(--grass-green)]">
                 {totalSuperficie.toFixed(0)} has
               </p>
               <p className="text-sm text-gray-500">Área de Monitoreo</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6 text-center">
-              <p className="text-2xl font-bold text-[var(--grass-brown)]">
+            <CardContent className="py-6 flex flex-col items-center justify-center">
+              <p className="text-2xl font-bold text-[var(--grass-green-dark)]">
                 {totalEstaciones}
               </p>
               <p className="text-sm text-gray-500">Sitios MCP</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6 text-center">
-              <p className="text-2xl font-bold text-[var(--grass-orange)]">
+            <CardContent className="py-6 flex flex-col items-center justify-center">
+              <p className="text-2xl font-bold text-[var(--grass-green)]">
                 {estratos.length}
               </p>
               <p className="text-sm text-gray-500">Estratos</p>
@@ -201,6 +211,26 @@ export function TabPlanMonitoreo() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Footer */}
+      <div className="mt-8 pt-6 pb-8 border-t border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {quickActions.map((action) => (
+            <Button
+              key={action.id}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-200 w-full"
+              onClick={() => setActiveTab(action.id)}
+            >
+              {action.name}
+            </Button>
+          ))}
+        </div>
+        <p className="text-center text-xs text-gray-400">
+          Grassland Regeneration and Sustainable Standard - 2025
+        </p>
+      </div>
     </div>
   );
 }

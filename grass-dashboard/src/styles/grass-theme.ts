@@ -29,12 +29,12 @@ export const grassTheme = {
       bajo: '#75e192',       // Verde claro - var(--estrato-bajo)
     },
     
-    // Colores de procesos ecosistémicos
+    // Colores de procesos ecosistémicos (paleta GRASS sobria)
     procesos: {
-      cicloAgua: '#ff5900',     // Naranja - var(--grass-orange)
-      cicloMineral: '#252525',  // Marrón oscuro - var(--grass-brown)
-      flujoEnergia: '#507531',  // Verde oscuro (usa greenDark)
-      dinamicaComunidades: '#FFC107', // Amarillo/dorado - var(--grass-yellow)
+      cicloAgua: '#5a9a8a',        // Verde azulado/teal apagado
+      cicloMineral: '#313b2e',     // Verde muy oscuro - var(--estrato-loma)
+      flujoEnergia: '#8aca53',     // Verde grass - var(--grass-green)
+      dinamicaComunidades: '#c4b896', // Beige/oliva apagado (tierra)
     },
     
     // Colores neutrales

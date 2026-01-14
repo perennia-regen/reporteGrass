@@ -1,7 +1,9 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { mockDashboardData, mockComunidadData } from '@/lib/mock-data';
+import { useDashboardStore } from '@/lib/dashboard-store';
 import dynamic from 'next/dynamic';
 import {
   BarChart,
@@ -25,9 +27,39 @@ const MapaComunidad = dynamic(() => import('@/components/widgets/MapaComunidad')
   ),
 });
 
+// Función para calcular color de gradiente basado en valor ISE (0-100)
+// Usando la paleta GRASS: estrato-loma (#313b2e) → grass-green (#8aca53) → grass-green-light (#b1ff6d)
+const getISEGradientColor = (valor: number): string => {
+  const normalized = Math.max(0, Math.min(100, valor)) / 100;
+
+  if (normalized < 0.5) {
+    // De estrato-loma (#313b2e) a grass-green (#8aca53)
+    const t = normalized * 2;
+    const r = Math.round(49 + (138 - 49) * t);
+    const g = Math.round(59 + (202 - 59) * t);
+    const b = Math.round(46 + (83 - 46) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  } else {
+    // De grass-green (#8aca53) a grass-green-light (#b1ff6d)
+    const t = (normalized - 0.5) * 2;
+    const r = Math.round(138 + (177 - 138) * t);
+    const g = Math.round(202 + (255 - 202) * t);
+    const b = Math.round(83 + (109 - 83) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+};
+
 export function TabComunidad() {
   const { establecimiento, ise } = mockDashboardData;
   const { establecimientos, estadisticas } = mockComunidadData;
+  const { setActiveTab } = useDashboardStore();
+
+  const quickActions = [
+    { id: 'inicio', name: 'Inicio' },
+    { id: 'plan-monitoreo', name: 'Plan de Monitoreo' },
+    { id: 'resultados', name: 'Resultados' },
+    { id: 'sobre-grass', name: 'Sobre GRASS' },
+  ];
 
   // Calcular ranking
   const sortedByISE = [...establecimientos].sort((a, b) => b.ise - a.ise);
@@ -72,7 +104,7 @@ export function TabComunidad() {
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-3xl font-bold text-[var(--grass-brown)]">
+            <p className="text-3xl font-bold text-[var(--estrato-media-loma)]">
               {estadisticas.totalHectareas.toLocaleString()}
             </p>
             <p className="text-sm text-gray-500">Hectáreas totales</p>
@@ -80,7 +112,7 @@ export function TabComunidad() {
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-3xl font-bold text-[var(--estrato-loma)]">
+            <p className="text-3xl font-bold" style={{ color: getISEGradientColor(estadisticas.isePromedio) }}>
               {estadisticas.isePromedio.toFixed(1)}
             </p>
             <p className="text-sm text-gray-500">ISE Promedio Comunidad</p>
@@ -88,7 +120,7 @@ export function TabComunidad() {
         </Card>
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-3xl font-bold text-[var(--grass-orange)]">
+            <p className="text-3xl font-bold text-[var(--grass-green)]">
               #{miRanking}
             </p>
             <p className="text-sm text-gray-500">Tu posición en el ranking</p>
@@ -110,14 +142,19 @@ export function TabComunidad() {
               establecimientos={establecimientos}
               currentEstablecimiento={establecimiento.nombre}
             />
-            <div className="mt-4 flex items-center gap-4 text-sm">
+            <div className="mt-4 flex flex-col gap-2 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[var(--grass-green)]" />
-                <span>Tu establecimiento</span>
+                <div className="w-4 h-4 rounded-full border-2 border-black" style={{ backgroundColor: getISEGradientColor(70) }} />
+                <span>Tu establecimiento (borde negro)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[var(--grass-brown)]" />
-                <span>Otros establecimientos</span>
+                <div
+                  className="w-24 h-3 rounded"
+                  style={{
+                    background: `linear-gradient(to right, ${getISEGradientColor(0)}, ${getISEGradientColor(50)}, ${getISEGradientColor(100)})`
+                  }}
+                />
+                <span className="text-xs text-gray-500">Color = ISE (más claro = mejor)</span>
               </div>
             </div>
           </CardContent>
@@ -142,7 +179,9 @@ export function TabComunidad() {
                   {comparacionData.map((entry, index) => (
                     <Cell
                       key={index}
-                      fill={entry.isCurrent ? '#4CAF50' : '#8D6E63'}
+                      fill={getISEGradientColor(entry.ise)}
+                      stroke={entry.isCurrent ? '#000' : 'none'}
+                      strokeWidth={entry.isCurrent ? 2 : 0}
                     />
                   ))}
                 </Bar>
@@ -176,18 +215,27 @@ export function TabComunidad() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={rankingData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" />
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={rankingData} layout="vertical" barSize={36} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" domain={[0, 100]} />
-              <YAxis dataKey="nombre" type="category" width={100} />
+              <YAxis
+                dataKey="nombre"
+                type="category"
+                width={110}
+                tick={{ fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+              />
               <Tooltip />
               <ReferenceLine x={70} stroke="#666" strokeDasharray="5 5" />
-              <Bar dataKey="ise" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="ise" radius={[4, 4, 4, 4]}>
                 {rankingData.map((entry, index) => (
                   <Cell
                     key={index}
-                    fill={entry.isCurrent ? '#4CAF50' : '#8D6E63'}
+                    fill={getISEGradientColor(entry.ise)}
+                    stroke={entry.isCurrent ? '#000' : 'none'}
+                    strokeWidth={entry.isCurrent ? 2 : 0}
                   />
                 ))}
               </Bar>
@@ -235,6 +283,26 @@ export function TabComunidad() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Footer */}
+      <div className="mt-8 pt-6 pb-8 border-t border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {quickActions.map((action) => (
+            <Button
+              key={action.id}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-200 w-full"
+              onClick={() => setActiveTab(action.id)}
+            >
+              {action.name}
+            </Button>
+          ))}
+        </div>
+        <p className="text-center text-xs text-gray-400">
+          Grassland Regeneration and Sustainable Standard - 2025
+        </p>
+      </div>
     </div>
   );
 }

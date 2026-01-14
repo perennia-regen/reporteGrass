@@ -92,7 +92,8 @@
   --grass-green-light: #b1ff6d;      /* Verde claro para acentos */
   --grass-orange: #ff5900;          /* Naranja para procesos */
   --grass-brown: #252525;           /* Marrón para ciclos minerales */
-  --grass-yellow: #FFC107;          /* Amarillo para flujo de energía */
+  --grass-yellow: #FFC107;          /* Amarillo para dinámica comunidades */
+  --grass-turquoise: #4DB6AC;       /* Turquesa para ciclo del agua */
 
   /* Colores de estratos */
   --estrato-loma: #313b2e;          /* Azul oscuro - Loma */

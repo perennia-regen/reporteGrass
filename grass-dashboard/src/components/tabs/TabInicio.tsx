@@ -13,15 +13,11 @@ import { PhotoGalleryModal } from '@/components/PhotoGalleryModal';
 import type { FotoMonitoreo } from '@/types/dashboard';
 import {
   ArrowRight,
-  Map,
-  BarChart3,
-  Info,
-  Users,
   TrendingUp,
-  Layers,
   Plus,
   X,
   Camera,
+  ChevronDown,
 } from 'lucide-react';
 
 // Tipos locales para los gráficos predeterminados de la página inicio
@@ -285,42 +281,42 @@ export function TabInicio() {
     usedKPIs: KPIType[];
   }) => {
     const data = getKPIData(value);
-    const option = kpiOptions.find(o => o.id === value);
 
     return (
-      <Card className="bg-white">
-        <CardContent className="pt-6">
-          {isEditing && (
-            <div className="mb-3">
-              <select
-                value={value}
-                onChange={(e) => onChange(e.target.value as KPIType)}
-                className="w-full text-xs border rounded px-2 py-1.5 bg-gray-50 text-gray-700"
-              >
-                {kpiOptions.map((opt) => (
-                  <option
-                    key={opt.id}
-                    value={opt.id}
-                    disabled={usedKPIs.includes(opt.id) && opt.id !== value}
-                  >
-                    {opt.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          <div className="text-center">
-            <p
-              className="text-3xl font-bold"
-              style={{ color: data.color }}
+      <Card className={`bg-white ${isEditing ? 'overflow-hidden !py-0 !gap-0' : ''}`}>
+        {isEditing && (
+          <div className="relative bg-gray-50 border-b border-gray-200">
+            <select
+              value={value}
+              onChange={(e) => onChange(e.target.value as KPIType)}
+              className="w-full text-xs px-3 py-1.5 pr-10 bg-transparent text-gray-700 cursor-pointer focus:outline-none appearance-none"
             >
-              {data.value}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">{data.label}</p>
-            <p className={`text-xs mt-2 ${data.isPositive === false ? 'text-orange-500' : data.isPositive === true ? 'text-green-600' : 'text-gray-400'}`}>
-              {data.sublabel}
-            </p>
+              {kpiOptions.map((opt) => (
+                <option
+                  key={opt.id}
+                  value={opt.id}
+                  disabled={usedKPIs.includes(opt.id) && opt.id !== value}
+                >
+                  {opt.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-gray-200 rounded-full pointer-events-none">
+              <ChevronDown className="w-3 h-3 text-gray-600" />
+            </div>
           </div>
+        )}
+        <CardContent className="py-4 flex flex-col items-center justify-center">
+          <p
+            className="text-3xl font-bold"
+            style={{ color: data.color }}
+          >
+            {data.value}
+          </p>
+          <p className="text-sm text-gray-500 mt-1">{data.label}</p>
+          <p className={`text-xs mt-1 ${data.isPositive === false ? 'text-orange-500' : data.isPositive === true ? 'text-green-600' : 'text-gray-400'}`}>
+            {data.sublabel}
+          </p>
         </CardContent>
       </Card>
     );
@@ -330,18 +326,25 @@ export function TabInicio() {
   const getUsedKPIs = () => [kpi1, kpi2, kpi3];
 
   // Función para calcular color de gradiente basado en valor ISE (0-100)
-  // Verde brillante (#22c55e) para valores altos → Verde oscuro (#14532d) para valores bajos
+  // Usando la paleta GRASS: estrato-loma (#313b2e) → grass-green (#8aca53) → grass-green-light (#b1ff6d)
   const getISEGradientColor = (valor: number): string => {
-    // Normalizar valor entre 0 y 100
     const normalized = Math.max(0, Math.min(100, valor)) / 100;
 
-    // Colores: verde brillante (alto) → verde oscuro (bajo)
-    // #22c55e (RGB: 34, 197, 94) → #14532d (RGB: 20, 83, 45)
-    const r = Math.round(20 + (34 - 20) * normalized);
-    const g = Math.round(83 + (197 - 83) * normalized);
-    const b = Math.round(45 + (94 - 45) * normalized);
-
-    return `rgb(${r}, ${g}, ${b})`;
+    if (normalized < 0.5) {
+      // De estrato-loma (#313b2e) a grass-green (#8aca53)
+      const t = normalized * 2;
+      const r = Math.round(49 + (138 - 49) * t);
+      const g = Math.round(59 + (202 - 59) * t);
+      const b = Math.round(46 + (83 - 46) * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    } else {
+      // De grass-green (#8aca53) a grass-green-light (#b1ff6d)
+      const t = (normalized - 0.5) * 2;
+      const r = Math.round(138 + (177 - 138) * t);
+      const g = Math.round(202 + (255 - 202) * t);
+      const b = Math.round(83 + (109 - 83) * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
   };
 
   const renderChart = (chartType: ChartType) => {
@@ -509,11 +512,11 @@ export function TabInicio() {
   }) => {
     if (isEditing) {
       return (
-        <div className="bg-gray-50 px-4 py-2 flex items-center justify-between border-b">
+        <div className="relative bg-gray-50 border-b border-gray-200">
           <select
             value={value}
             onChange={(e) => onChange(e.target.value as ChartType)}
-            className="text-xs border rounded px-2 py-1 bg-white"
+            className={`w-full text-xs px-3 py-1.5 bg-transparent text-gray-700 cursor-pointer focus:outline-none appearance-none ${canRemove ? 'pr-16' : 'pr-10'}`}
           >
             {chartOptions.map((opt) => (
               <option key={opt.id} value={opt.id} disabled={usedCharts.includes(opt.id) && opt.id !== value}>
@@ -521,13 +524,16 @@ export function TabInicio() {
               </option>
             ))}
           </select>
+          <div className={`absolute top-1/2 -translate-y-1/2 p-1 bg-gray-200 rounded-full pointer-events-none ${canRemove ? 'right-9' : 'right-2'}`}>
+            <ChevronDown className="w-3 h-3 text-gray-600" />
+          </div>
           {canRemove && onRemove && (
             <button
               onClick={onRemove}
-              className="p-1 hover:bg-red-100 rounded text-red-500"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-red-100 rounded-full text-red-500"
               title="Eliminar gráfico"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3" />
             </button>
           )}
         </div>
@@ -535,17 +541,17 @@ export function TabInicio() {
     }
 
     return (
-      <div className="bg-gray-50 px-4 py-2 flex items-center justify-between border-b">
-        <span className="text-sm font-medium text-gray-700">{getChartName(value)}</span>
+      <div className="bg-gray-50 px-3 py-2 border-b">
+        <span className="text-xs font-medium text-gray-700">{getChartName(value)}</span>
       </div>
     );
   };
 
   const quickActions = [
-    { id: 'plan-monitoreo', name: 'Plan de Monitoreo', icon: Map, color: 'var(--grass-green)' },
-    { id: 'resultados', name: 'Resultados', icon: BarChart3, color: 'var(--grass-brown)' },
-    { id: 'sobre-grass', name: 'Sobre GRASS', icon: Info, color: 'var(--grass-orange)' },
-    { id: 'comunidad', name: 'Comunidad', icon: Users, color: 'var(--estrato-loma)' },
+    { id: 'plan-monitoreo', name: 'Plan de Monitoreo' },
+    { id: 'resultados', name: 'Resultados' },
+    { id: 'sobre-grass', name: 'Sobre GRASS' },
+    { id: 'comunidad', name: 'Comunidad' },
   ];
 
   return (
@@ -722,32 +728,23 @@ export function TabInicio() {
       </Card>
 
       {/* Footer con Quick Actions */}
-      <div className="mt-8 pt-6 border-t-2 border-gray-100">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Layers className="w-4 h-4 text-gray-400" />
-          <span className="text-sm text-gray-500 font-medium">Explorar Secciones</span>
+      <div className="mt-8 pt-6 pb-8 border-t border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {quickActions.map((action) => (
+            <Button
+              key={action.id}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-200 w-full"
+              onClick={() => setActiveTab(action.id)}
+            >
+              {action.name}
+            </Button>
+          ))}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Button
-                key={action.id}
-                variant="ghost"
-                className="h-auto py-3 flex flex-col items-center gap-1.5 hover:bg-gray-50 rounded-xl transition-all group"
-                onClick={() => setActiveTab(action.id)}
-              >
-                <div
-                  className="p-2 rounded-lg transition-colors"
-                  style={{ backgroundColor: `${action.color}15` }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: action.color }} />
-                </div>
-                <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900">{action.name}</span>
-              </Button>
-            );
-          })}
-        </div>
+        <p className="text-center text-xs text-gray-400">
+          Grassland Regeneration and Sustainable Standard - 2025
+        </p>
       </div>
 
       {/* Modal de galería de fotos */}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -401,7 +402,14 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
 
 export function TabResultados() {
   const { ise, procesos, procesosHistorico, recomendaciones, estratos, monitores } = mockDashboardData;
-  const { editableContent, updateContent } = useDashboardStore();
+  const { editableContent, updateContent, setActiveTab } = useDashboardStore();
+
+  const quickActions = [
+    { id: 'inicio', name: 'Inicio' },
+    { id: 'plan-monitoreo', name: 'Plan de Monitoreo' },
+    { id: 'sobre-grass', name: 'Sobre GRASS' },
+    { id: 'comunidad', name: 'Comunidad' },
+  ];
 
   // Preparar datos para gráfico ISE por estrato
   const iseEstratoData = Object.entries(ise.porEstrato).map(([nombre, valor]) => ({
@@ -464,15 +472,22 @@ export function TabResultados() {
               <CardTitle className="text-base">ISE por Estrato - Marzo 2025</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={iseEstratoData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={iseEstratoData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" domain={[0, 100]} />
-                  <YAxis dataKey="nombre" type="category" width={80} />
+                  <YAxis
+                    dataKey="nombre"
+                    type="category"
+                    width={100}
+                    tick={{ fontSize: 13 }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
                   <Tooltip />
                   <ReferenceLine x={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" label={{ value: 'Deseable', position: 'top' }} />
                   <ReferenceLine x={ise.promedio} stroke="#E65100" strokeDasharray="3 3" label={{ value: `Prom: ${ise.promedio}`, position: 'bottom' }} />
-                  <Bar dataKey="ISE" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="ISE" radius={[4, 4, 4, 4]}>
                     {iseEstratoData.map((entry, index) => (
                       <Cell key={index} fill={entry.color} />
                     ))}
@@ -576,15 +591,22 @@ export function TabResultados() {
               <CardTitle className="text-base">Procesos - Total Establecimiento (Marzo 2025)</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={procesosData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={procesosData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" domain={[0, 100]} unit="%" />
-                  <YAxis dataKey="proceso" type="category" width={110} />
+                  <YAxis
+                    dataKey="proceso"
+                    type="category"
+                    width={140}
+                    tick={{ fontSize: 13 }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
                   <Tooltip formatter={(value) => `${value}%`} />
-                  <Bar dataKey="valor" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="valor" radius={[4, 4, 4, 4]}>
                     {procesosData.map((entry, index) => (
-                      <Bar key={index} dataKey="valor" fill={entry.fill} />
+                      <Cell key={index} fill={entry.fill} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -661,11 +683,11 @@ export function TabResultados() {
 
         <Card>
           <CardContent className="pt-6">
-            <Table>
+            <Table className="table-fixed w-full">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[120px]">Estrato</TableHead>
-                  <TableHead>Sugerencias de Manejo</TableHead>
+                  <TableHead className="w-[15%] whitespace-normal">Estrato</TableHead>
+                  <TableHead className="w-[85%] whitespace-normal">Sugerencias de Manejo</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -678,16 +700,16 @@ export function TabResultados() {
 
                   return (
                     <TableRow key={rec.estrato}>
-                      <TableCell className="font-medium align-top pt-4">
+                      <TableCell className="font-medium align-top pt-4 whitespace-normal">
                         <div className="flex items-center gap-2">
                           <div
-                            className="w-3 h-3 rounded"
+                            className="w-3 h-3 rounded flex-shrink-0"
                             style={{ backgroundColor: estrato?.color || '#757575' }}
                           />
                           {rec.estrato}
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-gray-700">
+                      <TableCell className="text-sm text-gray-700 whitespace-normal break-words">
                         <EditableText
                           value={editableValue}
                           onChange={(value) => updateContent(contentKey, value)}
@@ -820,6 +842,26 @@ export function TabResultados() {
           </CardContent>
         </Card>
       </section>
+
+      {/* Footer */}
+      <div className="mt-8 pt-6 pb-8 border-t border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {quickActions.map((action) => (
+            <Button
+              key={action.id}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-200 w-full"
+              onClick={() => setActiveTab(action.id)}
+            >
+              {action.name}
+            </Button>
+          ))}
+        </div>
+        <p className="text-center text-xs text-gray-400">
+          Grassland Regeneration and Sustainable Standard - 2025
+        </p>
+      </div>
     </div>
   );
 }

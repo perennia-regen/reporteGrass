@@ -1,6 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -10,14 +11,28 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { indicadoresBiologicos } from '@/lib/mock-data';
+import { useDashboardStore } from '@/lib/dashboard-store';
 
 export function TabSobreGrass() {
+  const { setActiveTab } = useDashboardStore();
+
+  const quickActions = [
+    { id: 'inicio', name: 'Inicio' },
+    { id: 'plan-monitoreo', name: 'Plan de Monitoreo' },
+    { id: 'resultados', name: 'Resultados' },
+    { id: 'comunidad', name: 'Comunidad' },
+  ];
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header con fondo oscuro similar al PDF */}
-      <div className="bg-gray-900 rounded-lg p-8 text-center">
-        <h2 className="text-3xl font-bold text-white mb-2">SOBRE</h2>
-        <h1 className="text-5xl font-bold text-[var(--grass-green)]">GRASS</h1>
+      {/* Encabezado */}
+      <div>
+        <h2 className="text-2xl font-bold text-[var(--grass-green-dark)]">
+          Sobre GRASS
+        </h2>
+        <p className="text-gray-600 mt-1">
+          Grassland Regeneration and Sustainable Standard por Ovis 21
+        </p>
       </div>
 
       {/* Introducción */}
@@ -132,24 +147,24 @@ export function TabSobreGrass() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow className="bg-gray-900">
-                <TableHead className="text-white font-semibold">Proceso Ecosistémico</TableHead>
-                <TableHead className="text-white font-semibold">Criterio de Calidad</TableHead>
-                <TableHead className="text-white font-semibold">Indicadores</TableHead>
+                <TableHead className="text-white font-semibold w-[18%] whitespace-normal">Proceso Ecosistémico</TableHead>
+                <TableHead className="text-white font-semibold w-[40%] whitespace-normal">Criterio de Calidad</TableHead>
+                <TableHead className="text-white font-semibold w-[42%] whitespace-normal">Indicadores</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {indicadoresBiologicos.map((item, index) => (
                 <TableRow key={index} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                  <TableCell className="font-semibold text-[var(--grass-green-dark)]">
+                  <TableCell className="font-semibold text-[var(--grass-green-dark)] align-top whitespace-normal break-words">
                     {item.proceso}
                   </TableCell>
-                  <TableCell className="text-sm text-gray-600">
+                  <TableCell className="text-sm text-gray-600 align-top whitespace-normal break-words">
                     {item.criterio}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="align-top whitespace-normal break-words">
                     <ul className="text-sm space-y-1">
                       {item.indicadores.map((ind, i) => (
                         <li key={i} className="text-gray-700">• {ind}</li>
@@ -182,6 +197,26 @@ export function TabSobreGrass() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Footer */}
+      <div className="mt-8 pt-6 pb-8 border-t border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {quickActions.map((action) => (
+            <Button
+              key={action.id}
+              variant="outline"
+              size="sm"
+              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-200 w-full"
+              onClick={() => setActiveTab(action.id)}
+            >
+              {action.name}
+            </Button>
+          ))}
+        </div>
+        <p className="text-center text-xs text-gray-400">
+          Grassland Regeneration and Sustainable Standard - 2025
+        </p>
+      </div>
     </div>
   );
 }

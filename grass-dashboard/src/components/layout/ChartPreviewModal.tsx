@@ -89,18 +89,20 @@ export function ChartByType({ chartType, showLabels = true, compact = false }: C
       }));
       return (
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={compact ? { left: 0, right: 5 } : undefined}>
-            {showLabels && <CartesianGrid strokeDasharray="3 3" />}
+          <BarChart data={data} layout="vertical" barSize={compact ? 20 : 36} margin={compact ? { left: 0, right: 5 } : { top: 5, right: 30, left: 10, bottom: 5 }}>
+            {showLabels && <CartesianGrid strokeDasharray="3 3" horizontal={false} />}
             <XAxis type="number" domain={[0, 100]} tick={{ fontSize: tickFontSize }} hide={compact} />
             <YAxis
               dataKey="nombre"
               type="category"
-              width={compact ? 50 : 70}
+              width={compact ? 50 : 90}
               tick={{ fontSize: tickFontSize }}
+              tickLine={false}
+              axisLine={false}
             />
             {showLabels && <Tooltip />}
             <ReferenceLine x={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" />
-            <Bar dataKey="ISE" radius={[0, 4, 4, 0]}>
+            <Bar dataKey="ISE" radius={[4, 4, 4, 4]}>
               {data.map((entry, index) => (
                 <Cell key={index} fill={entry.color} />
               ))}
@@ -168,17 +170,19 @@ export function ChartByType({ chartType, showLabels = true, compact = false }: C
       ];
       return (
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={compact ? { left: 0, right: 5 } : undefined}>
-            {showLabels && <CartesianGrid strokeDasharray="3 3" />}
+          <BarChart data={data} layout="vertical" barSize={compact ? 20 : 36} margin={compact ? { left: 0, right: 5 } : { top: 5, right: 30, left: 10, bottom: 5 }}>
+            {showLabels && <CartesianGrid strokeDasharray="3 3" horizontal={false} />}
             <XAxis type="number" domain={[0, 100]} tick={{ fontSize: tickFontSize }} hide={compact} />
             <YAxis
               dataKey="nombre"
               type="category"
-              width={compact ? 60 : 100}
+              width={compact ? 60 : 120}
               tick={{ fontSize: tickFontSize }}
+              tickLine={false}
+              axisLine={false}
             />
             {showLabels && <Tooltip />}
-            <Bar dataKey="valor" radius={[0, 4, 4, 0]}>
+            <Bar dataKey="valor" radius={[4, 4, 4, 4]}>
               {data.map((entry, index) => (
                 <Cell key={index} fill={entry.color} />
               ))}

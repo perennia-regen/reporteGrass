@@ -106,13 +106,20 @@ function BarChartWidget({ widget, ise }: { widget: WidgetConfig; ise: typeof moc
       </CardHeader>
       <CardContent className="h-[calc(100%-60px)]">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" />
+          <BarChart data={data} layout="vertical" barSize={32} margin={{ top: 5, right: 20, left: 5, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
             <XAxis type="number" domain={[0, 100]} />
-            <YAxis dataKey="nombre" type="category" width={70} fontSize={12} />
+            <YAxis
+              dataKey="nombre"
+              type="category"
+              width={80}
+              tick={{ fontSize: 12 }}
+              tickLine={false}
+              axisLine={false}
+            />
             <Tooltip />
             <ReferenceLine x={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" />
-            <Bar dataKey="ISE" radius={[0, 4, 4, 0]}>
+            <Bar dataKey="ISE" radius={[4, 4, 4, 4]}>
               {data.map((entry, index) => (
                 <Cell key={index} fill={entry.color} />
               ))}

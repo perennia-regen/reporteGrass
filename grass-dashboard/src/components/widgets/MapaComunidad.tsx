@@ -6,9 +6,31 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { EstablecimientoComunidad } from '@/types/dashboard';
 
-// Crear icono personalizado
-const createCommunityIcon = (isCurrent: boolean) => {
-  const color = isCurrent ? '#4CAF50' : '#8D6E63';
+// Función para calcular color de gradiente basado en valor ISE (0-100)
+// Usando la paleta GRASS: estrato-loma (#313b2e) → grass-green (#8aca53) → grass-green-light (#b1ff6d)
+const getISEGradientColor = (valor: number): string => {
+  const normalized = Math.max(0, Math.min(100, valor)) / 100;
+
+  if (normalized < 0.5) {
+    // De estrato-loma (#313b2e) a grass-green (#8aca53)
+    const t = normalized * 2;
+    const r = Math.round(49 + (138 - 49) * t);
+    const g = Math.round(59 + (202 - 59) * t);
+    const b = Math.round(46 + (83 - 46) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  } else {
+    // De grass-green (#8aca53) a grass-green-light (#b1ff6d)
+    const t = (normalized - 0.5) * 2;
+    const r = Math.round(138 + (177 - 138) * t);
+    const g = Math.round(202 + (255 - 202) * t);
+    const b = Math.round(83 + (109 - 83) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+};
+
+// Crear icono personalizado basado en ISE
+const createCommunityIcon = (isCurrent: boolean, ise: number) => {
+  const color = getISEGradientColor(ise);
   const size = isCurrent ? 32 : 24;
 
   return L.divIcon({
@@ -25,10 +47,10 @@ const createCommunityIcon = (isCurrent: boolean) => {
         color: white;
         font-weight: bold;
         font-size: ${isCurrent ? 14 : 10}px;
-        border: 3px solid white;
+        border: ${isCurrent ? '3px solid #000' : '2px solid white'};
         box-shadow: 0 2px 6px rgba(0,0,0,0.3);
       ">
-        ${isCurrent ? '★' : '●'}
+        ${isCurrent ? '★' : ''}
       </div>
     `,
     iconSize: [size, size],
@@ -84,7 +106,7 @@ export default function MapaComunidad({
           <Marker
             key={est.id}
             position={est.coordenadas}
-            icon={createCommunityIcon(isCurrent)}
+            icon={createCommunityIcon(isCurrent, est.ise)}
             zIndexOffset={isCurrent ? 1000 : 0}
           >
             <Popup>
