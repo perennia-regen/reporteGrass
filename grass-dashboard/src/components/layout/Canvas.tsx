@@ -1,16 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useDashboardStore, generateWidgetId } from '@/lib/dashboard-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { Download } from 'lucide-react';
 import type { WidgetConfig, WidgetType } from '@/types/dashboard';
-import { TabInicio } from '@/components/tabs/TabInicio';
-import { TabPlanMonitoreo } from '@/components/tabs/TabPlanMonitoreo';
-import { TabResultados } from '@/components/tabs/TabResultados';
-import { TabSobreGrass } from '@/components/tabs/TabSobreGrass';
-import { TabComunidad } from '@/components/tabs/TabComunidad';
+
+// Loading component for tabs
+function TabLoading() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-gray-400 animate-pulse">Cargando contenido...</div>
+    </div>
+  );
+}
+
+// Dynamic imports for tabs - code splitting
+const TabInicio = dynamic(
+  () => import('@/components/tabs/TabInicio').then((mod) => mod.TabInicio),
+  { loading: () => <TabLoading /> }
+);
+
+const TabPlanMonitoreo = dynamic(
+  () => import('@/components/tabs/TabPlanMonitoreo').then((mod) => mod.TabPlanMonitoreo),
+  { loading: () => <TabLoading /> }
+);
+
+const TabResultados = dynamic(
+  () => import('@/components/tabs/TabResultados').then((mod) => mod.TabResultados),
+  { loading: () => <TabLoading /> }
+);
+
+const TabSobreGrass = dynamic(
+  () => import('@/components/tabs/TabSobreGrass').then((mod) => mod.TabSobreGrass),
+  { loading: () => <TabLoading /> }
+);
+
+const TabComunidad = dynamic(
+  () => import('@/components/tabs/TabComunidad').then((mod) => mod.TabComunidad),
+  { loading: () => <TabLoading /> }
+);
 
 export function Canvas() {
   const { activeTab, setActiveTab, tabs, addWidget, isEditing } = useDashboardStore();

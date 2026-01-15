@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -146,102 +146,61 @@ interface DeterminantesSectionProps {
 function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSectionProps) {
   const [estratoSeleccionado, setEstratoSeleccionado] = useState<string>('todos');
 
-  // Calcular promedios por indicador según estrato seleccionado
-  const calcularPromedios = (estratoFiltro: string) => {
-    const filtrados = estratoFiltro === 'todos'
-      ? monitores
-      : monitores.filter(m => m.estrato === estratoFiltro);
+  // Memoize expensive estrato calculations - computed once per estrato set
+  const promediosPorEstrato = useMemo(() => {
+    const calcularPromediosEstrato = (estrato: string) => {
+      const filtrados = monitores.filter(m => m.estrato === estrato);
+      if (filtrados.length === 0) return {};
 
-    if (filtrados.length === 0) return {};
-
-    const sumas: Record<string, number> = {};
-    const counts: Record<string, number> = {};
-
-    filtrados.forEach(m => {
-      Object.entries(m.indicadores).forEach(([key, value]) => {
-        if (!sumas[key]) {
-          sumas[key] = 0;
-          counts[key] = 0;
-        }
-        sumas[key] += value;
-        counts[key]++;
+      const sumas: Record<string, number> = {};
+      filtrados.forEach(m => {
+        Object.entries(m.indicadores).forEach(([key, value]) => {
+          sumas[key] = (sumas[key] || 0) + value;
+        });
       });
-    });
 
-    const promedios: Record<string, number> = {};
-    Object.keys(sumas).forEach(key => {
-      promedios[key] = Math.round((sumas[key] / counts[key]) * 10) / 10;
-    });
-
-    return promedios;
-  };
-
-  // Preparar datos para gráficos de líneas mostrando evolución por estrato
-  const prepararDatosEvolucion = (procesoKey: keyof typeof procesosDeterminantes) => {
-    const proceso = procesosDeterminantes[procesoKey];
-
-    // Crear datos simulados de evolución usando fechas del histórico
-    // En un caso real, estos datos vendrían de múltiples monitoreos
-    const fechas = ['mar 2022', 'may 2023', 'feb 2024', 'mar 2025'];
-
-    // Calcular promedios actuales por estrato
-    const promedioLoma = calcularPromediosEstrato('Loma');
-    const promedioMediaLoma = calcularPromediosEstrato('Media Loma');
-    const promedioBajo = calcularPromediosEstrato('Bajo');
-
-    return proceso.indicadores.map((ind) => ({
-      indicador: ind.name,
-      Loma: promedioLoma[ind.key] || 0,
-      'Media Loma': promedioMediaLoma[ind.key] || 0,
-      Bajo: promedioBajo[ind.key] || 0,
-    }));
-  };
-
-  const calcularPromediosEstrato = (estrato: string) => {
-    const filtrados = monitores.filter(m => m.estrato === estrato);
-    if (filtrados.length === 0) return {};
-
-    const sumas: Record<string, number> = {};
-    filtrados.forEach(m => {
-      Object.entries(m.indicadores).forEach(([key, value]) => {
-        sumas[key] = (sumas[key] || 0) + value;
+      const promedios: Record<string, number> = {};
+      Object.keys(sumas).forEach(key => {
+        promedios[key] = Math.round((sumas[key] / filtrados.length) * 10) / 10;
       });
-    });
+      return promedios;
+    };
 
-    const promedios: Record<string, number> = {};
-    Object.keys(sumas).forEach(key => {
-      promedios[key] = Math.round((sumas[key] / filtrados.length) * 10) / 10;
-    });
-    return promedios;
-  };
+    return {
+      Loma: calcularPromediosEstrato('Loma'),
+      'Media Loma': calcularPromediosEstrato('Media Loma'),
+      Bajo: calcularPromediosEstrato('Bajo'),
+      todos: calcularPromediosEstrato('todos'),
+    };
+  }, [monitores]);
 
-  // Preparar datos para un gráfico específico
-  const prepararDatosGrafico = (procesoKey: keyof typeof procesosDeterminantes) => {
+  // Memoize chart data preparation
+  const prepararDatosGrafico = useCallback((procesoKey: keyof typeof procesosDeterminantes) => {
     const proceso = procesosDeterminantes[procesoKey];
 
     if (estratoSeleccionado === 'todos') {
-      // Mostrar comparación por estrato
-      return proceso.indicadores.map((ind) => {
-        const promedioLoma = calcularPromediosEstrato('Loma');
-        const promedioMediaLoma = calcularPromediosEstrato('Media Loma');
-        const promedioBajo = calcularPromediosEstrato('Bajo');
-
-        return {
-          indicador: ind.name,
-          Loma: promedioLoma[ind.key] || 0,
-          'Media Loma': promedioMediaLoma[ind.key] || 0,
-          Bajo: promedioBajo[ind.key] || 0,
-        };
-      });
+      return proceso.indicadores.map((ind) => ({
+        indicador: ind.name,
+        Loma: promediosPorEstrato.Loma[ind.key] || 0,
+        'Media Loma': promediosPorEstrato['Media Loma'][ind.key] || 0,
+        Bajo: promediosPorEstrato.Bajo[ind.key] || 0,
+      }));
     } else {
-      // Mostrar solo el estrato seleccionado
-      const promedios = calcularPromediosEstrato(estratoSeleccionado);
+      const promedios = promediosPorEstrato[estratoSeleccionado as keyof typeof promediosPorEstrato] || {};
       return proceso.indicadores.map((ind) => ({
         indicador: ind.name,
         valor: promedios[ind.key] || 0,
       }));
     }
-  };
+  }, [estratoSeleccionado, promediosPorEstrato]);
+
+  // Pre-compute all chart data to avoid recalculation during render
+  const chartData = useMemo(() => ({
+    dinamicaComunidades: prepararDatosGrafico('dinamicaComunidades'),
+    flujoEnergia: prepararDatosGrafico('flujoEnergia'),
+    cicloMineral: prepararDatosGrafico('cicloMineral'),
+    cicloAgua: prepararDatosGrafico('cicloAgua'),
+  }), [prepararDatosGrafico]);
 
   const estratos = ['todos', 'Loma', 'Media Loma', 'Bajo'];
 
@@ -282,7 +241,7 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={prepararDatosGrafico('dinamicaComunidades')}>
+              <LineChart data={chartData.dinamicaComunidades}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="indicador" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
                 <YAxis domain={[-20, 20]} />
@@ -312,7 +271,7 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={prepararDatosGrafico('flujoEnergia')} layout="vertical">
+              <BarChart data={chartData.flujoEnergia} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" domain={[-20, 20]} />
                 <YAxis dataKey="indicador" type="category" width={120} tick={{ fontSize: 11 }} />
@@ -346,7 +305,7 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={prepararDatosGrafico('cicloMineral')}>
+              <LineChart data={chartData.cicloMineral}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="indicador" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
                 <YAxis domain={[-20, 30]} />
@@ -376,7 +335,7 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={prepararDatosGrafico('cicloAgua')}>
+              <LineChart data={chartData.cicloAgua}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="indicador" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 10 }} />
                 <YAxis domain={[-20, 30]} />
@@ -404,48 +363,48 @@ export function TabResultados() {
   const { ise, procesos, procesosHistorico, recomendaciones, estratos, monitores } = mockDashboardData;
   const { editableContent, updateContent, setActiveTab } = useDashboardStore();
 
-  const quickActions = [
+  const quickActions = useMemo(() => [
     { id: 'inicio', name: 'Inicio' },
     { id: 'plan-monitoreo', name: 'Plan de Monitoreo' },
     { id: 'sobre-grass', name: 'Sobre GRASS' },
     { id: 'comunidad', name: 'Comunidad' },
-  ];
+  ], []);
 
-  // Preparar datos para gráfico ISE por estrato
-  const iseEstratoData = Object.entries(ise.porEstrato).map(([nombre, valor]) => ({
-    nombre,
-    ISE: valor,
-    color: getEstratoColor(nombre),
-  }));
+  // Memoize chart data preparations
+  const iseEstratoData = useMemo(() =>
+    Object.entries(ise.porEstrato).map(([nombre, valor]) => ({
+      nombre,
+      ISE: valor,
+      color: getEstratoColor(nombre),
+    })), [ise.porEstrato]);
 
-  // Preparar datos para evolución ISE
-  const iseEvolucionData = ise.historico.map((h) => ({
-    fecha: h.fecha,
-    ISE: h.valor,
-  }));
+  const iseEvolucionData = useMemo(() =>
+    ise.historico.map((h) => ({
+      fecha: h.fecha,
+      ISE: h.valor,
+    })), [ise.historico]);
 
-  // Preparar datos para evolución ISE por estrato
-  const iseEstratoEvolucionData = ise.historico.map((h) => ({
-    fecha: h.fecha,
-    ...h.porEstrato,
-  }));
+  const iseEstratoEvolucionData = useMemo(() =>
+    ise.historico.map((h) => ({
+      fecha: h.fecha,
+      ...h.porEstrato,
+    })), [ise.historico]);
 
-  // Preparar datos para procesos ecosistémicos
-  const procesosData = [
+  const procesosData = useMemo(() => [
     { proceso: 'Ciclo del Agua', valor: procesos.cicloAgua, fill: grassTheme.colors.procesos.cicloAgua },
     { proceso: 'Ciclo Mineral', valor: procesos.cicloMineral, fill: grassTheme.colors.procesos.cicloMineral },
     { proceso: 'Flujo de Energía', valor: procesos.flujoEnergia, fill: grassTheme.colors.procesos.flujoEnergia },
     { proceso: 'Din. Comunidades', valor: procesos.dinamicaComunidades, fill: grassTheme.colors.procesos.dinamicaComunidades },
-  ];
+  ], [procesos]);
 
-  // Preparar datos para evolución de procesos
-  const procesosEvolucionData = procesosHistorico.map((h) => ({
-    fecha: h.fecha,
-    'Ciclo Agua': h.valores.cicloAgua,
-    'Ciclo Mineral': h.valores.cicloMineral,
-    'Flujo Energía': h.valores.flujoEnergia,
-    'Din. Comunidades': h.valores.dinamicaComunidades,
-  }));
+  const procesosEvolucionData = useMemo(() =>
+    procesosHistorico.map((h) => ({
+      fecha: h.fecha,
+      'Ciclo Agua': h.valores.cicloAgua,
+      'Ciclo Mineral': h.valores.cicloMineral,
+      'Flujo Energía': h.valores.flujoEnergia,
+      'Din. Comunidades': h.valores.dinamicaComunidades,
+    })), [procesosHistorico]);
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { mockDashboardData } from '@/lib/mock-data';
 import { ISE_THRESHOLD, grassTheme } from '@/styles/grass-theme';
 import type { WidgetConfig } from '@/types/dashboard';
-import { ChartByType } from '@/components/layout/ChartPreviewModal';
+import { ChartByType } from '@/components/charts/DynamicChartByType';
 import { getEstratoColor } from '@/lib/utils';
 import {
   BarChart,

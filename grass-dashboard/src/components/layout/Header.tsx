@@ -1,14 +1,29 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/ui/logo';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { mockDashboardData } from '@/lib/mock-data';
-import { PDFPreviewModal } from '@/components/PDFPreviewModal';
 import { createShareUrl, type ShareableState } from '@/lib/url-state';
 import { Eye, Send, Printer, ChevronDown, Link2, Pencil, Check, ExternalLink, Home } from 'lucide-react';
 import NextLink from 'next/link';
+
+// Dynamic import for PDF Preview Modal - only loads when needed
+const PDFPreviewModal = dynamic(
+  () => import('@/components/PDFPreviewModal').then((mod) => mod.PDFPreviewModal),
+  {
+    loading: () => (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="bg-white rounded-lg p-6">
+          <div className="animate-pulse text-gray-600">Cargando vista previa...</div>
+        </div>
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 export function Header() {
   const { isEditing, setIsEditing, editableContent, selectedKPIs, sugerenciaItems } = useDashboardStore();
@@ -211,13 +226,15 @@ export function Header() {
         </div>
       </header>
 
-      {/* Modal de preview del PDF */}
-      <PDFPreviewModal
-        isOpen={showPDFPreview}
-        onClose={() => setShowPDFPreview(false)}
-        observacionGeneral={editableContent.observacionGeneral}
-        comentarioFinal={editableContent.comentarioFinal}
-      />
+      {/* Modal de preview del PDF - only mounted when needed */}
+      {showPDFPreview && (
+        <PDFPreviewModal
+          isOpen={showPDFPreview}
+          onClose={() => setShowPDFPreview(false)}
+          observacionGeneral={editableContent.observacionGeneral}
+          comentarioFinal={editableContent.comentarioFinal}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -60,7 +60,10 @@ export function GridEditor({ widgets, tabId }: GridEditorProps) {
     }
   };
 
-  const activeWidget = activeId ? widgets.find((w) => w.id === activeId) : null;
+  const activeWidget = useMemo(
+    () => activeId ? widgets.find((w) => w.id === activeId) : null,
+    [activeId, widgets]
+  );
 
   if (!isEditing && widgets.length === 0) {
     return null;

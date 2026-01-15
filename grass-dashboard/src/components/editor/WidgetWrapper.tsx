@@ -5,6 +5,14 @@ import { CSS } from '@dnd-kit/utilities';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import type { WidgetConfig } from '@/types/dashboard';
 
+// Size options defined outside component to prevent recreation on each render
+const SIZE_OPTIONS = [
+  { w: 3, h: 2, label: 'Pequeño' },
+  { w: 6, h: 3, label: 'Mediano' },
+  { w: 12, h: 4, label: 'Grande' },
+  { w: 6, h: 6, label: 'Cuadrado' },
+] as const;
+
 interface WidgetWrapperProps {
   widget: WidgetConfig;
   tabId: string;
@@ -37,14 +45,6 @@ export function WidgetWrapper({
     gridColumn: `span ${widget.gridPosition.w}`,
     gridRow: `span ${widget.gridPosition.h}`,
   };
-
-  // Opciones de tamaño predefinidas
-  const sizeOptions = [
-    { w: 3, h: 2, label: 'Pequeño' },
-    { w: 6, h: 3, label: 'Mediano' },
-    { w: 12, h: 4, label: 'Grande' },
-    { w: 6, h: 6, label: 'Cuadrado' },
-  ];
 
   return (
     <div
@@ -85,7 +85,7 @@ export function WidgetWrapper({
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {sizeOptions.map((size) => (
+              {SIZE_OPTIONS.map((size) => (
                 <option key={`${size.w}-${size.h}`} value={`${size.w}-${size.h}`}>
                   {size.label}
                 </option>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Eye } from 'lucide-react';
-import { ChartByType, ChartPreviewModal } from './ChartPreviewModal';
+import { ChartByType, ChartPreviewModal } from '@/components/charts/DynamicChartByType';
 
 interface ChartThumbnailProps {
   chartType: string;
