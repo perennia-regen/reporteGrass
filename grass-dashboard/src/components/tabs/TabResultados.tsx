@@ -456,7 +456,7 @@ export function TabResultados() {
               <EditableText
                 value={editableContent.comentarioISEEstrato || `El valor promedio del ISE fue de ${ise.promedio}, por debajo del umbral deseable de ${ISE_THRESHOLD} puntos.`}
                 onChange={(v) => updateContent('comentarioISEEstrato', v)}
-                placeholder="Comentario sobre ISE por estrato..."
+                placeholder="Comentario sobre ISE por estrato…"
                 className="text-xs text-gray-500 mt-2"
                 showPencilOnHover
                 multiline
@@ -483,7 +483,7 @@ export function TabResultados() {
               <EditableText
                 value={editableContent.comentarioEvolucionISE || 'Se observa una marcada disminución inicial por sequía severa (2023), con recuperación parcial posterior.'}
                 onChange={(v) => updateContent('comentarioEvolucionISE', v)}
-                placeholder="Comentario sobre evolución del ISE..."
+                placeholder="Comentario sobre evolución del ISE…"
                 className="text-xs text-gray-500 mt-2"
                 showPencilOnHover
                 multiline
@@ -528,7 +528,7 @@ export function TabResultados() {
             <EditableText
               value={editableContent.comentarioEvolucionISEEstrato || 'Al analizar la evolución por estratos, se identifican situaciones diferenciadas. El estrato Bajo muestra una leve mejora, mientras que Media Loma presenta una tendencia negativa más marcada.'}
               onChange={(v) => updateContent('comentarioEvolucionISEEstrato', v)}
-              placeholder="Comentario sobre evolución ISE por estrato..."
+              placeholder="Comentario sobre evolución ISE por estrato…"
               className="text-xs text-gray-500 mt-2"
               showPencilOnHover
               multiline
@@ -591,7 +591,7 @@ export function TabResultados() {
               <EditableText
                 value={editableContent.comentarioProcesosActual || `A nivel de todo el establecimiento, se observa un funcionamiento relativamente adecuado del ciclo del agua (${procesos.cicloAgua}%), y un desempeño intermedio en el ciclo mineral (${procesos.cicloMineral}%) y el flujo de energía (${procesos.flujoEnergia}%).`}
                 onChange={(v) => updateContent('comentarioProcesosActual', v)}
-                placeholder="Comentario sobre procesos ecosistémicos..."
+                placeholder="Comentario sobre procesos ecosistémicos…"
                 className="text-xs text-gray-500 mt-3"
                 showPencilOnHover
                 multiline
@@ -621,7 +621,7 @@ export function TabResultados() {
               <EditableText
                 value={editableContent.comentarioEvolucionProcesos || 'En los tres años evaluados, se observa una relativa estabilidad en los ciclos del agua y mineral. El flujo de energía mostró una fuerte caída inicial, con recuperación parcial posterior.'}
                 onChange={(v) => updateContent('comentarioEvolucionProcesos', v)}
-                placeholder="Comentario sobre evolución de procesos..."
+                placeholder="Comentario sobre evolución de procesos…"
                 className="text-xs text-gray-500 mt-2"
                 showPencilOnHover
                 multiline
@@ -672,7 +672,7 @@ export function TabResultados() {
                         <EditableText
                           value={editableValue}
                           onChange={(value) => updateContent(contentKey, value)}
-                          placeholder="Ingrese sugerencias de manejo..."
+                          placeholder="Ingrese sugerencias de manejo…"
                           className="leading-relaxed"
                           multiline
                         />

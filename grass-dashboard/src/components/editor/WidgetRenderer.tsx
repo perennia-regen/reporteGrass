@@ -261,7 +261,7 @@ function TextBlockWidget({ widget }: { widget: WidgetConfig }) {
         <CardTitle className="text-sm">{widget.title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-700">{config.content || 'Contenido del comentario...'}</p>
+        <p className="text-sm text-gray-700">{config.content || 'Contenido del comentario…'}</p>
       </CardContent>
     </Card>
   );

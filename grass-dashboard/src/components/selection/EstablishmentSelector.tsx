@@ -25,6 +25,9 @@ export function EstablishmentSelector({
         {establecimientos.map((est) => (
           <Card
             key={est.id}
+            role="button"
+            tabIndex={0}
+            aria-pressed={selected === est.id}
             className={cn(
               'cursor-pointer transition-all py-4 hover:border-[var(--grass-green)]',
               selected === est.id
@@ -32,6 +35,12 @@ export function EstablishmentSelector({
                 : 'border-gray-200'
             )}
             onClick={() => onSelect(est.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(est.id);
+              }
+            }}
           >
             <CardContent className="flex items-center justify-between py-0">
               <div className="flex items-center gap-4">

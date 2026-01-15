@@ -69,7 +69,10 @@
   /* ============================================
      CONFIGURACIÓN PERSONALIZABLE - MODIFICA AQUÍ
      ============================================ */
-  
+
+  /* Color scheme for native elements */
+  color-scheme: light dark;
+
   /* Border radius base */
   --radius: 0.625rem;
   
@@ -164,5 +167,17 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -18,7 +18,7 @@ interface EditableTextProps {
 export function EditableText({
   value,
   onChange,
-  placeholder = 'Click para editar...',
+  placeholder = 'Click para editar…',
   className = '',
   multiline = false,
   showPencilOnHover = false,

@@ -46,7 +46,7 @@ export function TablaEstrato({ item }: TablaEstratoProps) {
                 <EditableText
                   value={editableContent[`tabla_${item.id}_${estrato.id}`] || ''}
                   onChange={(value) => updateContent(`tabla_${item.id}_${estrato.id}`, value)}
-                  placeholder="Ingrese recomendación..."
+                  placeholder="Ingrese recomendación…"
                   className="text-sm"
                 />
               </TableCell>

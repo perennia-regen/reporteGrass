@@ -12,7 +12,7 @@ import type { WidgetConfig, WidgetType } from '@/types/dashboard';
 function TabLoading() {
   return (
     <div className="flex items-center justify-center h-64">
-      <div className="text-gray-400 animate-pulse">Cargando contenido...</div>
+      <div className="text-gray-400 animate-pulse">Cargando contenido…</div>
     </div>
   );
 }
@@ -198,7 +198,7 @@ function getDefaultConfig(type: WidgetType): Record<string, unknown> {
     'pie-chart': { dataSource: 'estratos' },
     'data-table': { dataSource: 'monitores' },
     'kpi-card': { metric: 'isePromedio', label: 'ISE Promedio' },
-    'text-block': { content: 'Ingrese su comentario aquí...' },
+    'text-block': { content: 'Ingrese su comentario aquí…' },
     'map-widget': { showEstratos: true, showMonitores: true },
     'photo-carousel': { images: [] },
     'timeline': { events: [] },

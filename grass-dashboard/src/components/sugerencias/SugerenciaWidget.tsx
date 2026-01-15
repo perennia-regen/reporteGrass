@@ -82,7 +82,7 @@ export function SugerenciaWidget({
             <EditableText
               value={editableContent[`sugerencia_text_${item.id}`] || ''}
               onChange={(value) => updateContent(`sugerencia_text_${item.id}`, value)}
-              placeholder="Escriba su sugerencia o recomendación..."
+              placeholder="Escriba su sugerencia o recomendación…"
               multiline
               className="text-gray-700 text-sm"
             />
@@ -113,7 +113,7 @@ export function SugerenciaWidget({
                   <EditableText
                     value={commentValue}
                     onChange={(value) => updateContent(`sugerencia_comment_${item.id}`, value)}
-                    placeholder="Agregue un comentario sobre este gráfico..."
+                    placeholder="Agregue un comentario sobre este gráfico…"
                     multiline
                     className="text-gray-600 text-sm"
                   />

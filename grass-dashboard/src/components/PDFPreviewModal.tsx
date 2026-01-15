@@ -141,7 +141,7 @@ export function PDFPreviewModal({
               disabled={isDownloading || appliedSections.length === 0}
               className="bg-[var(--grass-green)] hover:bg-[var(--grass-green-dark)]"
             >
-              {isDownloading ? 'Descargando...' : 'Descargar PDF'}
+              {isDownloading ? 'Descargando…' : 'Descargar PDF'}
             </Button>
             <Button
               variant="outline"

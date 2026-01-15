@@ -153,7 +153,7 @@ export function TabInicio() {
           <EditableText
             value={editableContent.observacionGeneral}
             onChange={(value) => updateContent('observacionGeneral', value)}
-            placeholder="Ingrese una observacion general del monitoreo..."
+            placeholder="Ingrese una observación general del monitoreo…"
             className="text-gray-700 leading-relaxed"
             multiline
           />
@@ -175,39 +175,57 @@ export function TabInicio() {
             {localFotos.map((foto, index) => (
               <div key={index} className="group">
                 {/* Photo with edit option */}
-                <div
-                  className={`aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 relative overflow-hidden ${
-                    isEditing ? 'cursor-pointer hover:bg-gray-200 transition-colors' : ''
-                  }`}
-                  onClick={() => {
-                    if (isEditing) {
+                {isEditing ? (
+                  <button
+                    type="button"
+                    className="aspect-video w-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 relative overflow-hidden cursor-pointer hover:bg-gray-200 transition-colors"
+                    onClick={() => {
                       setSelectedPhotoIndex(index);
                       setShowGallery(true);
-                    }
-                  }}
-                >
-                  <div className="text-center">
-                    <svg
-                      className="w-8 h-8 mx-auto mb-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                  {/* Edit overlay */}
-                  {isEditing && (
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-colors">
-                      <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    }}
+                    aria-label={`Cambiar foto de ${foto.sitio}`}
+                  >
+                    <div className="text-center">
+                      <svg
+                        className="w-8 h-8 mx-auto mb-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
                     </div>
-                  )}
-                </div>
+                    {/* Edit overlay */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-colors">
+                      <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                    </div>
+                  </button>
+                ) : (
+                  <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 relative overflow-hidden">
+                    <div className="text-center">
+                      <svg
+                        className="w-8 h-8 mx-auto mb-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                )}
                 {/* Photo caption with editable comment */}
                 <div className="mt-2">
                   <p className="text-sm font-medium text-[var(--grass-green-dark)]">{foto.sitio}</p>
@@ -215,7 +233,7 @@ export function TabInicio() {
                   <EditableText
                     value={editableContent[`foto_comentario_${index}`] || foto.comentario}
                     onChange={(value) => updateContent(`foto_comentario_${index}`, value)}
-                    placeholder="Agregar comentario..."
+                    placeholder="Agregar comentario…"
                     className="text-xs text-gray-500"
                   />
                 </div>
