@@ -9,8 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { deserializeState } from '@/lib/url-state';
 
 export default function PreviewClient({ }: { id: string }) {
-  const { setIsEditing, setSelectedKPIs, setSugerenciaItems } = useDashboardStore();
-  const updateContent = useDashboardStore((state) => state.updateContent);
+  const { setIsEditing, setSelectedKPIs, setSugerenciaItems, updateBulkContent } = useDashboardStore();
   const { establecimiento } = mockDashboardData;
   const searchParams = useSearchParams();
 
@@ -27,11 +26,9 @@ export default function PreviewClient({ }: { id: string }) {
         if (state.kpis) {
           setSelectedKPIs(state.kpis);
         }
-        // Aplicar contenido editable
+        // Aplicar contenido editable (batch update para mejor performance)
         if (state.content) {
-          Object.entries(state.content).forEach(([key, value]) => {
-            updateContent(key, value);
-          });
+          updateBulkContent(state.content);
         }
         // Aplicar sugerencias
         if (state.sug) {
@@ -39,7 +36,7 @@ export default function PreviewClient({ }: { id: string }) {
         }
       }
     }
-  }, [setIsEditing, searchParams, setSelectedKPIs, updateContent, setSugerenciaItems]);
+  }, [setIsEditing, searchParams, setSelectedKPIs, updateBulkContent, setSugerenciaItems]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">

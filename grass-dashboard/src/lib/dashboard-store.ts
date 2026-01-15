@@ -61,6 +61,7 @@ interface DashboardState {
   // Contenido editable
   editableContent: EditableContent;
   updateContent: (key: string, value: string) => void;
+  updateBulkContent: (updates: Record<string, string>) => void;
 
   // Sidebar colapsable
   sidebarCollapsed: boolean;
@@ -176,6 +177,12 @@ export const useDashboardStore = create<DashboardState>()(
             ...editableContent,
             [key]: value,
           },
+        });
+      },
+      updateBulkContent: (updates) => {
+        const { editableContent } = get();
+        set({
+          editableContent: { ...editableContent, ...updates },
         });
       },
 
