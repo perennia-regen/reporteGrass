@@ -55,8 +55,7 @@ supabase/schema/
 │   ├── triggers.sql
 │   ├── rls_policies.sql
 │   └── security_fixes.sql
-└── views/              # Vistas para reportes
-    └── reports.sql
+└── users/              # (último directorio)
 ```
 
 ---
@@ -81,8 +80,9 @@ supabase/schema/
 | 014 | history_tables | monitoring_site_history, monitoring_task_history, etc. |
 | 015 | triggers_and_functions | update_updated_at_column trigger |
 | 016 | rls_policies | Row Level Security policies |
-| 017 | views | v_farm_summary, v_ise_historical, etc. |
+| 017 | views | ~~DROPPEADAS~~ (no eran de ruuts-api) |
 | 018 | security_fixes | RLS para ref tables, function search paths |
+| 019 | drop_views | **PENDIENTE** - Ejecutar DROP de vistas |
 
 ---
 
@@ -167,21 +167,6 @@ supabase/schema/
 - `monitoring_task_history` - Historial de tareas
 - `data_collection_statement_history` - Historial de declaraciones
 - `finding_history` - Historial de hallazgos
-
----
-
-## Vistas Disponibles
-
-| Vista | Descripción |
-|-------|-------------|
-| `v_farm_summary` | Resumen de farm con ISE más reciente |
-| `v_strata_summary` | Resumen por estrato con estadísticas |
-| `v_ise_historical` | Histórico de ISE para gráficos |
-| `v_ecosystem_processes_historical` | Histórico de procesos ecosistémicos |
-| `v_monitoring_sites_with_data` | Sitios con indicadores para mapas |
-| `v_monitoring_events_summary` | Eventos con progreso |
-| `v_soc_samples_summary` | Resumen de muestras SOC |
-| `v_indicator_readings` | Lecturas de indicadores con contexto |
 
 ---
 

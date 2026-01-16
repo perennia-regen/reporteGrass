@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../regen-project-dev-react"
+		},
+		{
+			"path": "../ruuts-api"
+		}
+	],
+	"settings": {}
+}
