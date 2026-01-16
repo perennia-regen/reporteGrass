@@ -5,6 +5,12 @@ import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
   Table,
   TableBody,
   TableCell,
@@ -68,28 +74,6 @@ import {
   Line,
   Cell,
 } from 'recharts';
-
-// Mapeo de abreviaciones a descripciones completas para tooltips
-const indicadorDescripciones: Record<string, string> = {
-  'Canopeo': 'Abundancia del Canopeo Vivo',
-  'Microf.': 'Abundancia de Microfauna',
-  'GF1': 'GF1 - Pastos Perennes de Verano',
-  'GF2': 'GF2 - Pastos Perennes de Invierno',
-  'GF3': 'GF3 - Hierbas y Leguminosas',
-  'GF4': 'GF4 - Árboles y Arbustos',
-  'Esp.D': 'Especies Contextualmente Deseables',
-  'Esp.I': 'Especies Contextualmente Indeseables',
-  'Ab.M': 'Abundancia de Mantillo',
-  'Inc.M': 'Incorporación de Mantillo',
-  'D.Bos': 'Descomposición de Bostas',
-  'S.Des': 'Suelo Desnudo',
-  'Enc.': 'Encostramiento',
-  'Er.E': 'Erosión Eólica',
-  'Er.H': 'Erosión Hídrica',
-  'Est.S': 'Estructura del Suelo',
-  'ISE1': 'Índice de Salud Ecosistémica - Lectura 1',
-  'ISE2': 'Índice de Salud Ecosistémica - Lectura 2',
-};
 
 // Definición de indicadores con sus claves y abreviaciones
 const indicadoresConfig = [
@@ -159,23 +143,127 @@ const procesosDeterminantes = {
   },
 };
 
-// Colores para líneas en gráficos de determinantes
-const lineColors = [
-  '#2563eb', // blue
-  '#dc2626', // red
-  '#16a34a', // green
-  '#ca8a04', // yellow
-  '#9333ea', // purple
-  '#0891b2', // cyan
-];
-
-// Componente para la sección de Determinantes con selector de estrato
+// Interface para la sección de Determinantes
 interface DeterminantesSectionProps {
   monitores: typeof mockDashboardData.monitores;
-  procesosHistorico: typeof mockDashboardData.procesosHistorico;
 }
 
-function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSectionProps) {
+// Componente para mostrar biomasa/materia seca por estrato (contenido sin título para acordeón)
+function BiomasaSectionContent({ estratos }: { estratos: typeof mockDashboardData.estratos }) {
+  const biomasaData = useMemo(() => calculateBiomasaByEstrato(), []);
+
+  const chartData = useMemo(() =>
+    estratos.map((e) => ({
+      nombre: e.nombre,
+      promedio: biomasaData[e.nombre]?.promedio || 0,
+      sitios: biomasaData[e.nombre]?.sitios || 0,
+      color: e.color,
+    })), [estratos, biomasaData]);
+
+  // Calcular total de materia seca (promedio * superficie para cada estrato)
+  const totalMateriaSeca = useMemo(() => {
+    let total = 0;
+    estratos.forEach((e) => {
+      const promedio = biomasaData[e.nombre]?.promedio || 0;
+      // kg MS/ha * ha = kg MS total, luego convertir a toneladas
+      total += (promedio * e.superficie) / 1000;
+    });
+    return Math.round(total);
+  }, [estratos, biomasaData]);
+
+  return (
+    <>
+      <p className="text-sm text-gray-600 mb-6">
+        Estimación de biomasa forrajera (kg de materia seca por hectárea) por estrato,
+        basada en los datos del evento de monitoreo de Marzo 2025.
+      </p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* KPI Card - Total estimado */}
+        <Card className="lg:col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Total Estimado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-4">
+              <p className="text-4xl font-bold text-[var(--grass-green-dark)]">
+                {totalMateriaSeca.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">toneladas de MS</p>
+              <p className="text-xs text-gray-400 mt-3">
+                Calculado como promedio por estrato × superficie
+              </p>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {estratos.map((e) => {
+                const data = biomasaData[e.nombre];
+                const totalEstrato = data ? Math.round((data.promedio * e.superficie) / 1000) : 0;
+                return (
+                  <div key={e.id} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded" style={{ backgroundColor: e.color }} aria-hidden="true" />
+                      <span>{e.nombre}</span>
+                    </div>
+                    <span className="font-medium">{totalEstrato.toLocaleString()} t</span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gráfico de barras */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Biomasa Promedio por Estrato (kg MS/ha)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" domain={[0, 'auto']} tickFormatter={(v) => v.toLocaleString()} />
+                <YAxis
+                  dataKey="nombre"
+                  type="category"
+                  width={100}
+                  tick={{ fontSize: 13 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  formatter={(value) => [`${(value as number).toLocaleString()} kg MS/ha`, 'Promedio']}
+                />
+                <Bar dataKey="promedio" radius={[4, 4, 4, 4]}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+
+            <div className="mt-4 grid grid-cols-3 gap-4 text-center text-sm">
+              {chartData.map((d) => (
+                <div key={d.nombre} className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded" style={{ backgroundColor: d.color }} aria-hidden="true" />
+                    <span className="font-medium">{d.nombre}</span>
+                  </div>
+                  <p className="text-lg font-bold">{d.promedio.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">kg MS/ha</p>
+                  <p className="text-xs text-gray-400 mt-1">{d.sitios} sitios</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+// Componente DeterminantesSection con contenido sin título para acordeón
+function DeterminantesSectionContent({ monitores }: DeterminantesSectionProps) {
   const [estratoSeleccionado, setEstratoSeleccionado] = useState<string>('todos');
 
   // Memoize expensive estrato calculations - computed once per estrato set
@@ -237,11 +325,8 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
   const estratos = ['todos', 'Loma', 'Media Loma', 'Bajo'];
 
   return (
-    <section>
-      <div className="flex items-center justify-between mb-4 border-b pb-2">
-        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)]">
-          Determinantes de los Procesos del Ecosistema
-        </h3>
+    <>
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Filtrar por estrato:</span>
           <select
@@ -389,129 +474,12 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
           </CardContent>
         </Card>
       </div>
-    </section>
-  );
-}
-
-// Componente para mostrar biomasa/materia seca por estrato
-function BiomasaSection({ estratos }: { estratos: typeof mockDashboardData.estratos }) {
-  const biomasaData = useMemo(() => calculateBiomasaByEstrato(), []);
-
-  const chartData = useMemo(() =>
-    estratos.map((e) => ({
-      nombre: e.nombre,
-      promedio: biomasaData[e.nombre]?.promedio || 0,
-      sitios: biomasaData[e.nombre]?.sitios || 0,
-      color: e.color,
-    })), [estratos, biomasaData]);
-
-  // Calcular total de materia seca (promedio * superficie para cada estrato)
-  const totalMateriaSeca = useMemo(() => {
-    let total = 0;
-    estratos.forEach((e) => {
-      const promedio = biomasaData[e.nombre]?.promedio || 0;
-      // kg MS/ha * ha = kg MS total, luego convertir a toneladas
-      total += (promedio * e.superficie) / 1000;
-    });
-    return Math.round(total);
-  }, [estratos, biomasaData]);
-
-  return (
-    <section>
-      <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
-        Materia Seca Disponible
-      </h3>
-      <p className="text-sm text-gray-600 mb-6">
-        Estimación de biomasa forrajera (kg de materia seca por hectárea) por estrato,
-        basada en los datos del evento de monitoreo de Marzo 2025.
-      </p>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* KPI Card - Total estimado */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Total Estimado</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-4">
-              <p className="text-4xl font-bold text-[var(--grass-green-dark)]">
-                {totalMateriaSeca.toLocaleString()}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">toneladas de MS</p>
-              <p className="text-xs text-gray-400 mt-3">
-                Calculado como promedio por estrato × superficie
-              </p>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {estratos.map((e) => {
-                const data = biomasaData[e.nombre];
-                const totalEstrato = data ? Math.round((data.promedio * e.superficie) / 1000) : 0;
-                return (
-                  <div key={e.id} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded" style={{ backgroundColor: e.color }} aria-hidden="true" />
-                      <span>{e.nombre}</span>
-                    </div>
-                    <span className="font-medium">{totalEstrato.toLocaleString()} t</span>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Gráfico de barras */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Biomasa Promedio por Estrato (kg MS/ha)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={chartData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" domain={[0, 'auto']} tickFormatter={(v) => v.toLocaleString()} />
-                <YAxis
-                  dataKey="nombre"
-                  type="category"
-                  width={100}
-                  tick={{ fontSize: 13 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  formatter={(value) => [`${(value as number).toLocaleString()} kg MS/ha`, 'Promedio']}
-                />
-                <Bar dataKey="promedio" radius={[4, 4, 4, 4]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-
-            <div className="mt-4 grid grid-cols-3 gap-4 text-center text-sm">
-              {chartData.map((d) => (
-                <div key={d.nombre} className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <div className="w-2 h-2 rounded" style={{ backgroundColor: d.color }} aria-hidden="true" />
-                    <span className="font-medium">{d.nombre}</span>
-                  </div>
-                  <p className="text-lg font-bold">{d.promedio.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">kg MS/ha</p>
-                  <p className="text-xs text-gray-400 mt-1">{d.sitios} sitios</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
+    </>
   );
 }
 
 export function TabResultados() {
-  const { ise, procesos, procesosHistorico, recomendaciones, estratos, monitores } = mockDashboardData;
+  const { ise, procesos, procesosHistorico, estratos, monitores } = mockDashboardData;
   const { editableContent, updateContent, setActiveTab } = useDashboardStore();
 
   const quickActions = useMemo(() => [
@@ -569,14 +537,16 @@ export function TabResultados() {
         </p>
       </div>
 
-      {/* SECCIÓN ISE */}
-      <section>
-        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
-          Índice de Salud Ecosistémica (ISE)
-        </h3>
-
-        {/* ISE por Estrato */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {/* ACORDEÓN DE SECCIONES */}
+      <Accordion type="multiple" defaultValue={['ise']} className="space-y-4">
+        {/* SECCIÓN ISE */}
+        <AccordionItem value="ise" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+            Índice de Salud Ecosistémica (ISE)
+          </AccordionTrigger>
+          <AccordionContent>
+            {/* ISE por Estrato */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">ISE por Estrato - Marzo 2025</CardTitle>
@@ -686,16 +656,17 @@ export function TabResultados() {
             />
           </CardContent>
         </Card>
-      </section>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* SECCIÓN PROCESOS ECOSISTÉMICOS */}
-      <section>
-        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
-          Procesos del Ecosistema
-        </h3>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Procesos Actual */}
+        {/* SECCIÓN PROCESOS ECOSISTÉMICOS */}
+        <AccordionItem value="procesos" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+            Procesos del Ecosistema
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Procesos Actual */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Procesos - Total Establecimiento (Marzo 2025)</CardTitle>
@@ -780,20 +751,32 @@ export function TabResultados() {
             </CardContent>
           </Card>
         </div>
-      </section>
 
-      {/* SECCIÓN BIOMASA / MATERIA SECA POR ESTRATO */}
-      <BiomasaSection estratos={estratos} />
+            {/* Subtítulo Determinantes */}
+            <h4 className="text-sm font-semibold text-[var(--grass-green-dark)] mt-8 mb-4 border-b pb-2">
+              Determinantes de los Procesos del Ecosistema
+            </h4>
+            <DeterminantesSectionContent monitores={monitores} />
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* SECCIÓN DISPONIBILIDAD Y CALIDAD FORRAJERA */}
-      <section>
-        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
-          Disponibilidad y Calidad Forrajera
-        </h3>
-        <p className="text-sm text-gray-600 mb-6">
-          Análisis de la biomasa disponible (kg de materia seca por hectárea) y calidad forrajera (escala 1-5)
-          por estrato, basado en los datos del evento de monitoreo.
-        </p>
+        {/* SECCIÓN DISPONIBILIDAD Y CALIDAD FORRAJERA (combinada con Materia Seca) */}
+        <AccordionItem value="forraje" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+            Disponibilidad y Calidad Forrajera
+          </AccordionTrigger>
+          <AccordionContent>
+            {/* Materia Seca Disponible */}
+            <BiomasaSectionContent estratos={estratos} />
+
+            {/* Subtítulo Calidad Forrajera */}
+            <h4 className="text-sm font-semibold text-[var(--grass-green-dark)] mt-8 mb-4 border-b pb-2">
+              Análisis de Calidad Forrajera
+            </h4>
+            <p className="text-sm text-gray-600 mb-6">
+              Análisis de la biomasa disponible (kg de materia seca por hectárea) y calidad forrajera (escala 1-5)
+              por estrato, basado en los datos del evento de monitoreo.
+            </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Biomasa por Estrato */}
@@ -853,20 +836,22 @@ export function TabResultados() {
             />
           </CardContent>
         </Card>
-      </section>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* SECCIÓN PATRÓN DE PASTOREO */}
-      <section>
-        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
-          Patrón e Intensidad de Pastoreo
-        </h3>
-        <p className="text-sm text-gray-600 mb-6">
-          Distribución del patrón de uso del pastoreo a nivel de establecimiento y la intensidad de pastoreo
-          por estrato, basado en las observaciones del evento de monitoreo.
-        </p>
+        {/* SECCIÓN PATRÓN DE PASTOREO */}
+        <AccordionItem value="pastoreo" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+            Patrón e Intensidad de Pastoreo
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="text-sm text-gray-600 mb-6">
+              Distribución del patrón de uso del pastoreo a nivel de establecimiento y la intensidad de pastoreo
+              por estrato, basado en las observaciones del evento de monitoreo.
+            </p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Patrón de Pastoreo - Pie Chart */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Patrón de Pastoreo - Pie Chart */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Patrón de Uso - Total Establecimiento</CardTitle>
@@ -902,92 +887,22 @@ export function TabResultados() {
             </CardContent>
           </Card>
         </div>
-      </section>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* SECCIÓN DETERMINANTES DE LOS PROCESOS DEL ECOSISTEMA */}
-      <DeterminantesSection monitores={monitores} procesosHistorico={procesosHistorico} />
+        {/* SECCIÓN ANEXO - TABLA DE RESULTADOS POR MONITOR (TRANSPUESTA) */}
+        <AccordionItem value="anexo" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+            Anexo
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Resultados por MCP en Marzo 2025. Los estratos se encuentran abreviados: AG (Agricultura/Loma), ML (Media Loma), BD (Bajo Dulce).
+            </p>
 
-      {/* SECCIÓN SÍNTESIS Y RECOMENDACIONES */}
-      <section>
-        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
-          Síntesis y Recomendaciones
-        </h3>
-
-        <Card>
-          <CardContent className="pt-6">
-            <Table className="table-fixed w-full">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[15%] whitespace-normal">Estrato</TableHead>
-                  <TableHead className="w-[85%] whitespace-normal">Sugerencias de Manejo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recomendaciones.map((rec) => {
-                  const estrato = estratos.find((e) => e.nombre === rec.estrato);
-                  // Mapear nombre de estrato a clave del store
-                  const estratoKey = rec.estrato === 'Media Loma' ? 'media_loma' : rec.estrato.toLowerCase();
-                  const contentKey = `recomendacion_${estratoKey}`;
-                  const editableValue = editableContent[contentKey] || rec.sugerencia;
-
-                  return (
-                    <TableRow key={rec.estrato}>
-                      <TableCell className="font-medium align-top pt-4 whitespace-normal">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded flex-shrink-0"
-                            style={{ backgroundColor: estrato?.color || '#757575' }}
-                            aria-hidden="true"
-                          />
-                          {rec.estrato}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-700 whitespace-normal break-words">
-                        <EditableText
-                          value={editableValue}
-                          onChange={(value) => updateContent(contentKey, value)}
-                          placeholder="Ingrese sugerencias de manejo…"
-                          className="leading-relaxed"
-                          multiline
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Comentario Final */}
-        <Card className="mt-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Comentario Final del Técnico</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EditableText
-              value={editableContent.comentarioFinal}
-              onChange={(value) => updateContent('comentarioFinal', value)}
-              placeholder="Ingrese un comentario final sobre los resultados..."
-              className="text-gray-700 leading-relaxed"
-              multiline
-            />
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* SECCIÓN ANEXO - TABLA DE RESULTADOS POR MONITOR (TRANSPUESTA) */}
-      <section>
-        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
-          Anexo - Tabla con resultados por monitor
-        </h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Resultados por MCP en Marzo 2025. Los estratos se encuentran abreviados: AG (Agricultura/Loma), ML (Media Loma), BD (Bajo Dulce).
-        </p>
-
-        <Card>
-          <CardContent className="pt-4 overflow-x-auto">
-            <TooltipProvider>
+            <Card>
+              <CardContent className="pt-4 overflow-x-auto">
+                <TooltipProvider>
               <Table className="text-xs">
                 <TableHeader>
                   <TableRow>
@@ -1071,10 +986,12 @@ export function TabResultados() {
                   </TableRow>
                 </TableBody>
               </Table>
-            </TooltipProvider>
-          </CardContent>
-        </Card>
-      </section>
+                </TooltipProvider>
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Footer */}
       <div className="mt-8 pt-6 pb-8 border-t border-gray-200">

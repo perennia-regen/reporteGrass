@@ -8,7 +8,7 @@ import { useDashboardStore, type KPIType } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
 import { SugerenciasSection } from '@/components/sugerencias';
 import { PhotoGalleryModal } from '@/components/PhotoGalleryModal';
-import { ArrowRight, TrendingUp, Plus, Camera } from 'lucide-react';
+import { ArrowRight, TrendingUp, Plus, Camera, X } from 'lucide-react';
 
 // Modular imports
 import { QUICK_ACTIONS } from './constants';
@@ -59,6 +59,26 @@ export function TabInicio() {
       setLocalFotos(newFotos);
     }
     setSelectedPhotoIndex(null);
+  };
+
+  // Add new photo slot
+  const handleAddPhoto = () => {
+    const newPhoto: SitePhotoWithISE = {
+      siteId: `new-${Date.now()}`,
+      siteName: 'Nuevo sitio',
+      estrato: 'Sin estrato',
+      ise: 0,
+      url: '/placeholder-photo.jpg',
+    };
+    setLocalFotos([...localFotos, newPhoto]);
+    setSelectedPhotoIndex(localFotos.length);
+    setShowGallery(true);
+  };
+
+  // Remove photo slot
+  const handleRemovePhoto = (index: number) => {
+    const newFotos = localFotos.filter((_, i) => i !== index);
+    setLocalFotos(newFotos);
   };
 
   return (
@@ -182,7 +202,18 @@ export function TabInicio() {
               const iseColor = foto.ise >= 60 ? '#22c55e' : foto.ise >= 40 ? '#eab308' : foto.ise >= 20 ? '#f97316' : '#ef4444';
 
               return (
-                <div key={foto.siteId} className="group">
+                <div key={foto.siteId} className="group relative">
+                  {/* Remove button - only in edit mode and if more than 1 photo */}
+                  {isEditing && localFotos.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhoto(index)}
+                      className="absolute -top-2 -right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label={`Eliminar foto de ${foto.siteName}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                   {/* Photo with real image */}
                   {isEditing ? (
                     <button
@@ -236,6 +267,20 @@ export function TabInicio() {
               );
             })}
           </div>
+
+          {/* Add photo button - only in edit mode and max 8 photos */}
+          {isEditing && localFotos.length < 8 && (
+            <div className="mt-4 flex justify-center p-4 border-2 border-dashed rounded-lg border-gray-300 hover:border-gray-400 transition-colors">
+              <Button
+                variant="ghost"
+                onClick={handleAddPhoto}
+                className="text-gray-500 hover:text-[var(--grass-green-dark)]"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar foto ({localFotos.length}/8)
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
