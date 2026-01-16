@@ -22,11 +22,15 @@ export const grassTheme = {
       greenLight: '#b1ff6d', // Verde claro acentos - var(--grass-green-light)
     },
     
-    // Colores de estratos
+    // Colores de estratos (gradiente fucsia apagado → celeste apagado)
     estratos: {
-      loma: '#313b2e',       // Verde oscuro - var(--estrato-loma)
-      mediaLoma: '#6cb460',  // Verde medio - var(--estrato-media-loma)
-      bajo: '#75e192',       // Verde claro - var(--estrato-bajo)
+      // Colores base del gradiente
+      gradientStart: '#b35d8d',  // Fucsia apagado - var(--estrato-gradient-start)
+      gradientEnd: '#5ba3b0',    // Celeste apagado - var(--estrato-gradient-end)
+      // Colores predefinidos para 3 estratos (interpolados del gradiente)
+      loma: '#b35d8d',       // Fucsia apagado - var(--estrato-loma)
+      mediaLoma: '#87809f',  // Lavanda apagado - var(--estrato-media-loma)
+      bajo: '#5ba3b0',       // Celeste apagado - var(--estrato-bajo)
     },
     
     // Colores de procesos ecosistémicos (paleta GRASS sobria)
@@ -144,8 +148,69 @@ export const grassTheme = {
 export const chartColors = {
   bar: ['#252525', '#507531', '#8aca53'], // Usa brown, greenDark, green
   line: ['#ff5900', '#252525', '#507531', '#FFC107'], // orange, brown, greenDark, yellow
-  pie: ['#313b2e', '#6cb460', '#75e192'], // Usa colores de estratos
+  pie: ['#b35d8d', '#87809f', '#5ba3b0'], // Usa colores de estratos (fucsia → celeste apagado)
 };
+
+/**
+ * Interpola linealmente entre dos valores
+ */
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+/**
+ * Convierte un color hexadecimal a RGB
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return { r: 0, g: 0, b: 0 };
+  return {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16),
+  };
+}
+
+/**
+ * Convierte RGB a hexadecimal
+ */
+function rgbToHex(r: number, g: number, b: number): string {
+  return '#' + [r, g, b].map(x => {
+    const hex = Math.round(x).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }).join('');
+}
+
+/**
+ * Genera un array de colores interpolados entre fucsia y azul claro
+ * para cualquier cantidad de estratos.
+ *
+ * @param count Número de estratos
+ * @returns Array de colores hexadecimales
+ *
+ * @example
+ * generateEstratoColors(3) // ['#d946ef', '#a097f2', '#67e8f9']
+ * generateEstratoColors(5) // ['#d946ef', '#bc6ef3', '#a097f2', '#83bff6', '#67e8f9']
+ */
+export function generateEstratoColors(count: number): string[] {
+  if (count <= 0) return [];
+  if (count === 1) return [grassTheme.colors.estratos.gradientStart];
+
+  const startColor = hexToRgb(grassTheme.colors.estratos.gradientStart);
+  const endColor = hexToRgb(grassTheme.colors.estratos.gradientEnd);
+
+  const colors: string[] = [];
+
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    const r = lerp(startColor.r, endColor.r, t);
+    const g = lerp(startColor.g, endColor.g, t);
+    const b = lerp(startColor.b, endColor.b, t);
+    colors.push(rgbToHex(r, g, b));
+  }
+
+  return colors;
+}
 
 // Umbral ISE deseable
 export const ISE_THRESHOLD = 70;

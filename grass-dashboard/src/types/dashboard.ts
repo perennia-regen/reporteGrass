@@ -351,3 +351,38 @@ export interface ForrajeHistoricoItem {
     calidad: number;
   }[];
 }
+
+// ============================================
+// Tipos para Secciones Personalizadas
+// ============================================
+
+// Foto para galería personalizada
+export interface CustomSectionPhoto {
+  url: string;
+  sitio: string;
+  ise?: number;
+  estrato?: string;
+}
+
+// Item dentro de una sección personalizada
+export interface CustomSectionItem {
+  id: string;
+  type: SugerenciaWidgetType | 'photo-gallery';
+  content?: string;
+  tableConfig?: {
+    columns: string[];
+    rows: TableRow[];
+  };
+  chartType?: WidgetType;
+  photos?: CustomSectionPhoto[]; // Para photo-gallery (máx 4)
+  colSpan?: SugerenciaLayout;
+  order?: number;
+}
+
+// Sección personalizada completa
+export interface CustomSection {
+  id: string;
+  title: string;
+  items: CustomSectionItem[];
+  position: number; // 0=después de ISE, 1=después de Procesos, 2=después de Forraje, 3=después de Pastoreo
+}

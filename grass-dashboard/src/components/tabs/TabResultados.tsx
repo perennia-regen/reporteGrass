@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,9 +57,12 @@ function ChartSkeleton() {
     </div>
   );
 }
-import { useDashboardStore } from '@/lib/dashboard-store';
+import { useDashboardStore, useCustomSections, useAddCustomSection, useIsEditing, useRemoveCustomSection, useResultadosSectionOrder, useSetResultadosSectionOrder, useUpdateCustomSection } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
 import { getEstratoColor } from '@/lib/utils';
+import { Plus, GripVertical, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { CustomSectionEditor } from './TabResultados/';
 import {
   BarChart,
   Bar,
@@ -478,9 +481,93 @@ function DeterminantesSectionContent({ monitores }: DeterminantesSectionProps) {
   );
 }
 
+// Componente para título editable de sección personalizada
+function EditableSectionTitle({
+  title,
+  sectionId,
+  isEditing
+}: {
+  title: string;
+  sectionId: string;
+  isEditing: boolean;
+}) {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState(title);
+  const updateCustomSection = useUpdateCustomSection();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingTitle && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditingTitle]);
+
+  // Sincronizar valor cuando cambia externamente
+  useEffect(() => {
+    setTitleValue(title);
+  }, [title]);
+
+  const handleSave = () => {
+    if (titleValue.trim()) {
+      updateCustomSection(sectionId, { title: titleValue.trim() });
+    } else {
+      setTitleValue(title);
+    }
+    setIsEditingTitle(false);
+  };
+
+  if (!isEditing) {
+    return <span className="flex-1 text-left">{title}</span>;
+  }
+
+  if (isEditingTitle) {
+    return (
+      <Input
+        ref={inputRef}
+        value={titleValue}
+        onChange={(e) => setTitleValue(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') handleSave();
+          if (e.key === 'Escape') {
+            setTitleValue(title);
+            setIsEditingTitle(false);
+          }
+        }}
+        onClick={(e) => e.stopPropagation()}
+        className="flex-1 text-base font-semibold h-8"
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        setIsEditingTitle(true);
+      }}
+      className="flex-1 text-left flex items-center gap-2 group"
+    >
+      <span>{title}</span>
+      <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+  );
+}
+
 export function TabResultados() {
   const { ise, procesos, procesosHistorico, estratos, monitores } = mockDashboardData;
   const { editableContent, updateContent, setActiveTab } = useDashboardStore();
+  const customSections = useCustomSections();
+  const addCustomSection = useAddCustomSection();
+  const removeCustomSection = useRemoveCustomSection();
+  const sectionOrder = useResultadosSectionOrder();
+  const setSectionOrder = useSetResultadosSectionOrder();
+  const isEditing = useIsEditing();
+
+  // Estado para drag & drop de secciones (TODAS las secciones)
+  const [draggedSectionId, setDraggedSectionId] = useState<string | null>(null);
+  const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(null);
 
   const quickActions = useMemo(() => [
     { id: 'inicio', name: 'Inicio' },
@@ -488,6 +575,37 @@ export function TabResultados() {
     { id: 'sobre-grass', name: 'Sobre GRASS' },
     { id: 'comunidad', name: 'Comunidad' },
   ], []);
+
+  // Handlers para drag & drop de TODAS las secciones
+  const handleSectionDragStart = useCallback((e: React.DragEvent, sectionId: string) => {
+    setDraggedSectionId(sectionId);
+    e.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  const handleSectionDragOver = useCallback((e: React.DragEvent, sectionId: string) => {
+    e.preventDefault();
+    setDragOverSectionId(sectionId);
+  }, []);
+
+  const handleSectionDrop = useCallback(() => {
+    if (draggedSectionId !== null && dragOverSectionId !== null && draggedSectionId !== dragOverSectionId) {
+      const fromIndex = sectionOrder.indexOf(draggedSectionId);
+      const toIndex = sectionOrder.indexOf(dragOverSectionId);
+      if (fromIndex !== -1 && toIndex !== -1) {
+        const newOrder = [...sectionOrder];
+        const [removed] = newOrder.splice(fromIndex, 1);
+        newOrder.splice(toIndex, 0, removed);
+        setSectionOrder(newOrder);
+      }
+    }
+    setDraggedSectionId(null);
+    setDragOverSectionId(null);
+  }, [draggedSectionId, dragOverSectionId, sectionOrder, setSectionOrder]);
+
+  const handleSectionDragEnd = useCallback(() => {
+    setDraggedSectionId(null);
+    setDragOverSectionId(null);
+  }, []);
 
   // Memoize chart data preparations
   const iseEstratoData = useMemo(() =>
@@ -529,7 +647,7 @@ export function TabResultados() {
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Encabezado */}
       <div>
-        <h2 className="text-2xl font-bold text-black">
+        <h2 className="text-2xl font-bold text-black" style={{ textWrap: 'balance' }}>
           Resultados del Monitoreo
         </h2>
         <p className="text-gray-600 mt-1">
@@ -537,461 +655,521 @@ export function TabResultados() {
         </p>
       </div>
 
-      {/* ACORDEÓN DE SECCIONES */}
+      {/* ACORDEÓN DE SECCIONES - Renderizadas según el orden */}
       <Accordion type="multiple" defaultValue={['ise']} className="space-y-4">
-        {/* SECCIÓN ISE */}
-        <AccordionItem value="ise" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
-            Índice de Salud Ecosistémica (ISE)
-          </AccordionTrigger>
-          <AccordionContent>
-            {/* ISE por Estrato */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">ISE por Estrato - Marzo 2025</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={iseEstratoData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} />
-                  <YAxis
-                    dataKey="nombre"
-                    type="category"
-                    width={100}
-                    tick={{ fontSize: 13 }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip />
-                  <ReferenceLine x={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" label={{ value: 'Deseable', position: 'top' }} />
-                  <ReferenceLine x={ise.promedio} stroke="#E65100" strokeDasharray="3 3" label={{ value: `Prom: ${ise.promedio}`, position: 'bottom' }} />
-                  <Bar dataKey="ISE" radius={[4, 4, 4, 4]}>
-                    {iseEstratoData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              <EditableText
-                value={editableContent.comentarioISEEstrato || `ISE promedio de ${ise.promedio}, por debajo del umbral deseable (${ISE_THRESHOLD}). Loma con menor valor por uso agrícola. Bajo y Media Loma con mejores resultados pero aún con margen de mejora.`}
-                onChange={(v) => updateContent('comentarioISEEstrato', v)}
-                placeholder="Comentario sobre ISE por estrato…"
-                className="text-xs text-gray-500 mt-2"
-                showPencilOnHover
-                multiline
-              />
-            </CardContent>
-          </Card>
+        {sectionOrder.map((sectionId) => {
+          // Propiedades comunes de drag & drop para todas las secciones
+          const dragProps = isEditing ? {
+            draggable: true,
+            onDragStart: (e: React.DragEvent) => handleSectionDragStart(e, sectionId),
+            onDragOver: (e: React.DragEvent) => handleSectionDragOver(e, sectionId),
+            onDrop: handleSectionDrop,
+            onDragEnd: handleSectionDragEnd,
+          } : {};
 
-          {/* Evolución ISE Total */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Evolución ISE - Total Establecimiento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={iseEvolucionData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="fecha" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <ReferenceLine y={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" label="Deseable" />
-                  <Bar dataKey="ISE" fill={grassTheme.colors.primary.green} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-              <EditableText
-                value={editableContent.comentarioEvolucionISE || 'Caída inicial marcada por sequía severa, con recuperación parcial posterior. El ISE refleja el impacto del clima y las decisiones de manejo.'}
-                onChange={(v) => updateContent('comentarioEvolucionISE', v)}
-                placeholder="Comentario sobre evolución del ISE…"
-                className="text-xs text-gray-500 mt-2"
-                showPencilOnHover
-                multiline
-              />
-            </CardContent>
-          </Card>
-        </div>
+          const dragClasses = `${draggedSectionId === sectionId ? 'opacity-40' : ''} ${
+            dragOverSectionId === sectionId ? 'border-t-4 border-[var(--grass-green)]' : ''
+          }`;
 
-        {/* Evolución ISE por Estrato - Barras si ≤2 monitoreos, Líneas si >2 */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Evolución ISE por Estrato</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              {ise.historico.length > 2 ? (
-                <LineChart data={iseEstratoEvolucionData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="fecha" />
-                  <YAxis domain={[-30, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <ReferenceLine y={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" />
-                  <Line type="monotone" dataKey="Bajo" stroke={getEstratoColor('Bajo')} strokeWidth={2} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Media Loma" stroke={getEstratoColor('Media Loma')} strokeWidth={2} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Loma" stroke={getEstratoColor('Loma')} strokeWidth={2} dot={{ r: 4 }} />
-                </LineChart>
-              ) : (
-                <BarChart data={iseEstratoEvolucionData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="fecha" />
-                  <YAxis domain={[-30, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <ReferenceLine y={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" />
-                  <Bar dataKey="Bajo" fill={getEstratoColor('Bajo')} />
-                  <Bar dataKey="Media Loma" fill={getEstratoColor('Media Loma')} />
-                  <Bar dataKey="Loma" fill={getEstratoColor('Loma')} />
-                </BarChart>
-              )}
-            </ResponsiveContainer>
-            <EditableText
-              value={editableContent.comentarioEvolucionISEEstrato || 'Loma estable en valores bajos por uso agrícola. Media Loma con tendencia negativa por conversión a cultivos anuales. Bajo con leve mejora por mejor gestión de descansos.'}
-              onChange={(v) => updateContent('comentarioEvolucionISEEstrato', v)}
-              placeholder="Comentario sobre evolución ISE por estrato…"
-              className="text-xs text-gray-500 mt-2"
-              showPencilOnHover
-              multiline
-            />
-          </CardContent>
-        </Card>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* SECCIÓN PROCESOS ECOSISTÉMICOS */}
-        <AccordionItem value="procesos" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
-            Procesos del Ecosistema
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Procesos Actual */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Procesos - Total Establecimiento (Marzo 2025)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={procesosData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} unit="%" />
-                  <YAxis
-                    dataKey="proceso"
-                    type="category"
-                    width={140}
-                    tick={{ fontSize: 13 }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip formatter={(value) => `${value}%`} />
-                  <Bar dataKey="valor" radius={[4, 4, 4, 4]}>
-                    {procesosData.map((entry, index) => (
-                      <Cell key={index} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.cicloAgua }} aria-hidden="true" />
-                  <span>Ciclo del Agua: {procesos.cicloAgua}%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.cicloMineral }} aria-hidden="true" />
-                  <span>Ciclo Mineral: {procesos.cicloMineral}%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.flujoEnergia }} aria-hidden="true" />
-                  <span>Flujo de Energía: {procesos.flujoEnergia}%</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.dinamicaComunidades }} aria-hidden="true" />
-                  <span>Din. Comunidades: {procesos.dinamicaComunidades}%</span>
-                </div>
+          // Sección ISE
+          if (sectionId === 'ise') {
+            return (
+              <div key={sectionId} {...dragProps} className={dragClasses}>
+                <AccordionItem value="ise" className="border rounded-lg px-4">
+                  <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+                    <div className="flex items-center gap-2 w-full">
+                      {isEditing && <GripVertical className="w-4 h-4 text-gray-400 cursor-move shrink-0" />}
+                      <span className="flex-1 text-left">Índice de Salud Ecosistémica (ISE)</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">ISE por Estrato - Marzo 2025</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={220}>
+                            <BarChart data={iseEstratoData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                              <XAxis type="number" domain={[0, 100]} />
+                              <YAxis dataKey="nombre" type="category" width={100} tick={{ fontSize: 13 }} tickLine={false} axisLine={false} />
+                              <Tooltip />
+                              <ReferenceLine x={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" label={{ value: 'Deseable', position: 'top' }} />
+                              <ReferenceLine x={ise.promedio} stroke="#E65100" strokeDasharray="3 3" label={{ value: `Prom: ${ise.promedio}`, position: 'bottom' }} />
+                              <Bar dataKey="ISE" radius={[4, 4, 4, 4]}>
+                                {iseEstratoData.map((entry, index) => (
+                                  <Cell key={index} fill={entry.color} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                          <EditableText
+                            value={editableContent.comentarioISEEstrato || `ISE promedio de ${ise.promedio}, por debajo del umbral deseable (${ISE_THRESHOLD}). Loma con menor valor por uso agrícola.`}
+                            onChange={(v) => updateContent('comentarioISEEstrato', v)}
+                            placeholder="Comentario sobre ISE por estrato…"
+                            className="text-xs text-gray-500 mt-2"
+                            showPencilOnHover
+                            multiline
+                          />
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Evolución ISE - Total Establecimiento</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={iseEvolucionData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="fecha" />
+                              <YAxis domain={[0, 100]} />
+                              <Tooltip />
+                              <ReferenceLine y={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" label="Deseable" />
+                              <Bar dataKey="ISE" fill={grassTheme.colors.primary.green} radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                          <EditableText
+                            value={editableContent.comentarioEvolucionISE || 'Caída inicial marcada por sequía severa, con recuperación parcial posterior.'}
+                            onChange={(v) => updateContent('comentarioEvolucionISE', v)}
+                            placeholder="Comentario sobre evolución del ISE…"
+                            className="text-xs text-gray-500 mt-2"
+                            showPencilOnHover
+                            multiline
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Evolución ISE por Estrato</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          {ise.historico.length > 2 ? (
+                            <LineChart data={iseEstratoEvolucionData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="fecha" />
+                              <YAxis domain={[-30, 100]} />
+                              <Tooltip />
+                              <Legend />
+                              <ReferenceLine y={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" />
+                              <Line type="monotone" dataKey="Bajo" stroke={getEstratoColor('Bajo')} strokeWidth={2} dot={{ r: 4 }} />
+                              <Line type="monotone" dataKey="Media Loma" stroke={getEstratoColor('Media Loma')} strokeWidth={2} dot={{ r: 4 }} />
+                              <Line type="monotone" dataKey="Loma" stroke={getEstratoColor('Loma')} strokeWidth={2} dot={{ r: 4 }} />
+                            </LineChart>
+                          ) : (
+                            <BarChart data={iseEstratoEvolucionData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="fecha" />
+                              <YAxis domain={[-30, 100]} />
+                              <Tooltip />
+                              <Legend />
+                              <ReferenceLine y={ISE_THRESHOLD} stroke="#666" strokeDasharray="5 5" />
+                              <Bar dataKey="Bajo" fill={getEstratoColor('Bajo')} />
+                              <Bar dataKey="Media Loma" fill={getEstratoColor('Media Loma')} />
+                              <Bar dataKey="Loma" fill={getEstratoColor('Loma')} />
+                            </BarChart>
+                          )}
+                        </ResponsiveContainer>
+                        <EditableText
+                          value={editableContent.comentarioEvolucionISEEstrato || 'Loma estable en valores bajos por uso agrícola. Media Loma con tendencia negativa.'}
+                          onChange={(v) => updateContent('comentarioEvolucionISEEstrato', v)}
+                          placeholder="Comentario sobre evolución ISE por estrato…"
+                          className="text-xs text-gray-500 mt-2"
+                          showPencilOnHover
+                          multiline
+                        />
+                      </CardContent>
+                    </Card>
+                  </AccordionContent>
+                </AccordionItem>
               </div>
-              <EditableText
-                value={editableContent.comentarioProcesosActual || `Ciclo del agua adecuado (${procesos.cicloAgua}%). Ciclo mineral y flujo de energía intermedios. Dinámica de comunidades limitada (${procesos.dinamicaComunidades}%), reflejando menor diversidad biológica.`}
-                onChange={(v) => updateContent('comentarioProcesosActual', v)}
-                placeholder="Comentario sobre procesos ecosistémicos…"
-                className="text-xs text-gray-500 mt-3"
-                showPencilOnHover
-                multiline
-              />
-            </CardContent>
-          </Card>
+            );
+          }
 
-          {/* Evolución Procesos */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Evolución de Procesos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={procesosEvolucionData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="fecha" />
-                  <YAxis domain={[0, 100]} unit="%" />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="Ciclo Agua" stroke={grassTheme.colors.procesos.cicloAgua} strokeWidth={2} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Ciclo Mineral" stroke={grassTheme.colors.procesos.cicloMineral} strokeWidth={2} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Flujo Energía" stroke={grassTheme.colors.procesos.flujoEnergia} strokeWidth={2} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="Din. Comunidades" stroke={grassTheme.colors.procesos.dinamicaComunidades} strokeWidth={2} dot={{ r: 4 }} />
-                </LineChart>
-              </ResponsiveContainer>
-              <EditableText
-                value={editableContent.comentarioEvolucionProcesos || 'Ciclos del agua y mineral estables. Flujo de energía con caída inicial y recuperación parcial. Dinámica de comunidades con tendencia descendente que requiere atención.'}
-                onChange={(v) => updateContent('comentarioEvolucionProcesos', v)}
-                placeholder="Comentario sobre evolución de procesos…"
-                className="text-xs text-gray-500 mt-2"
-                showPencilOnHover
-                multiline
-              />
-            </CardContent>
-          </Card>
-        </div>
+          // Sección Procesos
+          if (sectionId === 'procesos') {
+            return (
+              <div key={sectionId} {...dragProps} className={dragClasses}>
+                <AccordionItem value="procesos" className="border rounded-lg px-4">
+                  <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+                    <div className="flex items-center gap-2 w-full">
+                      {isEditing && <GripVertical className="w-4 h-4 text-gray-400 cursor-move shrink-0" />}
+                      <span className="flex-1 text-left">Procesos del Ecosistema</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Procesos - Total Establecimiento (Marzo 2025)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={280}>
+                            <BarChart data={procesosData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                              <XAxis type="number" domain={[0, 100]} unit="%" />
+                              <YAxis dataKey="proceso" type="category" width={140} tick={{ fontSize: 13 }} tickLine={false} axisLine={false} />
+                              <Tooltip formatter={(value) => `${value}%`} />
+                              <Bar dataKey="valor" radius={[4, 4, 4, 4]}>
+                                {procesosData.map((entry, index) => (
+                                  <Cell key={index} fill={entry.fill} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                          <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.cicloAgua }} aria-hidden="true" />
+                              <span>Ciclo del Agua: {procesos.cicloAgua}%</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.cicloMineral }} aria-hidden="true" />
+                              <span>Ciclo Mineral: {procesos.cicloMineral}%</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.flujoEnergia }} aria-hidden="true" />
+                              <span>Flujo de Energía: {procesos.flujoEnergia}%</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.dinamicaComunidades }} aria-hidden="true" />
+                              <span>Din. Comunidades: {procesos.dinamicaComunidades}%</span>
+                            </div>
+                          </div>
+                          <EditableText
+                            value={editableContent.comentarioProcesosActual || `Ciclo del agua adecuado (${procesos.cicloAgua}%). Dinámica de comunidades limitada (${procesos.dinamicaComunidades}%).`}
+                            onChange={(v) => updateContent('comentarioProcesosActual', v)}
+                            placeholder="Comentario sobre procesos ecosistémicos…"
+                            className="text-xs text-gray-500 mt-3"
+                            showPencilOnHover
+                            multiline
+                          />
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Evolución de Procesos</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={250}>
+                            <LineChart data={procesosEvolucionData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="fecha" />
+                              <YAxis domain={[0, 100]} unit="%" />
+                              <Tooltip />
+                              <Legend />
+                              <Line type="monotone" dataKey="Ciclo Agua" stroke={grassTheme.colors.procesos.cicloAgua} strokeWidth={2} dot={{ r: 4 }} />
+                              <Line type="monotone" dataKey="Ciclo Mineral" stroke={grassTheme.colors.procesos.cicloMineral} strokeWidth={2} dot={{ r: 4 }} />
+                              <Line type="monotone" dataKey="Flujo Energía" stroke={grassTheme.colors.procesos.flujoEnergia} strokeWidth={2} dot={{ r: 4 }} />
+                              <Line type="monotone" dataKey="Din. Comunidades" stroke={grassTheme.colors.procesos.dinamicaComunidades} strokeWidth={2} dot={{ r: 4 }} />
+                            </LineChart>
+                          </ResponsiveContainer>
+                          <EditableText
+                            value={editableContent.comentarioEvolucionProcesos || 'Ciclos del agua y mineral estables. Flujo de energía con caída inicial y recuperación parcial.'}
+                            onChange={(v) => updateContent('comentarioEvolucionProcesos', v)}
+                            placeholder="Comentario sobre evolución de procesos…"
+                            className="text-xs text-gray-500 mt-2"
+                            showPencilOnHover
+                            multiline
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+                    <h4 className="text-sm font-semibold text-[var(--grass-green-dark)] mt-8 mb-4 border-b pb-2">
+                      Determinantes de los Procesos del Ecosistema
+                    </h4>
+                    <DeterminantesSectionContent monitores={monitores} />
+                  </AccordionContent>
+                </AccordionItem>
+              </div>
+            );
+          }
 
-            {/* Subtítulo Determinantes */}
-            <h4 className="text-sm font-semibold text-[var(--grass-green-dark)] mt-8 mb-4 border-b pb-2">
-              Determinantes de los Procesos del Ecosistema
-            </h4>
-            <DeterminantesSectionContent monitores={monitores} />
-          </AccordionContent>
-        </AccordionItem>
+          // Sección Forraje
+          if (sectionId === 'forraje') {
+            return (
+              <div key={sectionId} {...dragProps} className={dragClasses}>
+                <AccordionItem value="forraje" className="border rounded-lg px-4">
+                  <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+                    <div className="flex items-center gap-2 w-full">
+                      {isEditing && <GripVertical className="w-4 h-4 text-gray-400 cursor-move shrink-0" />}
+                      <span className="flex-1 text-left">Disponibilidad y Calidad Forrajera</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <BiomasaSectionContent estratos={estratos} />
+                    <h4 className="text-sm font-semibold text-[var(--grass-green-dark)] mt-8 mb-4 border-b pb-2">
+                      Análisis de Calidad Forrajera
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-6">
+                      Análisis de la biomasa disponible (kg de materia seca por hectárea) y calidad forrajera (escala 1-5)
+                      por estrato, basado en los datos del evento de monitoreo.
+                    </p>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Disponibilidad Forrajera por Estrato</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ForrajeBiomasaChart data={forrajeData} />
+                          <EditableText
+                            value={editableContent.comentarioForrajeBiomasa || 'Bajo con mayor disponibilidad por mejores condiciones hídricas y gestión de descansos.'}
+                            onChange={(v) => updateContent('comentarioForrajeBiomasa', v)}
+                            placeholder="Comentario sobre disponibilidad forrajera…"
+                            className="text-xs text-gray-500 mt-2"
+                            showPencilOnHover
+                            multiline
+                          />
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Calidad Forrajera por Estrato</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <ForrajeCalidadChart data={forrajeData} />
+                          <p className="text-xs text-gray-400 mt-2 mb-2">
+                            Escala: 1 (muy baja) - 5 (muy buena). Línea punteada indica calidad media (3).
+                          </p>
+                          <EditableText
+                            value={editableContent.comentarioForrajeCalidad || 'Valores superiores a 3 indican buena presencia de gramíneas perennes y leguminosas.'}
+                            onChange={(v) => updateContent('comentarioForrajeCalidad', v)}
+                            placeholder="Comentario sobre calidad forrajera…"
+                            className="text-xs text-gray-500"
+                            showPencilOnHover
+                            multiline
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Evolución Interanual de Forraje por Estrato</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ForrajeInteranualChart data={forrajeHistorico} />
+                        <EditableText
+                          value={editableContent.comentarioForrajeInteranual || 'Las condiciones climáticas y decisiones de manejo inciden directamente en la biomasa acumulada.'}
+                          onChange={(v) => updateContent('comentarioForrajeInteranual', v)}
+                          placeholder="Comentario sobre evolución del forraje…"
+                          className="text-xs text-gray-500 mt-2"
+                          showPencilOnHover
+                          multiline
+                        />
+                      </CardContent>
+                    </Card>
+                  </AccordionContent>
+                </AccordionItem>
+              </div>
+            );
+          }
 
-        {/* SECCIÓN DISPONIBILIDAD Y CALIDAD FORRAJERA (combinada con Materia Seca) */}
-        <AccordionItem value="forraje" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
-            Disponibilidad y Calidad Forrajera
-          </AccordionTrigger>
-          <AccordionContent>
-            {/* Materia Seca Disponible */}
-            <BiomasaSectionContent estratos={estratos} />
+          // Sección Pastoreo
+          if (sectionId === 'pastoreo') {
+            return (
+              <div key={sectionId} {...dragProps} className={dragClasses}>
+                <AccordionItem value="pastoreo" className="border rounded-lg px-4">
+                  <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+                    <div className="flex items-center gap-2 w-full">
+                      {isEditing && <GripVertical className="w-4 h-4 text-gray-400 cursor-move shrink-0" />}
+                      <span className="flex-1 text-left">Patrón e Intensidad de Pastoreo</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-sm text-gray-600 mb-6">
+                      Distribución del patrón de uso del pastoreo a nivel de establecimiento y la intensidad de pastoreo
+                      por estrato, basado en las observaciones del evento de monitoreo.
+                    </p>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Patrón de Uso - Total Establecimiento</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <PatronPastoreoChart data={pastoreoData.patronTotal} />
+                          <EditableText
+                            value={editableContent.comentarioPatronPastoreo || 'La carga animal y las salidas intensas de potreros pueden limitar la acumulación de biomasa.'}
+                            onChange={(v) => updateContent('comentarioPatronPastoreo', v)}
+                            placeholder="Comentario sobre patrón de pastoreo…"
+                            className="text-xs text-gray-500 mt-2"
+                            showPencilOnHover
+                            multiline
+                          />
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Intensidad de Pastoreo por Estrato</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <IntensidadPastoreoChart data={pastoreoData.intensidadPorEstrato} />
+                          <EditableText
+                            value={editableContent.comentarioIntensidadPastoreo || 'Gestión cuidadosa de descansos favorece la recuperación ecológica.'}
+                            onChange={(v) => updateContent('comentarioIntensidadPastoreo', v)}
+                            placeholder="Comentario sobre intensidad de pastoreo…"
+                            className="text-xs text-gray-500 mt-2"
+                            showPencilOnHover
+                            multiline
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </div>
+            );
+          }
 
-            {/* Subtítulo Calidad Forrajera */}
-            <h4 className="text-sm font-semibold text-[var(--grass-green-dark)] mt-8 mb-4 border-b pb-2">
-              Análisis de Calidad Forrajera
-            </h4>
-            <p className="text-sm text-gray-600 mb-6">
-              Análisis de la biomasa disponible (kg de materia seca por hectárea) y calidad forrajera (escala 1-5)
-              por estrato, basado en los datos del evento de monitoreo.
-            </p>
+          // Sección Anexo
+          if (sectionId === 'anexo') {
+            return (
+              <div key={sectionId} {...dragProps} className={dragClasses}>
+                <AccordionItem value="anexo" className="border rounded-lg px-4">
+                  <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+                    <div className="flex items-center gap-2 w-full">
+                      {isEditing && <GripVertical className="w-4 h-4 text-gray-400 cursor-move shrink-0" />}
+                      <span className="flex-1 text-left">Anexo</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Resultados por MCP en Marzo 2025. Los estratos se encuentran abreviados: AG (Agricultura/Loma), ML (Media Loma), BD (Bajo Dulce).
+                    </p>
+                    <Card>
+                      <CardContent className="pt-4 overflow-x-auto">
+                        <TooltipProvider>
+                          <Table className="text-xs">
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="text-left whitespace-nowrap sticky left-0 bg-white z-10 min-w-[140px]">Indicador</TableHead>
+                                {monitores.map((m) => (
+                                  <TableHead key={m.id} className="text-center whitespace-nowrap px-2">
+                                    <UITooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="cursor-help" style={{ color: getEstratoColor(m.estrato) }}>
+                                          {m.estratoCodigo}-{m.id}
+                                        </span>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Monitor {m.id} - Estrato {m.estrato}</p>
+                                      </TooltipContent>
+                                    </UITooltip>
+                                  </TableHead>
+                                ))}
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              <TableRow className="bg-gray-50">
+                                <TableCell className="font-medium sticky left-0 bg-gray-50 z-10">Estrato</TableCell>
+                                {monitores.map((m) => (
+                                  <TableCell key={m.id} className="text-center font-medium" style={{ color: getEstratoColor(m.estrato) }}>
+                                    {m.estratoCodigo}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                              {indicadoresConfig.map((ind) => (
+                                <TableRow key={ind.key}>
+                                  <TableCell className="sticky left-0 bg-white z-10">
+                                    <UITooltip>
+                                      <TooltipTrigger asChild>
+                                        <span className="cursor-help underline decoration-dotted decoration-gray-400">{ind.abbr}</span>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{ind.name}</p>
+                                      </TooltipContent>
+                                    </UITooltip>
+                                  </TableCell>
+                                  {monitores.map((m) => (
+                                    <TableCell key={m.id} className="text-center">
+                                      {m.indicadores[ind.key as keyof typeof m.indicadores]}
+                                    </TableCell>
+                                  ))}
+                                </TableRow>
+                              ))}
+                              <TableRow className="bg-gray-50 font-bold">
+                                <TableCell className="sticky left-0 bg-gray-50 z-10">
+                                  <UITooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help underline decoration-dotted decoration-gray-400">ISE1</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Índice de Salud Ecosistémica - Lectura 1</p>
+                                    </TooltipContent>
+                                  </UITooltip>
+                                </TableCell>
+                                {monitores.map((m) => (
+                                  <TableCell key={m.id} className="text-center">{m.ise1}</TableCell>
+                                ))}
+                              </TableRow>
+                              <TableRow className="bg-gray-50 font-bold">
+                                <TableCell className="sticky left-0 bg-gray-50 z-10">
+                                  <UITooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help underline decoration-dotted decoration-gray-400">ISE2</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Índice de Salud Ecosistémica - Lectura 2</p>
+                                    </TooltipContent>
+                                  </UITooltip>
+                                </TableCell>
+                                {monitores.map((m) => (
+                                  <TableCell key={m.id} className="text-center">{m.ise2}</TableCell>
+                                ))}
+                              </TableRow>
+                            </TableBody>
+                          </Table>
+                        </TooltipProvider>
+                      </CardContent>
+                    </Card>
+                  </AccordionContent>
+                </AccordionItem>
+              </div>
+            );
+          }
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Biomasa por Estrato */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Disponibilidad Forrajera por Estrato</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ForrajeBiomasaChart data={forrajeData} />
-              <EditableText
-                value={editableContent.comentarioForrajeBiomasa || 'Bajo con mayor disponibilidad por mejores condiciones hídricas y gestión de descansos. La carga animal puede limitar la acumulación de biomasa.'}
-                onChange={(v) => updateContent('comentarioForrajeBiomasa', v)}
-                placeholder="Comentario sobre disponibilidad forrajera…"
-                className="text-xs text-gray-500 mt-2"
-                showPencilOnHover
-                multiline
-              />
-            </CardContent>
-          </Card>
+          // Secciones personalizadas
+          const customSection = customSections.find(s => s.id === sectionId);
+          if (customSection) {
+            return (
+              <div key={sectionId} {...dragProps} className={dragClasses}>
+                <AccordionItem value={customSection.id} className="border rounded-lg px-4">
+                  <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
+                    <div className="flex items-center gap-2 w-full">
+                      {isEditing && <GripVertical className="w-4 h-4 text-gray-400 cursor-move shrink-0" />}
+                      <EditableSectionTitle
+                        title={customSection.title}
+                        sectionId={customSection.id}
+                        isEditing={isEditing}
+                      />
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CustomSectionEditor
+                      section={customSection}
+                      onDelete={() => removeCustomSection(customSection.id)}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </div>
+            );
+          }
 
-          {/* Calidad Forrajera por Estrato */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Calidad Forrajera por Estrato</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ForrajeCalidadChart data={forrajeData} />
-              <p className="text-xs text-gray-400 mt-2 mb-2">
-                Escala: 1 (muy baja) - 5 (muy buena). Línea punteada indica calidad media (3).
-              </p>
-              <EditableText
-                value={editableContent.comentarioForrajeCalidad || 'Valores superiores a 3 indican buena presencia de gramíneas perennes y leguminosas. El envejecimiento de pasturas puede reducir la calidad.'}
-                onChange={(v) => updateContent('comentarioForrajeCalidad', v)}
-                placeholder="Comentario sobre calidad forrajera…"
-                className="text-xs text-gray-500"
-                showPencilOnHover
-                multiline
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Evolución Interanual de Forraje */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Evolución Interanual de Forraje por Estrato</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ForrajeInteranualChart data={forrajeHistorico} />
-            <EditableText
-              value={editableContent.comentarioForrajeInteranual || 'Las condiciones climáticas y decisiones de manejo inciden directamente en la biomasa acumulada. Mayor canopeo refleja mejor aprovechamiento de la radiación solar.'}
-              onChange={(v) => updateContent('comentarioForrajeInteranual', v)}
-              placeholder="Comentario sobre evolución del forraje…"
-              className="text-xs text-gray-500 mt-2"
-              showPencilOnHover
-              multiline
-            />
-          </CardContent>
-        </Card>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* SECCIÓN PATRÓN DE PASTOREO */}
-        <AccordionItem value="pastoreo" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
-            Patrón e Intensidad de Pastoreo
-          </AccordionTrigger>
-          <AccordionContent>
-            <p className="text-sm text-gray-600 mb-6">
-              Distribución del patrón de uso del pastoreo a nivel de establecimiento y la intensidad de pastoreo
-              por estrato, basado en las observaciones del evento de monitoreo.
-            </p>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Patrón de Pastoreo - Pie Chart */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Patrón de Uso - Total Establecimiento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PatronPastoreoChart data={pastoreoData.patronTotal} />
-              <EditableText
-                value={editableContent.comentarioPatronPastoreo || 'La carga animal y las salidas intensas de potreros pueden limitar la acumulación de biomasa. Un patrón equilibrado favorece la regeneración.'}
-                onChange={(v) => updateContent('comentarioPatronPastoreo', v)}
-                placeholder="Comentario sobre patrón de pastoreo…"
-                className="text-xs text-gray-500 mt-2"
-                showPencilOnHover
-                multiline
-              />
-            </CardContent>
-          </Card>
-
-          {/* Intensidad de Pastoreo por Estrato - Barras Apiladas */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Intensidad de Pastoreo por Estrato</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <IntensidadPastoreoChart data={pastoreoData.intensidadPorEstrato} />
-              <EditableText
-                value={editableContent.comentarioIntensidadPastoreo || 'Gestión cuidadosa de descansos favorece la recuperación ecológica. Ajustar tiempos de recuperación según época y receptividad del sistema.'}
-                onChange={(v) => updateContent('comentarioIntensidadPastoreo', v)}
-                placeholder="Comentario sobre intensidad de pastoreo…"
-                className="text-xs text-gray-500 mt-2"
-                showPencilOnHover
-                multiline
-              />
-            </CardContent>
-          </Card>
-        </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* SECCIÓN ANEXO - TABLA DE RESULTADOS POR MONITOR (TRANSPUESTA) */}
-        <AccordionItem value="anexo" className="border rounded-lg px-4">
-          <AccordionTrigger className="text-base font-semibold text-[var(--grass-green-dark)] hover:no-underline">
-            Anexo
-          </AccordionTrigger>
-          <AccordionContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Resultados por MCP en Marzo 2025. Los estratos se encuentran abreviados: AG (Agricultura/Loma), ML (Media Loma), BD (Bajo Dulce).
-            </p>
-
-            <Card>
-              <CardContent className="pt-4 overflow-x-auto">
-                <TooltipProvider>
-              <Table className="text-xs">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-left whitespace-nowrap sticky left-0 bg-white z-10 min-w-[140px]">Indicador</TableHead>
-                    {monitores.map((m) => (
-                      <TableHead key={m.id} className="text-center whitespace-nowrap px-2">
-                        <UITooltip>
-                          <TooltipTrigger asChild>
-                            <span className="cursor-help" style={{ color: getEstratoColor(m.estrato) }}>
-                              {m.estratoCodigo}-{m.id}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Monitor {m.id} - Estrato {m.estrato}</p>
-                          </TooltipContent>
-                        </UITooltip>
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {/* Fila de Estrato */}
-                  <TableRow className="bg-gray-50">
-                    <TableCell className="font-medium sticky left-0 bg-gray-50 z-10">Estrato</TableCell>
-                    {monitores.map((m) => (
-                      <TableCell key={m.id} className="text-center font-medium" style={{ color: getEstratoColor(m.estrato) }}>
-                        {m.estratoCodigo}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  {/* Filas de indicadores */}
-                  {indicadoresConfig.map((ind) => (
-                    <TableRow key={ind.key}>
-                      <TableCell className="sticky left-0 bg-white z-10">
-                        <UITooltip>
-                          <TooltipTrigger asChild>
-                            <span className="cursor-help underline decoration-dotted decoration-gray-400">{ind.abbr}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{ind.name}</p>
-                          </TooltipContent>
-                        </UITooltip>
-                      </TableCell>
-                      {monitores.map((m) => (
-                        <TableCell key={m.id} className="text-center">
-                          {m.indicadores[ind.key as keyof typeof m.indicadores]}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                  {/* Filas de ISE */}
-                  <TableRow className="bg-gray-50 font-bold">
-                    <TableCell className="sticky left-0 bg-gray-50 z-10">
-                      <UITooltip>
-                        <TooltipTrigger asChild>
-                          <span className="cursor-help underline decoration-dotted decoration-gray-400">ISE1</span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Índice de Salud Ecosistémica - Lectura 1</p>
-                        </TooltipContent>
-                      </UITooltip>
-                    </TableCell>
-                    {monitores.map((m) => (
-                      <TableCell key={m.id} className="text-center">{m.ise1}</TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow className="bg-gray-50 font-bold">
-                    <TableCell className="sticky left-0 bg-gray-50 z-10">
-                      <UITooltip>
-                        <TooltipTrigger asChild>
-                          <span className="cursor-help underline decoration-dotted decoration-gray-400">ISE2</span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Índice de Salud Ecosistémica - Lectura 2</p>
-                        </TooltipContent>
-                      </UITooltip>
-                    </TableCell>
-                    {monitores.map((m) => (
-                      <TableCell key={m.id} className="text-center">{m.ise2}</TableCell>
-                    ))}
-                  </TableRow>
-                </TableBody>
-              </Table>
-                </TooltipProvider>
-              </CardContent>
-            </Card>
-          </AccordionContent>
-        </AccordionItem>
+          return null;
+        })}
       </Accordion>
+
+      {/* Botón para agregar nueva sección - solo en modo edición */}
+      {isEditing && (
+        <Button
+          variant="outline"
+          onClick={() => addCustomSection()}
+          className="w-full border-dashed border-2 border-gray-300 hover:border-[var(--grass-green)] text-gray-500 hover:text-[var(--grass-green-dark)]"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Agregar nueva sección
+        </Button>
+      )}
 
       {/* Footer */}
       <div className="mt-8 pt-6 pb-8 border-t border-gray-200">

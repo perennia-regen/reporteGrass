@@ -45,7 +45,9 @@
   --color-grass-brown: var(--grass-brown);
   --color-grass-yellow: var(--grass-yellow);
   
-  /* Colores de estratos */
+  /* Colores de estratos (gradiente fucsia → azul claro) */
+  --color-estrato-gradient-start: var(--estrato-gradient-start);
+  --color-estrato-gradient-end: var(--estrato-gradient-end);
   --color-estrato-loma: var(--estrato-loma);
   --color-estrato-media-loma: var(--estrato-media-loma);
   --color-estrato-bajo: var(--estrato-bajo);
@@ -98,10 +100,12 @@
   --grass-yellow: #FFC107;          /* Amarillo para dinámica comunidades */
   --grass-turquoise: #4DB6AC;       /* Turquesa para ciclo del agua */
 
-  /* Colores de estratos */
-  --estrato-loma: #313b2e;          /* Azul oscuro - Loma */
-  --estrato-media-loma: #6cb460;    /* Azul claro - Media loma */
-  --estrato-bajo: #75e192;          /* Rosa claro - Bajo */
+  /* Colores de estratos (gradiente fucsia apagado → celeste apagado) */
+  --estrato-gradient-start: #b35d8d;  /* Fucsia apagado - inicio del gradiente */
+  --estrato-gradient-end: #5ba3b0;    /* Celeste apagado - fin del gradiente */
+  --estrato-loma: #b35d8d;            /* Fucsia apagado - Loma */
+  --estrato-media-loma: #87809f;      /* Lavanda apagado - Media loma */
+  --estrato-bajo: #5ba3b0;            /* Celeste apagado - Bajo */
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -180,4 +184,17 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Performance: content-visibility for long lists and tables (rendering-content-visibility) */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 40px;
+}
+
+/* Message/item lists with auto visibility */
+.message-item,
+.table-row-virtualized {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 40px;
 }

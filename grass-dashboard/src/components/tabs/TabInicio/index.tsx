@@ -8,7 +8,7 @@ import { useDashboardStore, type KPIType } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
 import { SugerenciasSection } from '@/components/sugerencias';
 import { PhotoGalleryModal } from '@/components/PhotoGalleryModal';
-import { ArrowRight, TrendingUp, Plus, Camera, X } from 'lucide-react';
+import { ArrowRight, TrendingUp, Plus, Camera, X, FileText, Image } from 'lucide-react';
 
 // Modular imports
 import { QUICK_ACTIONS } from './constants';
@@ -69,6 +69,7 @@ export function TabInicio() {
       estrato: 'Sin estrato',
       ise: 0,
       url: '/placeholder-photo.jpg',
+      photoType: 'panoramic',
     };
     setLocalFotos([...localFotos, newPhoto]);
     setSelectedPhotoIndex(localFotos.length);
@@ -95,7 +96,7 @@ export function TabInicio() {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg text-[var(--grass-green-dark)] flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
+              <TrendingUp className="w-5 h-5" aria-hidden="true" />
               Principales Resultados
             </CardTitle>
             <Button
@@ -170,9 +171,10 @@ export function TabInicio() {
       {/* General Observation */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg text-[var(--grass-green-dark)]">
-            Observacion General
-          </CardTitle>
+          <CardTitle className="text-lg text-[var(--grass-green-dark)] flex items-center gap-2">
+              <FileText className="w-5 h-5" aria-hidden="true" />
+              Observacion General
+            </CardTitle>
         </CardHeader>
         <CardContent>
           <EditableText
@@ -191,9 +193,10 @@ export function TabInicio() {
       {/* Monitoring Photos */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg text-[var(--grass-green-dark)]">
-            Fotos del Monitoreo
-          </CardTitle>
+          <CardTitle className="text-lg text-[var(--grass-green-dark)] flex items-center gap-2">
+              <Image className="w-5 h-5" aria-hidden="true" />
+              Fotos del Monitoreo
+            </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -229,6 +232,8 @@ export function TabInicio() {
                         src={foto.url}
                         alt={`Sitio ${foto.siteName}`}
                         className="w-full h-full object-cover"
+                        width={320}
+                        height={180}
                       />
                       {/* Edit overlay */}
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
@@ -241,6 +246,8 @@ export function TabInicio() {
                         src={foto.url}
                         alt={`Sitio ${foto.siteName}`}
                         className="w-full h-full object-cover"
+                        width={320}
+                        height={180}
                       />
                     </div>
                   )}

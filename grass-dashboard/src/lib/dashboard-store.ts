@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { WidgetConfig, TabConfig, SugerenciaItem } from '@/types/dashboard';
+import type { WidgetConfig, TabConfig, SugerenciaItem, CustomSection, CustomSectionItem } from '@/types/dashboard';
 
 // Contenido editable del dashboard
 interface EditableContent {
@@ -91,6 +91,20 @@ interface DashboardState {
 
   // Reordenar widgets
   reorderWidgets: (tabId: string, fromIndex: number, toIndex: number) => void;
+
+  // Secciones personalizadas en Resultados
+  customSections: CustomSection[];
+  addCustomSection: (title?: string) => void;
+  updateCustomSection: (id: string, updates: Partial<CustomSection>) => void;
+  removeCustomSection: (id: string) => void;
+  addItemToSection: (sectionId: string, item: CustomSectionItem) => void;
+  updateItemInSection: (sectionId: string, itemId: string, updates: Partial<CustomSectionItem>) => void;
+  removeItemFromSection: (sectionId: string, itemId: string) => void;
+  reorderItemsInSection: (sectionId: string, fromIndex: number, toIndex: number) => void;
+
+  // Orden de TODAS las secciones en Resultados (fijas + personalizadas)
+  resultadosSectionOrder: string[];
+  setResultadosSectionOrder: (order: string[]) => void;
 }
 
 // Configuración inicial de tabs
@@ -273,6 +287,8 @@ export const useDashboardStore = create<DashboardState>()(
         sidebarCollapsed: false,
         tourCompleted: false,
         sugerenciaItems: [],
+        customSections: [],
+        resultadosSectionOrder: ['ise', 'procesos', 'forraje', 'pastoreo', 'anexo'],
         selectedKPIs: ['ise-promedio', 'hectareas', 'sitios-mcp'] as [KPIType, KPIType, KPIType],
       }),
 
@@ -337,6 +353,126 @@ export const useDashboardStore = create<DashboardState>()(
           return tab;
         });
         set({ tabs: newTabs });
+      },
+
+      // Secciones personalizadas en Resultados
+      customSections: [],
+
+      // Orden de todas las secciones en Resultados (incluye fijas: ise, procesos, forraje, pastoreo, anexo)
+      resultadosSectionOrder: ['ise', 'procesos', 'forraje', 'pastoreo', 'anexo'],
+
+      setResultadosSectionOrder: (order) => {
+        set({ resultadosSectionOrder: order });
+      },
+
+      addCustomSection: (title) => {
+        const { customSections, resultadosSectionOrder } = get();
+        const sectionNumber = customSections.length + 1;
+        const newSectionId = `custom-section-${Date.now()}`;
+        const newSection: CustomSection = {
+          id: newSectionId,
+          title: title || `Nueva Sección ${sectionNumber}`,
+          items: [],
+          position: customSections.length,
+        };
+        // Agregar al orden antes del anexo
+        const anexoIndex = resultadosSectionOrder.indexOf('anexo');
+        const newOrder = [...resultadosSectionOrder];
+        if (anexoIndex !== -1) {
+          newOrder.splice(anexoIndex, 0, newSectionId);
+        } else {
+          newOrder.push(newSectionId);
+        }
+        set({
+          customSections: [...customSections, newSection],
+          resultadosSectionOrder: newOrder,
+        });
+      },
+
+      updateCustomSection: (id, updates) => {
+        const { customSections } = get();
+        set({
+          customSections: customSections.map((section) =>
+            section.id === id ? { ...section, ...updates } : section
+          ),
+        });
+      },
+
+      removeCustomSection: (id) => {
+        const { customSections, editableContent, resultadosSectionOrder } = get();
+        const newContent = { ...editableContent };
+        // Limpiar contenido editable asociado a la sección
+        Object.keys(newContent).forEach((key) => {
+          if (key.includes(id)) {
+            delete newContent[key];
+          }
+        });
+        set({
+          customSections: customSections.filter((section) => section.id !== id),
+          editableContent: newContent,
+          resultadosSectionOrder: resultadosSectionOrder.filter((sId) => sId !== id),
+        });
+      },
+
+      addItemToSection: (sectionId, item) => {
+        const { customSections } = get();
+        set({
+          customSections: customSections.map((section) =>
+            section.id === sectionId
+              ? { ...section, items: [...section.items, item] }
+              : section
+          ),
+        });
+      },
+
+      updateItemInSection: (sectionId, itemId, updates) => {
+        const { customSections } = get();
+        set({
+          customSections: customSections.map((section) =>
+            section.id === sectionId
+              ? {
+                  ...section,
+                  items: section.items.map((item) =>
+                    item.id === itemId ? { ...item, ...updates } : item
+                  ),
+                }
+              : section
+          ),
+        });
+      },
+
+      removeItemFromSection: (sectionId, itemId) => {
+        const { customSections, editableContent } = get();
+        const newContent = { ...editableContent };
+        // Limpiar contenido editable asociado al item
+        Object.keys(newContent).forEach((key) => {
+          if (key.includes(itemId)) {
+            delete newContent[key];
+          }
+        });
+        set({
+          customSections: customSections.map((section) =>
+            section.id === sectionId
+              ? { ...section, items: section.items.filter((item) => item.id !== itemId) }
+              : section
+          ),
+          editableContent: newContent,
+        });
+      },
+
+      reorderItemsInSection: (sectionId, fromIndex, toIndex) => {
+        const { customSections } = get();
+        set({
+          customSections: customSections.map((section) => {
+            if (section.id === sectionId) {
+              const newItems = [...section.items];
+              const [removed] = newItems.splice(fromIndex, 1);
+              newItems.splice(toIndex, 0, removed);
+              return { ...section, items: newItems };
+            }
+            return section;
+          }),
+        });
       },
     }),
     {
@@ -405,3 +541,17 @@ export const useReorderWidgets = () => useDashboardStore((s) => s.reorderWidgets
 
 // Reset
 export const useResetDashboard = () => useDashboardStore((s) => s.resetDashboard);
+
+// Custom Sections (Resultados)
+export const useCustomSections = () => useDashboardStore((s) => s.customSections);
+export const useAddCustomSection = () => useDashboardStore((s) => s.addCustomSection);
+export const useUpdateCustomSection = () => useDashboardStore((s) => s.updateCustomSection);
+export const useRemoveCustomSection = () => useDashboardStore((s) => s.removeCustomSection);
+export const useAddItemToSection = () => useDashboardStore((s) => s.addItemToSection);
+export const useUpdateItemInSection = () => useDashboardStore((s) => s.updateItemInSection);
+export const useRemoveItemFromSection = () => useDashboardStore((s) => s.removeItemFromSection);
+export const useReorderItemsInSection = () => useDashboardStore((s) => s.reorderItemsInSection);
+
+// Orden de secciones en Resultados (todas las secciones: fijas + personalizadas)
+export const useResultadosSectionOrder = () => useDashboardStore((s) => s.resultadosSectionOrder);
+export const useSetResultadosSectionOrder = () => useDashboardStore((s) => s.setResultadosSectionOrder);
