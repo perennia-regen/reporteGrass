@@ -649,24 +649,16 @@ export function getSitePhotosForGallery(count = 4): SitePhotoWithISE[] {
   // Sort by ISE to get variety (mix of high and low ISE sites)
   sitesWithPhotos.sort((a, b) => b.ise - a.ise);
 
-  // Select sites with variety: best, worst, and some in between
-  const selectedIndices = [
-    0, // Best ISE
-    Math.floor(sitesWithPhotos.length / 3),
-    Math.floor(sitesWithPhotos.length * 2 / 3),
-    sitesWithPhotos.length - 1, // Worst ISE
-  ];
-
   const estratoNameMap: Record<string, string> = {
     LOMA: 'Loma',
     'MEDIA LOMA': 'Media Loma',
     BAJO: 'Bajo',
   };
 
-  for (let i = 0; i < count && i < selectedIndices.length; i++) {
-    const idx = selectedIndices[i];
-    if (idx < sitesWithPhotos.length) {
-      const site = sitesWithPhotos[idx];
+  // If requesting more than 4, return all photos sorted by ISE
+  if (count > 4) {
+    for (let i = 0; i < Math.min(count, sitesWithPhotos.length); i++) {
+      const site = sitesWithPhotos[i];
       photos.push({
         siteId: site.sitio.replace(/\s+/g, ''),
         siteName: site.sitio,
@@ -676,6 +668,29 @@ export function getSitePhotosForGallery(count = 4): SitePhotoWithISE[] {
         photoType: 'panoramic',
       });
     }
+  } else {
+    // Select sites with variety: best, worst, and some in between
+    const selectedIndices = [
+      0, // Best ISE
+      Math.floor(sitesWithPhotos.length / 3),
+      Math.floor(sitesWithPhotos.length * 2 / 3),
+      sitesWithPhotos.length - 1, // Worst ISE
+    ];
+
+    for (let i = 0; i < count && i < selectedIndices.length; i++) {
+      const idx = selectedIndices[i];
+      if (idx < sitesWithPhotos.length) {
+        const site = sitesWithPhotos[idx];
+        photos.push({
+          siteId: site.sitio.replace(/\s+/g, ''),
+          siteName: site.sitio,
+          estrato: estratoNameMap[site.estrato] || site.estrato,
+          ise: site.ise,
+          url: site.fotos.panoramic!,
+          photoType: 'panoramic',
+        });
+      }
+    }
   }
 
   return photos;
@@ -683,3 +698,6 @@ export function getSitePhotosForGallery(count = 4): SitePhotoWithISE[] {
 
 // Pre-calculated site photos for gallery
 export const sitePhotosGallery = getSitePhotosForGallery(4);
+
+// All site photos for the full gallery modal
+export const allSitePhotos = getSitePhotosForGallery(999);
