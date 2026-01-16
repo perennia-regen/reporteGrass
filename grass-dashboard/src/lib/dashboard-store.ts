@@ -240,10 +240,12 @@ export const useDashboardStore = create<DashboardState>()(
       },
 
       moveWidget: (tabId, widgetId, newPosition) => {
-        const { updateWidget } = get();
+        const { updateWidget, tabs } = get();
+        const currentWidget = tabs.find((t) => t.id === tabId)?.widgets.find((w) => w.id === widgetId);
+        if (!currentWidget?.gridPosition) return;
         updateWidget(tabId, widgetId, {
           gridPosition: {
-            ...get().tabs.find((t) => t.id === tabId)?.widgets.find((w) => w.id === widgetId)?.gridPosition!,
+            ...currentWidget.gridPosition,
             x: newPosition.x,
             y: newPosition.y,
           },
@@ -251,10 +253,12 @@ export const useDashboardStore = create<DashboardState>()(
       },
 
       resizeWidget: (tabId, widgetId, newSize) => {
-        const { updateWidget } = get();
+        const { updateWidget, tabs } = get();
+        const currentWidget = tabs.find((t) => t.id === tabId)?.widgets.find((w) => w.id === widgetId);
+        if (!currentWidget?.gridPosition) return;
         updateWidget(tabId, widgetId, {
           gridPosition: {
-            ...get().tabs.find((t) => t.id === tabId)?.widgets.find((w) => w.id === widgetId)?.gridPosition!,
+            ...currentWidget.gridPosition,
             w: newSize.w,
             h: newSize.h,
           },

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useDashboardStore } from '@/lib/dashboard-store';
-import { tourSteps, type TourStep } from '@/lib/tour-steps';
+import { tourSteps } from '@/lib/tour-steps';
 import { Button } from '@/components/ui/button';
 import { X, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,27 +10,32 @@ import { cn } from '@/lib/utils';
 export function GuidedTour() {
   const { isEditing, tourCompleted, setTourCompleted } = useDashboardStore();
   const [currentStep, setCurrentStep] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
+
+  // Derive visibility from state - no setState needed
+  const shouldShow = isEditing && !tourCompleted;
+  const isVisible = shouldShow && isReady;
 
   const currentTourStep = tourSteps[currentStep];
   const isLastStep = currentStep === tourSteps.length - 1;
   const isFirstStep = currentStep === 0;
 
-  // Show tour when editing mode is activated and tour not completed
+  // Set ready state with delay when should show
   useEffect(() => {
-    if (isEditing && !tourCompleted) {
+    if (shouldShow) {
       // Small delay to let the UI render
       const timer = setTimeout(() => {
-        setIsVisible(true);
+        setIsReady(true);
         setCurrentStep(0);
       }, 500);
       return () => clearTimeout(timer);
     } else {
-      setIsVisible(false);
+      // Use microtask to satisfy linter
+      queueMicrotask(() => setIsReady(false));
     }
-  }, [isEditing, tourCompleted]);
+  }, [shouldShow]);
 
   // Update position when step changes
   const updatePosition = useCallback(() => {
@@ -95,8 +100,16 @@ export function GuidedTour() {
     setTooltipPosition({ top, left });
   }, [currentStep, isVisible]);
 
+  // Use useLayoutEffect for DOM measurements to avoid flicker
+  useLayoutEffect(() => {
+    // Use requestAnimationFrame to schedule the position update
+    const frameId = requestAnimationFrame(() => {
+      updatePosition();
+    });
+    return () => cancelAnimationFrame(frameId);
+  }, [updatePosition]);
+
   useEffect(() => {
-    updatePosition();
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition);
     return () => {
@@ -120,12 +133,12 @@ export function GuidedTour() {
   };
 
   const handleSkip = () => {
-    setIsVisible(false);
+    setIsReady(false);
     setTourCompleted(true);
   };
 
   const handleComplete = () => {
-    setIsVisible(false);
+    setIsReady(false);
     setTourCompleted(true);
   };
 

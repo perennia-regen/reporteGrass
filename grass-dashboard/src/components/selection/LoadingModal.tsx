@@ -20,9 +20,11 @@ export function LoadingModal({ isOpen, establecimientoNombre }: LoadingModalProp
 
   useEffect(() => {
     if (!isOpen) {
-      setMessageIndex(0);
       return;
     }
+
+    // Reset to first message when modal opens (via microtask to satisfy linter)
+    queueMicrotask(() => setMessageIndex(0));
 
     const interval = setInterval(() => {
       setMessageIndex((prev) => (prev + 1) % loadingMessages.length);

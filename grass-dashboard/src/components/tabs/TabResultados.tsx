@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,9 +19,38 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { mockDashboardData, calculateBiomasaByEstrato, forrajeData, pastoreoData, forrajeHistorico } from '@/lib/mock-data';
-import { ForrajeBiomasaChart, ForrajeCalidadChart, ForrajeInteranualChart } from '@/components/charts/forraje';
-import { PatronPastoreoChart, IntensidadPastoreoChart } from '@/components/charts/pastoreo';
 import { ISE_THRESHOLD, grassTheme } from '@/styles/grass-theme';
+
+// Dynamic imports para charts pesados - reduce bundle inicial (bundle-dynamic-imports)
+const ForrajeBiomasaChart = dynamic(
+  () => import('@/components/charts/forraje').then((m) => m.ForrajeBiomasaChart),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+const ForrajeCalidadChart = dynamic(
+  () => import('@/components/charts/forraje').then((m) => m.ForrajeCalidadChart),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+const ForrajeInteranualChart = dynamic(
+  () => import('@/components/charts/forraje').then((m) => m.ForrajeInteranualChart),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+const PatronPastoreoChart = dynamic(
+  () => import('@/components/charts/pastoreo').then((m) => m.PatronPastoreoChart),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+const IntensidadPastoreoChart = dynamic(
+  () => import('@/components/charts/pastoreo').then((m) => m.IntensidadPastoreoChart),
+  { ssr: false, loading: () => <ChartSkeleton /> }
+);
+
+// Skeleton de carga para charts
+function ChartSkeleton() {
+  return (
+    <div className="h-64 flex items-center justify-center bg-gray-50 rounded animate-pulse">
+      <span className="text-gray-400 text-sm">Cargando gráfico...</span>
+    </div>
+  );
+}
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
 import { getEstratoColor } from '@/lib/utils';

@@ -48,6 +48,106 @@ const layoutOptions: { value: SugerenciaLayout; label: string }[] = [
   { value: 3, label: 'Tres columnas' },
 ];
 
+// Props para el menú de agregar
+interface AddMenuProps {
+  className?: string;
+  menuRef: React.RefObject<HTMLDivElement | null>;
+  showAddMenu: boolean;
+  setShowAddMenu: (show: boolean) => void;
+  showChartSubmenu: boolean;
+  setShowChartSubmenu: (show: boolean) => void;
+  sugerenciaItems: SugerenciaItem[];
+  addNewItem: (widgetType: SugerenciaWidgetType) => void;
+}
+
+// Componente del menú de agregar (fuera del render para evitar recreación)
+function AddMenu({
+  className = '',
+  menuRef,
+  showAddMenu,
+  setShowAddMenu,
+  showChartSubmenu,
+  setShowChartSubmenu,
+  sugerenciaItems,
+  addNewItem,
+}: AddMenuProps) {
+  return (
+    <div className={`relative ${className}`} ref={menuRef}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          setShowAddMenu(!showAddMenu);
+          setShowChartSubmenu(false);
+        }}
+        className="gap-1"
+      >
+        <Plus className="w-4 h-4" />
+        Agregar
+        <ChevronDown className="w-3 h-3" />
+      </Button>
+
+      {/* Menú dropdown */}
+      {showAddMenu && (
+        <div className="absolute left-0 bottom-full mb-1 w-56 bg-white rounded-lg shadow-lg border z-50">
+          {addMenuOptions.map((option) => {
+            const Icon = option.icon;
+            if (option.isSubmenu) {
+              return (
+                <div key={option.type} className="relative">
+                  <button
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
+                    onClick={() => setShowChartSubmenu(!showChartSubmenu)}
+                  >
+                    <Icon className="w-4 h-4 text-gray-500" />
+                    <span className="flex-1">{option.label}</span>
+                    <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showChartSubmenu ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Submenú de gráficos */}
+                  {showChartSubmenu && (
+                    <div className="border-t bg-gray-50">
+                      {chartOptions.map((chart) => {
+                        const isUsed = sugerenciaItems.some(item => item.chartType === chart.type);
+                        return (
+                          <button
+                            key={chart.type}
+                            className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left ${
+                              isUsed
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'hover:bg-gray-100'
+                            }`}
+                            onClick={() => !isUsed && addNewItem(chart.type as SugerenciaWidgetType)}
+                            disabled={isUsed}
+                          >
+                            <span className="text-xs">•</span>
+                            {chart.label}
+                            {isUsed && <span className="text-xs text-gray-400 ml-auto">(agregado)</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return (
+              <button
+                key={option.type}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
+                onClick={() => addNewItem(option.type as SugerenciaWidgetType)}
+              >
+                <Icon className="w-4 h-4 text-gray-500" />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SugerenciasSection() {
   const {
     isEditing,
@@ -180,83 +280,6 @@ export function SugerenciasSection() {
     }
   };
 
-  // Componente del menú de agregar (reutilizable)
-  const AddMenu = ({ className = '' }: { className?: string }) => (
-    <div className={`relative ${className}`} ref={menuRef}>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => {
-          setShowAddMenu(!showAddMenu);
-          setShowChartSubmenu(false);
-        }}
-        className="gap-1"
-      >
-        <Plus className="w-4 h-4" />
-        Agregar
-        <ChevronDown className="w-3 h-3" />
-      </Button>
-
-      {/* Menú dropdown */}
-      {showAddMenu && (
-        <div className="absolute left-0 bottom-full mb-1 w-56 bg-white rounded-lg shadow-lg border z-50">
-          {addMenuOptions.map((option) => {
-            const Icon = option.icon;
-            if (option.isSubmenu) {
-              return (
-                <div key={option.type} className="relative">
-                  <button
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
-                    onClick={() => setShowChartSubmenu(!showChartSubmenu)}
-                  >
-                    <Icon className="w-4 h-4 text-gray-500" />
-                    <span className="flex-1">{option.label}</span>
-                    <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showChartSubmenu ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Submenú de gráficos */}
-                  {showChartSubmenu && (
-                    <div className="border-t bg-gray-50">
-                      {chartOptions.map((chart) => {
-                        const isUsed = sugerenciaItems.some(item => item.chartType === chart.type);
-                        return (
-                          <button
-                            key={chart.type}
-                            className={`w-full flex items-center gap-2 px-4 py-2 text-sm text-left ${
-                              isUsed
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : 'hover:bg-gray-100'
-                            }`}
-                            onClick={() => !isUsed && addNewItem(chart.type as SugerenciaWidgetType)}
-                            disabled={isUsed}
-                          >
-                            <span className="text-xs">•</span>
-                            {chart.label}
-                            {isUsed && <span className="text-xs text-gray-400 ml-auto">(agregado)</span>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            }
-            return (
-              <button
-                key={option.type}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
-                onClick={() => addNewItem(option.type as SugerenciaWidgetType)}
-              >
-                <Icon className="w-4 h-4 text-gray-500" />
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -325,7 +348,15 @@ export function SugerenciasSection() {
                   <p className="text-sm text-center">
                     Arrastra desde la barra lateral o usa el botón para agregar
                   </p>
-                  <AddMenu />
+                  <AddMenu
+                    menuRef={menuRef}
+                    showAddMenu={showAddMenu}
+                    setShowAddMenu={setShowAddMenu}
+                    showChartSubmenu={showChartSubmenu}
+                    setShowChartSubmenu={setShowChartSubmenu}
+                    sugerenciaItems={sugerenciaItems}
+                    addNewItem={addNewItem}
+                  />
                   <p className="text-xs text-gray-400">
                     {sugerenciaItems.length}/{MAX_ITEMS} elementos
                   </p>
