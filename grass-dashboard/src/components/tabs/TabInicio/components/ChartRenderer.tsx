@@ -7,6 +7,8 @@ import {
   ISEEstratoChart,
   ProcesosChart,
   ProcesosEvolucionChart,
+  MateriaSecaEvolucionChart,
+  MateriaSecaEstratoChart,
 } from '../charts';
 
 interface ChartRendererProps {
@@ -23,6 +25,10 @@ export const ChartRenderer = memo(function ChartRenderer({ chartType }: ChartRen
       return <ProcesosChart />;
     case 'procesos-evolucion':
       return <ProcesosEvolucionChart />;
+    case 'materia-seca-evolucion':
+      return <MateriaSecaEvolucionChart />;
+    case 'materia-seca-estrato':
+      return <MateriaSecaEstratoChart />;
     default:
       return null;
   }

@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { mockDashboardData } from '@/lib/mock-data';
-import { useDashboardStore } from '@/lib/dashboard-store';
+import { sitePhotosGallery, type SitePhotoWithISE } from '@/lib/mock-data';
+import { useDashboardStore, type KPIType } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
 import { SugerenciasSection } from '@/components/sugerencias';
 import { PhotoGalleryModal } from '@/components/PhotoGalleryModal';
-import type { FotoMonitoreo } from '@/types/dashboard';
 import { ArrowRight, TrendingUp, Plus, Camera } from 'lucide-react';
 
 // Modular imports
@@ -17,7 +16,6 @@ import { useChartState } from './hooks';
 import { KPICard, ChartHeader, ChartRenderer } from './components';
 
 export function TabInicio() {
-  const { establecimiento, fotos } = mockDashboardData;
   const { isEditing, editableContent, updateContent, setActiveTab, selectedKPIs, updateKPI } = useDashboardStore();
 
   // Chart state management
@@ -38,31 +36,38 @@ export function TabInicio() {
   const [kpi1, kpi2, kpi3] = selectedKPIs;
   const usedKPIs = useMemo(() => [kpi1, kpi2, kpi3], [kpi1, kpi2, kpi3]);
 
-  // Photo gallery state
+  // Stable callbacks for KPI changes (prevents re-renders)
+  const handleKPI0Change = useCallback((v: KPIType) => updateKPI(0, v), [updateKPI]);
+  const handleKPI1Change = useCallback((v: KPIType) => updateKPI(1, v), [updateKPI]);
+  const handleKPI2Change = useCallback((v: KPIType) => updateKPI(2, v), [updateKPI]);
+
+  // Photo gallery state - using real site photos with ISE
   const [showGallery, setShowGallery] = useState(false);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
-  const [localFotos, setLocalFotos] = useState<FotoMonitoreo[]>(fotos);
+  const [localFotos, setLocalFotos] = useState<SitePhotoWithISE[]>(() => sitePhotosGallery);
 
   // Photo selection handler
-  const handlePhotoSelect = (foto: FotoMonitoreo) => {
+  const handlePhotoSelect = (foto: { url: string; sitio: string }) => {
     if (selectedPhotoIndex !== null) {
+      const currentPhoto = localFotos[selectedPhotoIndex];
       const newFotos = [...localFotos];
-      newFotos[selectedPhotoIndex] = foto;
+      newFotos[selectedPhotoIndex] = {
+        ...currentPhoto,
+        url: foto.url,
+        siteName: foto.sitio,
+      };
       setLocalFotos(newFotos);
     }
     setSelectedPhotoIndex(null);
   };
 
-  // Location string for gallery
-  const ubicacionStr = `${establecimiento.ubicacion.distrito}, ${establecimiento.ubicacion.departamento}`;
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* KPI Cards Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KPICard value={kpi1} onChange={(v) => updateKPI(0, v)} usedKPIs={usedKPIs} />
-        <KPICard value={kpi2} onChange={(v) => updateKPI(1, v)} usedKPIs={usedKPIs} />
-        <KPICard value={kpi3} onChange={(v) => updateKPI(2, v)} usedKPIs={usedKPIs} />
+        <KPICard value={kpi1} onChange={handleKPI0Change} usedKPIs={usedKPIs} />
+        <KPICard value={kpi2} onChange={handleKPI1Change} usedKPIs={usedKPIs} />
+        <KPICard value={kpi3} onChange={handleKPI2Change} usedKPIs={usedKPIs} />
       </div>
 
       {/* Main Results - Charts */}
@@ -172,73 +177,64 @@ export function TabInicio() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {localFotos.map((foto, index) => (
-              <div key={index} className="group">
-                {/* Photo with edit option */}
-                {isEditing ? (
-                  <button
-                    type="button"
-                    className="aspect-video w-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 relative overflow-hidden cursor-pointer hover:bg-gray-200 transition-colors"
-                    onClick={() => {
-                      setSelectedPhotoIndex(index);
-                      setShowGallery(true);
-                    }}
-                    aria-label={`Cambiar foto de ${foto.sitio}`}
-                  >
-                    <div className="text-center">
-                      <svg
-                        className="w-8 h-8 mx-auto mb-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        aria-hidden="true"
+            {localFotos.map((foto, index) => {
+              // ISE color based on score
+              const iseColor = foto.ise >= 60 ? '#22c55e' : foto.ise >= 40 ? '#eab308' : foto.ise >= 20 ? '#f97316' : '#ef4444';
+
+              return (
+                <div key={foto.siteId} className="group">
+                  {/* Photo with real image */}
+                  {isEditing ? (
+                    <button
+                      type="button"
+                      className="aspect-video w-full bg-gray-100 rounded-lg relative overflow-hidden cursor-pointer hover:ring-2 hover:ring-[var(--grass-green)] transition-all"
+                      onClick={() => {
+                        setSelectedPhotoIndex(index);
+                        setShowGallery(true);
+                      }}
+                      aria-label={`Cambiar foto de ${foto.siteName}`}
+                    >
+                      <img
+                        src={foto.url}
+                        alt={`Sitio ${foto.siteName}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Edit overlay */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 flex items-center justify-center transition-colors">
+                        <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+                      </div>
+                    </button>
+                  ) : (
+                    <div className="aspect-video bg-gray-100 rounded-lg relative overflow-hidden">
+                      <img
+                        src={foto.url}
+                        alt={`Sitio ${foto.siteName}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  {/* Photo caption with site name and ISE */}
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-[var(--grass-green-dark)]">{foto.siteName}</p>
+                      <span
+                        className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                        style={{ backgroundColor: `${iseColor}20`, color: iseColor }}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
+                        ISE {foto.ise}
+                      </span>
                     </div>
-                    {/* Edit overlay */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-colors">
-                      <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
-                    </div>
-                  </button>
-                ) : (
-                  <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 relative overflow-hidden">
-                    <div className="text-center">
-                      <svg
-                        className="w-8 h-8 mx-auto mb-2"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
+                    <p className="text-xs text-gray-400 mb-1">{foto.estrato}</p>
+                    <EditableText
+                      value={editableContent[`foto_comentario_${index}`] || ''}
+                      onChange={(value) => updateContent(`foto_comentario_${index}`, value)}
+                      placeholder="Agregar comentario…"
+                      className="text-xs text-gray-500"
+                    />
                   </div>
-                )}
-                {/* Photo caption with editable comment */}
-                <div className="mt-2">
-                  <p className="text-sm font-medium text-[var(--grass-green-dark)]">{foto.sitio}</p>
-                  <p className="text-xs text-gray-400 mb-1">{ubicacionStr}</p>
-                  <EditableText
-                    value={editableContent[`foto_comentario_${index}`] || foto.comentario}
-                    onChange={(value) => updateContent(`foto_comentario_${index}`, value)}
-                    placeholder="Agregar comentario…"
-                    className="text-xs text-gray-500"
-                  />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>

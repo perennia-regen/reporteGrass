@@ -1,0 +1,743 @@
+{
+  "eventoNombre": "La Unión - 25/3/2025",
+  "fecha": "2025-03-25",
+  "sitios": [
+    {
+      "sitio": "LAU 14",
+      "lat": -32.6848131,
+      "lng": -61.3692315,
+      "estrato": "BAJO",
+      "scoreTotal": 40,
+      "indicadores": {
+        "abundanciaCanopeo": -10,
+        "organismosVivos": 0,
+        "pastosVerano": 5,
+        "pastosInvierno": -5,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": 0,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 500,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 3.5,
+        "patronUso": "PP",
+        "intensidad": "moderate"
+      },
+      "fechaMonitoreo": "2025-03-25T10:48:14-03:00"
+    },
+    {
+      "sitio": "LAU01",
+      "lat": -32.6906126,
+      "lng": -61.3509401,
+      "estrato": "LOMA",
+      "scoreTotal": 10,
+      "indicadores": {
+        "abundanciaCanopeo": -5,
+        "organismosVivos": -5,
+        "pastosVerano": -10,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 4500,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 4,
+        "patronUso": "SP",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-26T15:58:20-03:00"
+    },
+    {
+      "sitio": "LAU02",
+      "lat": -32.6837009,
+      "lng": -61.3479389,
+      "estrato": "LOMA",
+      "scoreTotal": 10,
+      "indicadores": {
+        "abundanciaCanopeo": -5,
+        "organismosVivos": -5,
+        "pastosVerano": -10,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 4600,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 4,
+        "patronUso": "SP",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-26T15:43:50-03:00"
+    },
+    {
+      "sitio": "LAU03",
+      "lat": -32.676015,
+      "lng": -61.3550933,
+      "estrato": "LOMA",
+      "scoreTotal": 25,
+      "indicadores": {
+        "abundanciaCanopeo": 5,
+        "organismosVivos": 0,
+        "pastosVerano": -10,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": 0,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 6000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 4,
+        "patronUso": "SD",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T17:45:28-03:00"
+    },
+    {
+      "sitio": "LAU04",
+      "lat": -32.681317,
+      "lng": -61.3636326,
+      "estrato": "LOMA",
+      "scoreTotal": 15,
+      "indicadores": {
+        "abundanciaCanopeo": 0,
+        "organismosVivos": -5,
+        "pastosVerano": -10,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 4000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 4,
+        "patronUso": "SD",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T11:16:35-03:00"
+    },
+    {
+      "sitio": "LAU05",
+      "lat": -32.6729678,
+      "lng": -61.3643545,
+      "estrato": "BAJO",
+      "scoreTotal": 75,
+      "indicadores": {
+        "abundanciaCanopeo": 10,
+        "organismosVivos": 10,
+        "pastosVerano": 0,
+        "pastosInvierno": 0,
+        "hierbasLeguminosas": 5,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 5200,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 4.5,
+        "patronUso": "PP",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T15:51:12-03:00"
+    },
+    {
+      "sitio": "LAU06",
+      "lat": -32.6848045,
+      "lng": -61.360204,
+      "estrato": "BAJO",
+      "scoreTotal": 50,
+      "indicadores": {
+        "abundanciaCanopeo": -10,
+        "organismosVivos": 10,
+        "pastosVerano": 0,
+        "pastosInvierno": 0,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 600,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 3,
+        "patronUso": "PP",
+        "intensidad": "intense"
+      },
+      "fechaMonitoreo": "2025-03-26T16:17:35-03:00"
+    },
+    {
+      "sitio": "LAU07",
+      "lat": -32.6819782,
+      "lng": -61.3539648,
+      "estrato": "BAJO",
+      "scoreTotal": 55,
+      "indicadores": {
+        "abundanciaCanopeo": 5,
+        "organismosVivos": 5,
+        "pastosVerano": 0,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 5,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": null,
+        "erosionEolica": null,
+        "erosionHidrica": null
+      },
+      "forraje": {
+        "biomasaKgMSHa": 4000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 1,
+        "patronUso": "PP",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-26T09:10:42-03:00"
+    },
+    {
+      "sitio": "LAU08",
+      "lat": -32.6774988,
+      "lng": -61.3606958,
+      "estrato": "MEDIA LOMA",
+      "scoreTotal": 10,
+      "indicadores": {
+        "abundanciaCanopeo": 0,
+        "organismosVivos": -5,
+        "pastosVerano": -5,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 0,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 3800,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 4,
+        "patronUso": "SD",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T14:54:01-03:00"
+    },
+    {
+      "sitio": "LAU09",
+      "lat": -32.674132,
+      "lng": -61.3501122,
+      "estrato": "MEDIA LOMA",
+      "scoreTotal": 60,
+      "indicadores": {
+        "abundanciaCanopeo": 10,
+        "organismosVivos": 5,
+        "pastosVerano": 5,
+        "pastosInvierno": 0,
+        "hierbasLeguminosas": -10,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": null,
+        "biomasaM2DiaAnimal": null,
+        "calidadForraje": null,
+        "patronUso": null,
+        "intensidad": null
+      },
+      "fechaMonitoreo": "2025-03-25T13:23:51-03:00"
+    },
+    {
+      "sitio": "LAU10",
+      "lat": -32.6881271,
+      "lng": -61.3614156,
+      "estrato": "MEDIA LOMA",
+      "scoreTotal": 55,
+      "indicadores": {
+        "abundanciaCanopeo": 5,
+        "organismosVivos": 5,
+        "pastosVerano": 0,
+        "pastosInvierno": 0,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": -5,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 6000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 3.5,
+        "patronUso": "PP",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T19:12:42-03:00"
+    },
+    {
+      "sitio": "LAU11",
+      "lat": -32.6792057,
+      "lng": -61.3575132,
+      "estrato": "LOMA",
+      "scoreTotal": 15,
+      "indicadores": {
+        "abundanciaCanopeo": 0,
+        "organismosVivos": -5,
+        "pastosVerano": -10,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": 0,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 4000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 4,
+        "patronUso": "SD",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T11:51:31-03:00"
+    },
+    {
+      "sitio": "LAU12",
+      "lat": -32.6825881,
+      "lng": -61.3701118,
+      "estrato": "LOMA",
+      "scoreTotal": 15,
+      "indicadores": {
+        "abundanciaCanopeo": 0,
+        "organismosVivos": -5,
+        "pastosVerano": -10,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 4000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 3.5,
+        "patronUso": "SD",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T10:23:09-03:00"
+    },
+    {
+      "sitio": "LAU13",
+      "lat": -32.6708245,
+      "lng": -61.3664664,
+      "estrato": "LOMA",
+      "scoreTotal": 0,
+      "indicadores": {
+        "abundanciaCanopeo": -10,
+        "organismosVivos": 0,
+        "pastosVerano": -10,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": -10,
+        "arbolesArbustos": 0,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 20000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 3.5,
+        "patronUso": "SD",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T16:19:13-03:00"
+    },
+    {
+      "sitio": "LAU15",
+      "lat": -32.681519,
+      "lng": -61.3573017,
+      "estrato": "BAJO",
+      "scoreTotal": 30,
+      "indicadores": {
+        "abundanciaCanopeo": -10,
+        "organismosVivos": 0,
+        "pastosVerano": 0,
+        "pastosInvierno": 0,
+        "hierbasLeguminosas": -10,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 300,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 3,
+        "patronUso": "PP",
+        "intensidad": "intense"
+      },
+      "fechaMonitoreo": "2025-03-25T11:34:41-03:00"
+    },
+    {
+      "sitio": "LAU16",
+      "lat": -32.6759971,
+      "lng": -61.3479221,
+      "estrato": "BAJO",
+      "scoreTotal": 55,
+      "indicadores": {
+        "abundanciaCanopeo": 0,
+        "organismosVivos": 5,
+        "pastosVerano": 5,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 5,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 3000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 3.5,
+        "patronUso": "PP",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T12:51:17-03:00"
+    },
+    {
+      "sitio": "LAU17",
+      "lat": -32.6858169,
+      "lng": -61.355915,
+      "estrato": "MEDIA LOMA",
+      "scoreTotal": 60,
+      "indicadores": {
+        "abundanciaCanopeo": 0,
+        "organismosVivos": 5,
+        "pastosVerano": 0,
+        "pastosInvierno": 5,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 3000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 1,
+        "patronUso": "PP",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-26T08:36:24-03:00"
+    },
+    {
+      "sitio": "LAU18",
+      "lat": -32.6892236,
+      "lng": -61.3673358,
+      "estrato": "MEDIA LOMA",
+      "scoreTotal": 30,
+      "indicadores": {
+        "abundanciaCanopeo": -10,
+        "organismosVivos": 5,
+        "pastosVerano": 0,
+        "pastosInvierno": 0,
+        "hierbasLeguminosas": -5,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": -10,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 1100,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 3.5,
+        "patronUso": "PP",
+        "intensidad": "moderate"
+      },
+      "fechaMonitoreo": "2025-03-25T18:55:38-03:00"
+    },
+    {
+      "sitio": "LAU19",
+      "lat": -32.6762356,
+      "lng": -61.3680083,
+      "estrato": "MEDIA LOMA",
+      "scoreTotal": 20,
+      "indicadores": {
+        "abundanciaCanopeo": 0,
+        "organismosVivos": 0,
+        "pastosVerano": -5,
+        "pastosInvierno": -10,
+        "hierbasLeguminosas": 0,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 5,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 0,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 4000,
+        "biomasaM2DiaAnimal": 0,
+        "calidadForraje": 4,
+        "patronUso": "SD",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T15:18:29-03:00"
+    },
+    {
+      "sitio": "LAU20",
+      "lat": -32.6724254,
+      "lng": -61.35651,
+      "estrato": "MEDIA LOMA",
+      "scoreTotal": 60,
+      "indicadores": {
+        "abundanciaCanopeo": 5,
+        "organismosVivos": 5,
+        "pastosVerano": 5,
+        "pastosInvierno": 5,
+        "hierbasLeguminosas": -10,
+        "arbolesArbustos": null,
+        "especiesDeseables": 0,
+        "especiesIndeseables": 0,
+        "mantillo": 10,
+        "incorporacionMantillo": 10,
+        "desaparicionExcrementos": 10,
+        "sueloDesnudo": 20,
+        "encostramiento": 0,
+        "erosionEolica": 0,
+        "erosionHidrica": 0
+      },
+      "forraje": {
+        "biomasaKgMSHa": 4900,
+        "biomasaM2DiaAnimal": 1,
+        "calidadForraje": 4,
+        "patronUso": "PP",
+        "intensidad": "none"
+      },
+      "fechaMonitoreo": "2025-03-25T17:27:45-03:00"
+    }
+  ],
+  "fotos": {
+    "LAU 14": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU%2014-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU%2014-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU%2014-FORRAJE-90degrees.jpg"
+    },
+    "LAU01": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU01-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU01-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU01-FORRAJE-90degrees.jpg"
+    },
+    "LAU02": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU02-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU02-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU02-FORRAJE-90degrees.jpg"
+    },
+    "LAU03": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU03-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU03-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU03-FORRAJE-90degrees.jpg"
+    },
+    "LAU04": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU04-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU04-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU04-FORRAJE-90degrees.jpg"
+    },
+    "LAU05": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU05-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU05-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU05-FORRAJE-90degrees.jpg"
+    },
+    "LAU06": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU06-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU06-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU06-FORRAJE-90degrees.jpg"
+    },
+    "LAU07": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU07-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU07-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU07-FORRAJE-90degrees.jpg"
+    },
+    "LAU08": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU08-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU08-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU08-FORRAJE-90degrees.jpg"
+    },
+    "LAU10": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU10-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU10-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU10-FORRAJE-90degrees.jpg"
+    },
+    "LAU11": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU11-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU11-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU11-FORRAJE-90degrees.jpg"
+    },
+    "LAU12": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU12-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU12-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU12-FORRAJE-90degrees.jpg"
+    },
+    "LAU13": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU13-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU13-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU13-FORRAJE-90degrees.jpg"
+    },
+    "LAU15": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU15-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU15-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU15-FORRAJE-90degrees.jpg"
+    },
+    "LAU16": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU16-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU16-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU16-FORRAJE-90degrees.jpg"
+    },
+    "LAU17": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU17-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU17-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU17-FORRAJE-90degrees.jpg"
+    },
+    "LAU18": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU18-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU18-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU18-FORRAJE-90degrees.jpg"
+    },
+    "LAU19": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU19-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU19-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU19-FORRAJE-90degrees.jpg"
+    },
+    "LAU20": {
+      "panoramic": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU20-FORRAJE-panoramic.jpg",
+      "degrees45": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU20-FORRAJE-45degrees.jpg",
+      "degrees90": "https://nyc3.digitaloceanspaces.com/ruuts-dc-storm-trooper/mdc/45b0fc2d-a21d-4a72-bdbe-1f035ba5b643/pictures/STM-LAU20-FORRAJE-90degrees.jpg"
+    }
+  }
+}

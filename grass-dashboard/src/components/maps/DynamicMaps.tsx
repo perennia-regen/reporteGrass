@@ -20,3 +20,12 @@ export const DynamicMapaEstratos = dynamic(
     ssr: false,
   }
 );
+
+// Dynamic import of MonitoringMap (nuevo mapa con polígonos GeoJSON)
+export const DynamicMonitoringMap = dynamic(
+  () => import('@/components/maps/MonitoringMap'),
+  {
+    loading: () => <MapLoading />,
+    ssr: false,
+  }
+);

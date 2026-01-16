@@ -1,0 +1,3639 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_RUUTS-DB",
+      "label": "ruuts-db",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "grafana-postgresql-datasource",
+      "pluginName": "PostgreSQL"
+    },
+    {
+      "name": "DS_AUTH0-USERS",
+      "label": "auth0-users",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "marcusolsson-json-datasource",
+      "pluginName": "JSON API"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "dalvany-image-panel",
+      "name": "Dynamic image panel",
+      "version": "4.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "gauge",
+      "name": "Gauge",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.1.3"
+    },
+    {
+      "type": "datasource",
+      "id": "grafana-postgresql-datasource",
+      "name": "PostgreSQL",
+      "version": "1.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "marcusolsson-json-datasource",
+      "name": "JSON API",
+      "version": "1.3.16"
+    },
+    {
+      "type": "panel",
+      "id": "piechart",
+      "name": "Pie chart",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "ruuts-map-panel",
+      "name": "ruuts-map-panel",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "volkovlabs-echarts-panel",
+      "name": "Business Charts",
+      "version": "6.5.0"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 141,
+      "panels": [],
+      "title": "Plan de monitoreo",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 10,
+        "x": 0,
+        "y": 1
+      },
+      "id": 121,
+      "options": {
+        "latitude": 0,
+        "legendEnabled": true,
+        "longitude": 0,
+        "mapType": "basic",
+        "zoom": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  ST_AsGeoJSON(\n    ST_SetSRID(\n      ST_MakePoint(\n        CAST(ms.\"actualLocation\"->>1 AS FLOAT), -- Longitude\n        CAST(ms.\"actualLocation\"->>0 AS FLOAT)  -- Latitude\n      ), \n      4326  -- SRID para WGS84\n    )\n  ) AS geojson,\n  'actualLocation' as layer,\n  *\nFROM\n  public.\"monitoringSites\" ms\nWHERE\n  ms.\"isDeleted\" = false\n  AND ms.\"farmId\" = '$farm'\n  AND ms.\"samplingAreaId\" IN ($samplingArea)\n  AND ms.\"actualLocation\" IS NOT NULL\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT \n  ST_asGeoJSON(sa.geometry) as geojson,\n  'Estratos' AS layer,\n  *\nFROM public.\"samplingAreas\" sa \nWHERE \n  not sa.\"isDeleted\" and sa.\"farmId\" = '$farm'\n  and sa.\"id\" IN ($samplingArea)",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Localización de los sitios",
+      "type": "ruuts-map-panel"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "auto",
+              "wrapText": true
+            },
+            "filterable": false,
+            "inspect": false,
+            "minWidth": 0
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Estrato"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Área (ha)"
+            },
+            "properties": [
+              {
+                "id": "custom.width"
+              },
+              {
+                "id": "unit",
+                "value": "has"
+              },
+              {
+                "id": "displayName",
+                "value": "Área"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "% Área total"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 120
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Sitios totales"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sitios de Monitoreo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "M. Corto Plazo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sitios Corto Plazo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "M. Largo Plazo"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sitios Largo Plazo"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "M. de Suelos"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Muestras de Suelo"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 14,
+        "x": 10,
+        "y": 1
+      },
+      "id": 161,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "enablePagination": false,
+          "fields": [
+            "Área (ha)",
+            "Sitios totales",
+            "M. Corto Plazo",
+            "M. Largo Plazo",
+            "M. de Suelos"
+          ],
+          "reducer": [
+            "sum"
+          ],
+          "show": true
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Estrato"
+          }
+        ]
+      },
+      "pluginVersion": "11.1.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  sa.\"name\" AS \"Estrato\",\n  sa.\"totalHectares\" AS \"Área (ha)\",\n  (\n    sa.\"totalHectares\" / SUM(sa.\"totalHectares\") OVER ()\n  ) * 100 AS \"% Área total\",\n\n  -- Cuenta sitios únicos con monitoreo STM (independiente del evento), siempre que la tarea de orden 2 esté iniciada\n  COUNT(DISTINCT ms.id) FILTER (\n    WHERE mw.\"name\" = 'STM'\n      AND EXISTS (\n        SELECT 1\n        FROM public.\"monitoringTasks\" mt\n        WHERE\n          mt.\"monitoringActivityId\" = ma.\"id\"\n          AND mt.\"isDeleted\" = FALSE\n          AND mt.\"order\" = 2\n          AND mt.\"taskStatusId\" <> 0\n      )\n  ) AS \"M. Corto Plazo\",\n\n  -- Igual para LTM\n  COUNT(DISTINCT ms.id) FILTER (\n    WHERE mw.\"name\" = 'LTM'\n      AND EXISTS (\n        SELECT 1\n        FROM public.\"monitoringTasks\" mt\n        WHERE\n          mt.\"monitoringActivityId\" = ma.\"id\"\n          AND mt.\"isDeleted\" = FALSE\n          AND mt.\"order\" = 2\n          AND mt.\"taskStatusId\" <> 0\n      )\n  ) AS \"M. Largo Plazo\"\n\n  -- Las siguientes líneas cuentan la cantidad de sitios únicos con monitoreo SOC (Muestras de Suelo).\n  -- Están comentadas para no incluirlas ahora, pero puedes descomentarlas fácilmente en el futuro.\n\n  -- , COUNT(DISTINCT ms.id) FILTER (\n  --   WHERE mw.\"name\" = 'SOC'\n  --     AND EXISTS (\n  --       SELECT 1\n  --       FROM public.\"monitoringTasks\" mt\n  --       WHERE\n  --         mt.\"monitoringActivityId\" = ma.\"id\"\n  --         AND mt.\"isDeleted\" = FALSE\n  --         AND mt.\"order\" = 2\n  --         AND mt.\"taskStatusId\" <> 0\n  --     )\n  -- ) AS \"M. de Suelos\"\n\nFROM public.\"samplingAreas\" sa\nINNER JOIN public.\"monitoringSites\" ms ON sa.\"id\" = ms.\"samplingAreaId\"\nINNER JOIN public.\"monitoringActivity\" ma ON ms.\"id\" = ma.\"monitoringSiteId\"\nINNER JOIN public.\"monitoringWorkflows\" mw ON ma.\"monitoringWorkflowId\" = mw.\"id\"\n\nWHERE\n  sa.\"isDeleted\" = FALSE\n  AND ms.\"isDeleted\" = FALSE\n  AND ma.\"isDeleted\" = FALSE\n  AND ms.\"isValidationSite\" = FALSE\n  AND sa.\"farmId\" = '$farm'\n  AND sa.\"id\" IN ($samplingArea)\n\n-- NOTA: no filtramos por \"monitoringEventId\" porque queremos contar todos los sitios monitoreados, sin importar en qué evento\n\nGROUP BY sa.\"id\", sa.\"name\", sa.\"totalHectares\";\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [
+                  {
+                    "name": "id",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "\"monitoringWorkflows\""
+        }
+      ],
+      "title": "Form 4",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 3699,
+      "panels": [],
+      "title": "ISE  - Año del Monitoreo",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "max": 150,
+          "min": -150,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d65740",
+                "value": null
+              },
+              {
+                "color": "#de7764",
+                "value": -30
+              },
+              {
+                "color": "#fcdf10",
+                "value": 0
+              },
+              {
+                "color": "#90cb6f",
+                "value": 30
+              },
+              {
+                "color": "#3d5f3a",
+                "value": 60
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 17
+      },
+      "id": 4515,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.1.3",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\n/* 0) Eventos seleccionados (con fecha) */\nselected_events AS (\n  SELECT me.\"id\" AS event_id, me.\"date\" AS event_date\n  FROM public.\"monitoringEvents\" me\n  WHERE me.\"farmId\" = '$farm'\n    AND me.\"isDeleted\" = FALSE\n    AND me.\"monitoringWorkflowIds\" && ARRAY[0,1,3]\n    AND me.\"id\" IN ($monitoringEvent)\n),\n\n/* 1) ISE por SITIO × evento (solo eventos seleccionados) */\nise_site_event AS (\n  SELECT\n    ms.\"id\"             AS site_id,\n    ms.\"samplingAreaId\" AS estrato_id,\n    me.\"id\"             AS event_id,\n    me.\"date\"           AS event_date,\n    AVG((mt.\"dataPayload\"->>'totalIse')::NUMERIC) AS ise_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND (mt.\"dataPayload\"->>'totalIse') IS NOT NULL\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\n),\n\n/* 2) Histórico de FS por SITIO × fecha (sin filtrar por $monitoringEvent para permitir arrastre) */\nfs_history AS (\n  SELECT\n    ms.\"id\"   AS site_id,\n    me.\"date\" AS event_date,\n    AVG((mt.\"dataPayload\"->>'fieldStructure')::NUMERIC) AS fs_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"formName\" = 'StmIse2Form'\n    AND mt.\"isDeleted\" = FALSE\n    AND sa.\"farmId\" = '$farm'\n    AND (mt.\"dataPayload\"->>'fieldStructure') IS NOT NULL\n  GROUP BY ms.\"id\", me.\"date\"\n),\n\n/* 3) FS efectiva por SITIO × evento (arrastre prev/next) */\nsite_event_with_fs AS (\n  SELECT\n    i.estrato_id,\n    i.site_id,\n    i.event_id,\n    i.event_date,\n    i.ise_value,\n    COALESCE(prev_fs.fs_value, next_fs.fs_value, 0) AS eff_fs\n  FROM ise_site_event i\n  /* última FS <= fecha del evento */\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date <= i.event_date\n    ORDER BY fh.event_date DESC\n    LIMIT 1\n  ) prev_fs ON TRUE\n  /* primera FS >= fecha del evento (si no hubo previa) */\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date >= i.event_date\n    ORDER BY fh.event_date ASC\n    LIMIT 1\n  ) next_fs ON TRUE\n),\n\n/* 4) APILAR por AÑO: promedio anual por SITIO */\nsite_year AS (\n  SELECT\n    se.estrato_id,\n    se.site_id,\n    date_trunc('year', se.event_date) AS year_bucket,\n    AVG(se.ise_value) AS ise_y,\n    AVG(se.eff_fs)    AS fs_y\n  FROM site_event_with_fs se\n  GROUP BY se.estrato_id, se.site_id, date_trunc('year', se.event_date)\n),\n\n/* 5) Subida a ESTRATO: promedio simple entre SITIOS (misma lógica que el gráfico por SA) */\nestrato_year AS (\n  SELECT\n    sy.estrato_id,\n    sy.year_bucket,\n    AVG(sy.ise_y + sy.fs_y) AS ise2_estrato_y\n  FROM site_year sy\n  GROUP BY sy.estrato_id, sy.year_bucket\n),\n\n/* 6) Total de hectáreas de la finca (denominador fijo) */\ntotal_hectares_farm AS (\n  SELECT SUM(sa.\"totalHectares\") AS total_hectares\n  FROM public.\"samplingAreas\" sa\n  WHERE sa.\"farmId\" = '$farm'\n),\n\n/* 7) Establecimiento por AÑO: pondero por hectáreas de cada estrato */\nestab_year AS (\n  SELECT\n    ey.year_bucket,\n    SUM( ey.ise2_estrato_y * sa.\"totalHectares\" ) / NULLIF(thf.total_hectares,0) AS ise2_year\n  FROM estrato_year ey\n  JOIN public.\"samplingAreas\" sa\n    ON sa.\"id\" = ey.estrato_id AND sa.\"farmId\" = '$farm'\n  CROSS JOIN total_hectares_farm thf\n  GROUP BY ey.year_bucket, thf.total_hectares\n)\n\n/* 8) Resultado final: promedio simple entre los años seleccionados ya apilados */\nSELECT\n  ROUND(AVG(ise2_year)::NUMERIC, 1) AS \"ISE2 Establecimiento\"\nFROM estab_year;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "\"monitoringActivity\""
+        }
+      ],
+      "title": "ISE 2 Establecimiento",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "#37872D",
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "ISE 1",
+            "axisPlacement": "left",
+            "axisSoftMax": 90,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d65740",
+                "value": null
+              },
+              {
+                "color": "#de7764",
+                "value": -30
+              },
+              {
+                "color": "#fcdf10",
+                "value": 0
+              },
+              {
+                "color": "#90cb6f",
+                "value": 30
+              },
+              {
+                "color": "#3d5f3a",
+                "value": 60
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 9,
+        "x": 6,
+        "y": 17
+      },
+      "id": 3760,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "colorByField": "ISE2 Promedio",
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "vertical",
+        "showValue": "always",
+        "stacking": "none",
+        "text": {
+          "valueSize": 16
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "xField": "Nombre del estrato",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.1.3",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\n\n/* 0) Eventos seleccionados (con fecha) */\nselected_events AS (\n  SELECT me.\"id\" AS event_id, me.\"date\" AS event_date\n  FROM public.\"monitoringEvents\" me\n  WHERE me.\"farmId\" = '$farm'\n    AND me.\"isDeleted\" = FALSE\n    AND me.\"monitoringWorkflowIds\" && ARRAY[0,1,3]\n    AND me.\"id\" IN ($monitoringEvent)\n),\n\n/* 1) ISE por sitio × evento (solo eventos seleccionados) */\nise_site_event AS (\n  SELECT\n    ms.\"id\"                   AS site_id,\n    ms.\"samplingAreaId\"       AS estrato_id,\n    me.\"id\"                   AS event_id,\n    me.\"date\"                 AS event_date,\n    AVG((mt.\"dataPayload\"->>'totalIse')::NUMERIC) AS ise_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" = 'StmIseForm'\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND (mt.\"dataPayload\"->>'totalIse') IS NOT NULL\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\n),\n\n/* 2) Histórico de FS por sitio × fecha (SIN filtrar por $monitoringEvent para permitir arrastre) */\nfs_history AS (\n  SELECT\n    ms.\"id\"     AS site_id,\n    me.\"date\"   AS event_date,\n    AVG((mt.\"dataPayload\"->>'fieldStructure')::NUMERIC) AS fs_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"formName\" = 'StmIse2Form'\n    AND mt.\"isDeleted\" = FALSE\n    AND sa.\"farmId\" = '$farm'\n    AND (mt.\"dataPayload\"->>'fieldStructure') IS NOT NULL\n  GROUP BY ms.\"id\", me.\"date\"\n),\n\n/* 3) FS efectiva por sitio × evento (arrastre prev/next) */\nsite_event_with_fs AS (\n  SELECT\n    i.site_id,\n    i.estrato_id,\n    i.event_id,\n    i.event_date,\n    i.ise_value,\n    COALESCE(prev_fs.fs_value, next_fs.fs_value, 0) AS eff_fs\n  FROM ise_site_event i\n  /* última FS <= fecha del evento */\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date <= i.event_date\n    ORDER BY fh.event_date DESC\n    LIMIT 1\n  ) prev_fs ON TRUE\n  /* primera FS >= fecha del evento (si no hubo previa) */\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date >= i.event_date\n    ORDER BY fh.event_date ASC\n    LIMIT 1\n  ) next_fs ON TRUE\n),\n\n/* 4) APILAR: colapsar múltiples eventos del mismo AÑO por sitio */\nsite_year AS (\n  SELECT\n    se.estrato_id,\n    se.site_id,\n    date_trunc('year', se.event_date) AS year_bucket,\n    AVG(se.ise_value) AS ise_y,\n    AVG(se.eff_fs)    AS fs_y\n  FROM site_event_with_fs se\n  GROUP BY se.estrato_id, se.site_id, date_trunc('year', se.event_date)\n),\n\n/* 5) Promedio final por sitio (promedio entre años seleccionados ya apilados) */\nsite_final AS (\n  SELECT\n    estrato_id,\n    site_id,\n    AVG(ise_y + fs_y) AS ise2_site\n  FROM site_year\n  GROUP BY estrato_id, site_id\n)\n\n/* 6) Roll-up a estrato: promedio simple entre sitios */\nSELECT\n  sa.\"name\"                                  AS \"Nombre del estrato\",\n  ROUND(AVG(sf.ise2_site)::NUMERIC, 1)       AS \"ISE2 Promedio\"\nFROM site_final sf\nJOIN public.\"samplingAreas\" sa\n  ON sa.\"id\" = sf.estrato_id\nWHERE sa.\"farmId\" = '$farm'\nGROUP BY sa.\"name\"\nORDER BY sa.\"name\";\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "\"monitoringActivity\""
+        }
+      ],
+      "title": "ISE 2 por estrato",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "description": "Esto solo funciona como chequeo que la estructura de suelo, como no se hace todos los años, se este \"arrastrando\" desde años anteriores a este, o desde años posteriores a este.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "max": 150,
+          "min": -150,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d65740",
+                "value": null
+              },
+              {
+                "color": "#de7764",
+                "value": -30
+              },
+              {
+                "color": "#fcdf10",
+                "value": 0
+              },
+              {
+                "color": "#90cb6f",
+                "value": 30
+              },
+              {
+                "color": "#3d5f3a",
+                "value": 60
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 0,
+        "y": 25
+      },
+      "id": 3641,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.1.3",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\n/* 0) Eventos seleccionados (con fecha) */\nselected_events AS (\n  SELECT me.\"id\" AS event_id, me.\"date\" AS event_date\n  FROM public.\"monitoringEvents\" me\n  WHERE me.\"farmId\" = '$farm'\n    AND me.\"isDeleted\" = FALSE\n    AND me.\"monitoringWorkflowIds\" && ARRAY[0,1,3]\n    AND me.\"id\" IN ($monitoringEvent)\n),\n\n/* 1) ISE por SITIO × evento (solo eventos seleccionados) */\nise_site_event AS (\n  SELECT\n    ms.\"id\"             AS site_id,\n    ms.\"samplingAreaId\" AS estrato_id,\n    me.\"id\"             AS event_id,\n    me.\"date\"           AS event_date,\n    AVG((mt.\"dataPayload\"->>'totalIse')::NUMERIC) AS ise_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" = 'StmIseForm'\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND (mt.\"dataPayload\"->>'totalIse') IS NOT NULL\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\n),\n\n/* 2) Histórico de FS por SITIO × fecha (sin filtrar por $monitoringEvent) */\nfs_history AS (\n  SELECT\n    ms.\"id\"   AS site_id,\n    me.\"date\" AS event_date,\n    AVG((mt.\"dataPayload\"->>'fieldStructure')::NUMERIC) AS fs_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"formName\" = 'StmIse2Form'\n    AND mt.\"isDeleted\" = FALSE\n    AND sa.\"farmId\" = '$farm'\n    AND (mt.\"dataPayload\"->>'fieldStructure') IS NOT NULL\n  GROUP BY ms.\"id\", me.\"date\"\n),\n\n/* 3) FS efectiva por SITIO × evento (arrastre prev/next) */\nsite_event_with_fs AS (\n  SELECT\n    i.estrato_id,\n    i.site_id,\n    i.event_id,\n    i.event_date,\n    i.ise_value,\n    COALESCE(prev_fs.fs_value, next_fs.fs_value, 0) AS eff_fs\n  FROM ise_site_event i\n  /* última FS <= fecha del evento */\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date <= i.event_date\n    ORDER BY fh.event_date DESC\n    LIMIT 1\n  ) prev_fs ON TRUE\n  /* primera FS >= fecha del evento (si no hubo previa) */\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date >= i.event_date\n    ORDER BY fh.event_date ASC\n    LIMIT 1\n  ) next_fs ON TRUE\n),\n\n/* 4) APILAR por AÑO: promedio anual por SITIO */\nsite_year AS (\n  SELECT\n    se.estrato_id,\n    se.site_id,\n    date_trunc('year', se.event_date) AS year_bucket,\n    AVG(se.ise_value) AS ise_y,\n    AVG(se.eff_fs)    AS fs_y\n  FROM site_event_with_fs se\n  GROUP BY se.estrato_id, se.site_id, date_trunc('year', se.event_date)\n),\n\n/* 5) Subida a ESTRATO: promedio simple entre SITIOS (misma lógica del gráfico por Sampling Area) */\nestrato_year AS (\n  SELECT\n    sy.estrato_id,\n    sy.year_bucket,\n    AVG(sy.ise_y) AS ise_y_estrato,\n    AVG(sy.fs_y)  AS fs_y_estrato\n  FROM site_year sy\n  GROUP BY sy.estrato_id, sy.year_bucket\n),\n\n/* 6) Total de hectáreas de la finca (denominador fijo) */\ntotal_hectares_farm AS (\n  SELECT SUM(sa.\"totalHectares\") AS total_hectares\n  FROM public.\"samplingAreas\" sa\n  WHERE sa.\"farmId\" = '$farm'\n),\n\n/* 7) Establecimiento por AÑO: pondero por hectáreas de cada estrato */\nestab_year AS (\n  SELECT\n    ey.year_bucket,\n    SUM( ey.ise_y_estrato * sa.\"totalHectares\" ) / NULLIF(thf.total_hectares,0) AS ise1_year,\n    SUM( ey.fs_y_estrato  * sa.\"totalHectares\" ) / NULLIF(thf.total_hectares,0) AS fs_year,\n    SUM( (ey.ise_y_estrato + ey.fs_y_estrato) * sa.\"totalHectares\" ) / NULLIF(thf.total_hectares,0) AS ise2_year\n  FROM estrato_year ey\n  JOIN public.\"samplingAreas\" sa\n    ON sa.\"id\" = ey.estrato_id AND sa.\"farmId\" = '$farm'\n  CROSS JOIN total_hectares_farm thf\n  GROUP BY ey.year_bucket, thf.total_hectares\n)\n\n/* 8) Resultado final: promedio simple entre los AÑOS seleccionados ya apilados */\nSELECT\n  ROUND(AVG(ise1_year)::NUMERIC, 1) AS \"ISE Establecimiento\",\n  ROUND(AVG(fs_year)::NUMERIC,  1)  AS \"Estructura de Suelo Ponderada\",\n  ROUND(AVG(ise2_year)::NUMERIC, 1) AS \"ISE2 Establecimiento\"\nFROM estab_year;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "\"monitoringActivity\""
+        }
+      ],
+      "title": "Chequeo de traslado de Estructura de Suelo",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "estrato_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 227
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 13,
+        "x": 7,
+        "y": 25
+      },
+      "id": 4585,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.1.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\r\n\r\n/* 0) Eventos seleccionados (con fecha) */\r\nselected_events AS (\r\n  SELECT me.\"id\" AS event_id, me.\"date\" AS event_date\r\n  FROM public.\"monitoringEvents\" me\r\n  WHERE me.\"farmId\" = '$farm'\r\n    AND me.\"isDeleted\" = FALSE\r\n    AND me.\"monitoringWorkflowIds\" && ARRAY[0,1,3]\r\n    AND me.\"id\" IN ($monitoringEvent)\r\n),\r\n\r\n/* 1) ISE por sitio × evento (solo eventos seleccionados) */\r\nise_site_event AS (\r\n  SELECT\r\n    ms.\"id\"            AS site_id,\r\n    me.\"id\"            AS event_id,\r\n    me.\"date\"          AS event_date,\r\n    AVG((mt.\"dataPayload\"->>'totalIse')::NUMERIC) AS ise_value\r\n  FROM public.\"monitoringTasks\" mt\r\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\r\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\r\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\r\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\r\n  WHERE mt.\"dataPayload\" IS NOT NULL\r\n    AND mt.\"formName\" = 'StmIseForm'\r\n    AND mt.\"isDeleted\" = FALSE\r\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\r\n    AND sa.\"farmId\" = '$farm'\r\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\r\n    AND (mt.\"dataPayload\"->>'totalIse') IS NOT NULL\r\n  GROUP BY ms.\"id\", me.\"id\", me.\"date\"\r\n),\r\n\r\n/* 2) Sitios presentes (ancla del reporte) */\r\nsite_ids AS (\r\n  SELECT DISTINCT site_id FROM ise_site_event\r\n),\r\n\r\n/* 3) Histórico de FS por sitio × fecha (SIN filtrar por $monitoringEvent para permitir arrastre) */\r\nfs_history AS (\r\n  SELECT\r\n    ms.\"id\"     AS site_id,\r\n    me.\"date\"   AS event_date,\r\n    AVG((mt.\"dataPayload\"->>'fieldStructure')::NUMERIC) AS fs_value\r\n  FROM public.\"monitoringTasks\" mt\r\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\r\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\r\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\r\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\r\n  WHERE mt.\"formName\" = 'StmIse2Form'\r\n    AND mt.\"isDeleted\" = FALSE\r\n    AND sa.\"farmId\" = '$farm'\r\n    AND (mt.\"dataPayload\"->>'fieldStructure') IS NOT NULL\r\n  GROUP BY ms.\"id\", me.\"date\"\r\n),\r\n\r\n/* 4) FS efectiva por sitio × evento seleccionado (arrastre prev/next) */\r\nfs_effective AS (\r\n  SELECT\r\n    si.site_id,\r\n    se.event_id,\r\n    se.event_date,\r\n    COALESCE(prev_fs.fs_value, next_fs.fs_value, 0) AS eff_fs\r\n  FROM site_ids si\r\n  CROSS JOIN selected_events se\r\n  /* última FS <= fecha del evento */\r\n  LEFT JOIN LATERAL (\r\n    SELECT fh.fs_value\r\n    FROM fs_history fh\r\n    WHERE fh.site_id = si.site_id\r\n      AND fh.event_date <= se.event_date\r\n    ORDER BY fh.event_date DESC\r\n    LIMIT 1\r\n  ) prev_fs ON TRUE\r\n  /* primera FS >= fecha del evento (si no hubo previa) */\r\n  LEFT JOIN LATERAL (\r\n    SELECT fh.fs_value\r\n    FROM fs_history fh\r\n    WHERE fh.site_id = si.site_id\r\n      AND fh.event_date >= se.event_date\r\n    ORDER BY fh.event_date ASC\r\n    LIMIT 1\r\n  ) next_fs ON TRUE\r\n),\r\n\r\n/* 5) Unimos ISE seleccionado + FS efectiva por evento */\r\nsite_event_with_fs AS (\r\n  SELECT\r\n    i.site_id,\r\n    i.event_date,\r\n    i.ise_value,\r\n    f.eff_fs\r\n  FROM ise_site_event i\r\n  JOIN fs_effective f\r\n    ON f.site_id = i.site_id\r\n   AND f.event_id = i.event_id\r\n),\r\n\r\n/* 6) APILAR: colapsar múltiples eventos del mismo AÑO por sitio */\r\nsite_year AS (\r\n  SELECT\r\n    sewf.site_id,\r\n    date_trunc('year', sewf.event_date) AS year_bucket,\r\n    AVG(sewf.ise_value) AS ise_y,\r\n    AVG(sewf.eff_fs)    AS fs_y\r\n  FROM site_event_with_fs sewf\r\n  GROUP BY sewf.site_id, date_trunc('year', sewf.event_date)\r\n),\r\n\r\n/* 7) Promedio final por sitio (promedio sobre los años seleccionados ya apilados) */\r\nsite_final AS (\r\n  SELECT\r\n    sy.site_id,\r\n    AVG(sy.ise_y) AS avg_ise,\r\n    AVG(sy.fs_y)  AS avg_fs\r\n  FROM site_year sy\r\n  GROUP BY sy.site_id\r\n)\r\n\r\n/* 8) Salida final: tabla de auditoría sitio×sitio */\r\nSELECT\r\n  ms.\"name\"                                 AS \"Sitio\",\r\n  ROUND(sf.avg_ise::NUMERIC, 1)             AS \"ISE1\",\r\n  ROUND(sf.avg_fs::NUMERIC,  1)             AS \"Estructura de Suelo\",\r\n  ROUND((sf.avg_ise + sf.avg_fs)::NUMERIC, 1) AS \"ISE2\"\r\nFROM site_final sf\r\nJOIN public.\"monitoringSites\" ms\r\n  ON ms.\"id\" = sf.site_id AND ms.\"isDeleted\" = FALSE\r\nJOIN public.\"samplingAreas\" sa\r\n  ON ms.\"samplingAreaId\" = sa.\"id\" AND sa.\"farmId\" = '$farm'\r\nORDER BY ms.\"name\";\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Chequeo por sitio",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 9,
+        "x": 0,
+        "y": 33
+      },
+      "id": 4706,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.1.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "/* Comparo denominador usado vs total finca */\r\nWITH estrato_year AS (\r\n  SELECT\r\n    sa.\"id\" AS estrato_id,\r\n    date_trunc('year', me.\"date\") AS year_bucket\r\n  FROM public.\"monitoringTasks\" mt\r\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\r\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\r\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\r\n  WHERE mt.\"formName\" IN ('StmForagePictures','StmIseForm')\r\n    AND mt.\"isDeleted\" = FALSE\r\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\r\n    AND sa.\"farmId\" = '$farm'\r\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\r\n  GROUP BY sa.\"id\", date_trunc('year', me.\"date\")\r\n),\r\nfarm_total AS (\r\n  SELECT SUM(\"totalHectares\") AS total_farm\r\n  FROM public.\"samplingAreas\"\r\n  WHERE \"farmId\" = '$farm'\r\n)\r\nSELECT\r\n  ey.year_bucket,\r\n  SUM(sa.\"totalHectares\")                        AS denom_usado_por_query,\r\n  (SELECT total_farm FROM farm_total)            AS denom_total_finca\r\nFROM estrato_year ey\r\nJOIN public.\"samplingAreas\" sa\r\n  ON sa.\"id\" = ey.estrato_id\r\nGROUP BY ey.year_bucket\r\nORDER BY ey.year_bucket;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Chequeo de ponderador de hectareas",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 2224,
+      "panels": [],
+      "title": "ISE - Interanual",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMax": 100,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": -30
+              },
+              {
+                "color": "light-yellow",
+                "value": 0
+              },
+              {
+                "color": "light-green",
+                "value": 30
+              },
+              {
+                "color": "dark-green",
+                "value": 60
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 9,
+        "x": 0,
+        "y": 41
+      },
+      "id": 2349,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "colorByField": "ISE2 Establecimiento",
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 20
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "Año",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.1.3",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\n/* 0) Total de hectáreas de la finca (denominador fijo) */\ntotal_hectares_farm AS (\n  SELECT SUM(sa.\"totalHectares\") AS total_hectares\n  FROM public.\"samplingAreas\" sa\n  WHERE sa.\"farmId\" = '$farm'\n),\n\n/* 1) ISE por SITIO × evento (solo eventos seleccionados) */\nise_site_event AS (\n  SELECT\n    ms.\"id\"             AS site_id,\n    ms.\"samplingAreaId\" AS estrato_id,\n    me.\"id\"             AS event_id,\n    me.\"date\"           AS event_date,\n    AVG((mt.\"dataPayload\"->>'totalIse')::NUMERIC) AS ise_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" = 'StmIseForm'\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n    AND (mt.\"dataPayload\"->>'totalIse') IS NOT NULL\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\n),\n\n/* 2) Histórico de FS por SITIO × fecha (sin filtrar por $monitoringEvent para permitir arrastre) */\nfs_history AS (\n  SELECT\n    ms.\"id\"   AS site_id,\n    me.\"date\" AS event_date,\n    AVG((mt.\"dataPayload\"->>'fieldStructure')::NUMERIC) AS fs_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"formName\" = 'StmIse2Form'\n    AND mt.\"isDeleted\" = FALSE\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n    AND (mt.\"dataPayload\"->>'fieldStructure') IS NOT NULL\n  GROUP BY ms.\"id\", me.\"date\"\n),\n\n/* 3) FS efectiva por SITIO × evento (arrastre prev/next) */\nsite_event_with_fs AS (\n  SELECT\n    i.estrato_id,\n    i.site_id,\n    i.event_id,\n    i.event_date,\n    i.ise_value,\n    COALESCE(prev_fs.fs_value, next_fs.fs_value, 0) AS eff_fs\n  FROM ise_site_event i\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date <= i.event_date\n    ORDER BY fh.event_date DESC\n    LIMIT 1\n  ) prev_fs ON TRUE\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date >= i.event_date\n    ORDER BY fh.event_date ASC\n    LIMIT 1\n  ) next_fs ON TRUE\n),\n\n/* 4) APILAR por AÑO: promedio anual por SITIO */\nsite_year AS (\n  SELECT\n    se.estrato_id,\n    se.site_id,\n    date_trunc('year', se.event_date) AS year_bucket,\n    AVG(se.ise_value) AS ise_y,\n    AVG(se.eff_fs)    AS fs_y\n  FROM site_event_with_fs se\n  GROUP BY se.estrato_id, se.site_id, date_trunc('year', se.event_date)\n),\n\n/* 5) Subir a ESTRATO: promedio simple entre SITIOS */\nestrato_year AS (\n  SELECT\n    sy.estrato_id,\n    sy.year_bucket,\n    AVG(sy.ise_y) AS ise_y_e,\n    AVG(sy.fs_y)  AS fs_y_e\n  FROM site_year sy\n  GROUP BY sy.estrato_id, sy.year_bucket\n),\n\n/* 6) Establecimiento por AÑO: ponderado por hectáreas, denominador fijo */\nestab_year AS (\n  SELECT\n    ey.year_bucket,\n    SUM( (ey.ise_y_e + ey.fs_y_e) * sa.\"totalHectares\" ) / NULLIF(thf.total_hectares,0) AS ise2_year\n  FROM estrato_year ey\n  JOIN public.\"samplingAreas\" sa\n    ON sa.\"id\" = ey.estrato_id AND sa.\"farmId\" = '$farm'\n  CROSS JOIN total_hectares_farm thf\n  GROUP BY ey.year_bucket, thf.total_hectares\n)\n\n/* 7) Solo ISE2 */\nSELECT TO_CHAR(ey.year_bucket, 'YYYY') AS \"Año\", ROUND(ey.ise2_year::NUMERIC,1) AS \"ISE2 Establecimiento\"\nFROM estab_year ey\nORDER BY ey.year_bucket;\n\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "\"monitoringActivity\""
+        }
+      ],
+      "title": "ISE 2  Establecimiento - Interanual",
+      "transformations": [
+        {
+          "id": "formatTime",
+          "options": {
+            "outputFormat": "MMMM - YYYY",
+            "timeField": "date",
+            "timezone": "utc",
+            "useTimezone": true
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMax": 100,
+            "fillOpacity": 100,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": -30
+              },
+              {
+                "color": "light-yellow",
+                "value": 0
+              },
+              {
+                "color": "light-green",
+                "value": 30
+              },
+              {
+                "color": "dark-green",
+                "value": 60
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 50
+      },
+      "id": 4411,
+      "maxPerRow": 4,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "colorByField": "ISE2",
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 16
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "time",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.1.3",
+      "repeat": "samplingArea",
+      "repeatDirection": "h",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\n/* 1) ISE por SITIO × evento (solo eventos seleccionados) */\nise_site_event AS (\n  SELECT\n    ms.\"id\"             AS site_id,\n    ms.\"samplingAreaId\" AS estrato_id,\n    me.\"date\"           AS event_date,\n    AVG((mt.\"dataPayload\"->>'totalIse')::NUMERIC) AS ise_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" = 'StmIseForm'\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n    AND (mt.\"dataPayload\"->>'totalIse') IS NOT NULL\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"date\"\n),\n\n/* 2) Histórico de FS por SITIO × fecha (sin filtrar por $monitoringEvent para permitir arrastre) */\nfs_history AS (\n  SELECT\n    ms.\"id\"   AS site_id,\n    me.\"date\" AS event_date,\n    AVG((mt.\"dataPayload\"->>'fieldStructure')::NUMERIC) AS fs_value\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"formName\" = 'StmIse2Form'\n    AND mt.\"isDeleted\" = FALSE\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n    AND (mt.\"dataPayload\"->>'fieldStructure') IS NOT NULL\n  GROUP BY ms.\"id\", me.\"date\"\n),\n\n/* 3) FS efectiva por SITIO × evento (arrastre prev/next) */\nsite_event_with_fs AS (\n  SELECT\n    i.estrato_id,\n    i.site_id,\n    i.event_date,\n    i.ise_value,\n    COALESCE(prev_fs.fs_value, next_fs.fs_value, 0) AS eff_fs\n  FROM ise_site_event i\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date <= i.event_date\n    ORDER BY fh.event_date DESC\n    LIMIT 1\n  ) prev_fs ON TRUE\n  LEFT JOIN LATERAL (\n    SELECT fh.fs_value\n    FROM fs_history fh\n    WHERE fh.site_id = i.site_id\n      AND fh.event_date >= i.event_date\n    ORDER BY fh.event_date ASC\n    LIMIT 1\n  ) next_fs ON TRUE\n),\n\n/* 4) Promedio anual por SITIO (apilar por AÑO) */\nsite_year AS (\n  SELECT\n    se.estrato_id,\n    se.site_id,\n    date_trunc('year', se.event_date) AS year_bucket,\n    AVG(se.ise_value) AS ise_y,\n    AVG(se.eff_fs)    AS fs_y\n  FROM site_event_with_fs se\n  GROUP BY se.estrato_id, se.site_id, date_trunc('year', se.event_date)\n),\n\n/* 5) Subir a ESTRATO: promedio simple entre SITIOS (por año) */\nestrato_year AS (\n  SELECT\n    sy.estrato_id,\n    sy.year_bucket,\n    AVG(sy.ise_y) AS ise_y_e,\n    AVG(sy.fs_y)  AS fs_y_e\n  FROM site_year sy\n  GROUP BY sy.estrato_id, sy.year_bucket\n)\n\n/* 6) Salida: serie interanual por estrato (para bar chart) */\nSELECT\n  TO_CHAR(ey.year_bucket, 'YYYY')                       AS \"Año\",\n  ROUND((ey.ise_y_e + ey.fs_y_e)::NUMERIC, 1)           AS \"ISE2\"\nFROM estrato_year ey\nJOIN public.\"samplingAreas\" sa\n  ON sa.\"id\" = ey.estrato_id\nWHERE sa.\"farmId\" = '$farm'\n  AND sa.\"id\"     IN ($samplingArea)\nORDER BY ey.year_bucket;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "\"monitoringActivity\""
+        }
+      ],
+      "title": "ISE 2 - Estrato $samplingArea",
+      "transformations": [
+        {
+          "id": "formatTime",
+          "options": {
+            "outputFormat": "MMMM - YYYY",
+            "timeField": "time",
+            "timezone": "utc",
+            "useTimezone": true
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ISE Establecimiento"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 154
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 59
+      },
+      "id": 4715,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.1.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\r\n/* 0) Total de hectáreas de la finca (denominador fijo) */\r\ntotal_hectares_farm AS (\r\n  SELECT SUM(sa.\"totalHectares\") AS total_hectares\r\n  FROM public.\"samplingAreas\" sa\r\n  WHERE sa.\"farmId\" = '$farm'\r\n),\r\n\r\n/* 1) ISE por SITIO × evento (solo eventos seleccionados) */\r\nise_site_event AS (\r\n  SELECT\r\n    ms.\"id\"             AS site_id,\r\n    ms.\"samplingAreaId\" AS estrato_id,\r\n    me.\"id\"             AS event_id,\r\n    me.\"date\"           AS event_date,\r\n    AVG((mt.\"dataPayload\"->>'totalIse')::NUMERIC) AS ise_value\r\n  FROM public.\"monitoringTasks\" mt\r\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\r\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\r\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\r\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\r\n  WHERE mt.\"dataPayload\" IS NOT NULL\r\n    AND mt.\"formName\" = 'StmIseForm'\r\n    AND mt.\"isDeleted\" = FALSE\r\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\r\n    AND sa.\"farmId\" = '$farm'\r\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\r\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\r\n    AND sa.\"id\"                IN ($samplingArea)\r\n    AND (mt.\"dataPayload\"->>'totalIse') IS NOT NULL\r\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\r\n),\r\n\r\n/* 2) Histórico de FS por SITIO × fecha (sin filtrar por $monitoringEvent para permitir arrastre) */\r\nfs_history AS (\r\n  SELECT\r\n    ms.\"id\"   AS site_id,\r\n    me.\"date\" AS event_date,\r\n    AVG((mt.\"dataPayload\"->>'fieldStructure')::NUMERIC) AS fs_value\r\n  FROM public.\"monitoringTasks\" mt\r\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\r\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\r\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\r\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\r\n  WHERE mt.\"formName\" = 'StmIse2Form'\r\n    AND mt.\"isDeleted\" = FALSE\r\n    AND sa.\"farmId\" = '$farm'\r\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\r\n    AND sa.\"id\"                IN ($samplingArea)\r\n    AND (mt.\"dataPayload\"->>'fieldStructure') IS NOT NULL\r\n  GROUP BY ms.\"id\", me.\"date\"\r\n),\r\n\r\n/* 3) FS efectiva por SITIO × evento (arrastre prev/next) */\r\nsite_event_with_fs AS (\r\n  SELECT\r\n    i.estrato_id,\r\n    i.site_id,\r\n    i.event_id,\r\n    i.event_date,\r\n    i.ise_value,\r\n    COALESCE(prev_fs.fs_value, next_fs.fs_value, 0) AS eff_fs\r\n  FROM ise_site_event i\r\n  /* última FS <= fecha del evento */\r\n  LEFT JOIN LATERAL (\r\n    SELECT fh.fs_value\r\n    FROM fs_history fh\r\n    WHERE fh.site_id = i.site_id\r\n      AND fh.event_date <= i.event_date\r\n    ORDER BY fh.event_date DESC\r\n    LIMIT 1\r\n  ) prev_fs ON TRUE\r\n  /* primera FS >= fecha del evento (si no hubo previa) */\r\n  LEFT JOIN LATERAL (\r\n    SELECT fh.fs_value\r\n    FROM fs_history fh\r\n    WHERE fh.site_id = i.site_id\r\n      AND fh.event_date >= i.event_date\r\n    ORDER BY fh.event_date ASC\r\n    LIMIT 1\r\n  ) next_fs ON TRUE\r\n),\r\n\r\n/* 4) APILAR por AÑO: promedio anual por SITIO */\r\nsite_year AS (\r\n  SELECT\r\n    se.estrato_id,\r\n    se.site_id,\r\n    date_trunc('year', se.event_date) AS year_bucket,\r\n    AVG(se.ise_value) AS ise_y,\r\n    AVG(se.eff_fs)    AS fs_y\r\n  FROM site_event_with_fs se\r\n  GROUP BY se.estrato_id, se.site_id, date_trunc('year', se.event_date)\r\n),\r\n\r\n/* 5) Subir a ESTRATO: promedio simple entre SITIOS (mantenemos variables separadas) */\r\nestrato_year AS (\r\n  SELECT\r\n    sy.estrato_id,\r\n    sy.year_bucket,\r\n    AVG(sy.ise_y) AS ise_y_e,\r\n    AVG(sy.fs_y)  AS fs_y_e\r\n  FROM site_year sy\r\n  GROUP BY sy.estrato_id, sy.year_bucket\r\n),\r\n\r\n/* 6) Establecimiento por AÑO: ponderado por hectáreas, denominador fijo */\r\nestab_year AS (\r\n  SELECT\r\n    ey.year_bucket,\r\n    SUM( ey.ise_y_e              * sa.\"totalHectares\" ) / NULLIF(thf.total_hectares,0) AS ise1_year,\r\n    SUM( ey.fs_y_e               * sa.\"totalHectares\" ) / NULLIF(thf.total_hectares,0) AS fs_year,\r\n    SUM( (ey.ise_y_e+ey.fs_y_e)  * sa.\"totalHectares\" ) / NULLIF(thf.total_hectares,0) AS ise2_year\r\n  FROM estrato_year ey\r\n  JOIN public.\"samplingAreas\" sa\r\n    ON sa.\"id\" = ey.estrato_id AND sa.\"farmId\" = '$farm'\r\n  CROSS JOIN total_hectares_farm thf\r\n  GROUP BY ey.year_bucket, thf.total_hectares\r\n)\r\n\r\n/* 7) Salida: serie interanual (usa year_bucket como tiempo) */\r\nSELECT\r\n  ey.year_bucket                           AS \"Año\",\r\n  TO_CHAR(ey.year_bucket, 'YYYY')          AS \"Año (label)\",\r\n  ROUND(ey.ise1_year::NUMERIC, 1)          AS \"ISE Establecimiento\",\r\n  ROUND(ey.fs_year::NUMERIC,  1)           AS \"Estructura de Suelo Ponderada\",\r\n  ROUND(ey.ise2_year::NUMERIC, 1)          AS \"ISE2 Establecimiento\"\r\nFROM estab_year ey\r\nORDER BY ey.year_bucket;\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Debug",
+      "type": "table"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 67
+      },
+      "id": 344,
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "fixedColor": "#37872D",
+                "mode": "thresholds"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMax": 110,
+                "fillOpacity": 100,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": false,
+              "mappings": [],
+              "max": 110,
+              "min": 0,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red"
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 40
+                  },
+                  {
+                    "color": "green",
+                    "value": 60
+                  },
+                  {
+                    "color": "dark-green",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 19
+          },
+          "id": 3522,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.86,
+            "colorByField": "Valor",
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "orientation": "vertical",
+            "showValue": "always",
+            "stacking": "none",
+            "text": {
+              "valueSize": 20
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "xField": "Función",
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "11.1.3",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH\n/* 0) Total de hectáreas de la finca (denominador fijo) */\ntotal_hectares_farm AS (\n  SELECT SUM(sa.\"totalHectares\") AS total_hectares\n  FROM public.\"samplingAreas\" sa\n  WHERE sa.\"farmId\" = '$farm'\n),\n\n/* 1) Promedio de cada indicador por SITIO × EVENTO\n      (primero promediamos tareas dentro del sitio para evitar sesgo por #tareas) */\nsite_event_avg AS (\n  SELECT\n    ms.\"id\"                   AS site_id,\n    ms.\"samplingAreaId\"       AS sampling_area_id,\n    me.\"id\"                   AS event_id,\n\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'liveCanopyAbundance-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'liveCanopyAbundance')::NUMERIC END) AS avg_canopeo,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'bareSoil-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'bareSoil')::NUMERIC END)             AS avg_suelo,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'litterAbundance-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'litterAbundance')::NUMERIC END)      AS avg_mantillo,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'capping-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'capping')::NUMERIC END)              AS avg_encostramiento,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'windErosion-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'windErosion')::NUMERIC END)          AS avg_erosion_eolica,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'waterErosion-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'waterErosion')::NUMERIC END)         AS avg_erosion_hidrica,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'dungDecomposition-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'dungDecomposition')::NUMERIC END)    AS avg_estiercol,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'warmSeasonGrasses-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'warmSeasonGrasses')::NUMERIC END)    AS avg_pastos_verano,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'coolSeasonGrasses-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'coolSeasonGrasses')::NUMERIC END)    AS avg_pastos_invierno,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'forbsAndLegumes-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'forbsAndLegumes')::NUMERIC END)      AS avg_hierbas,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'treesAndShrubs-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'treesAndShrubs')::NUMERIC END)       AS avg_arboles,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'desirableRareSpecies-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'desirableRareSpecies')::NUMERIC END) AS avg_raras,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'nonDesirableRareSpecies-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'nonDesirableRareSpecies')::NUMERIC END) AS avg_indeseables\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE\n    mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"               IN ($samplingArea)\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\"\n),\n\n/* 2) Promedio por SITIO (apilado sobre los EVENTOS seleccionados) */\nsite_avg_per_site AS (\n  SELECT\n    sampling_area_id,\n    site_id,\n    AVG(avg_canopeo)         AS canopeo_site,\n    AVG(avg_suelo)           AS suelo_site,\n    AVG(avg_mantillo)        AS mantillo_site,\n    AVG(avg_encostramiento)  AS encostramiento_site,\n    AVG(avg_erosion_eolica)  AS erosion_eolica_site,\n    AVG(avg_erosion_hidrica) AS erosion_hidrica_site,\n    AVG(avg_estiercol)       AS estiercol_site,\n    AVG(avg_pastos_verano)   AS pastos_verano_site,\n    AVG(avg_pastos_invierno) AS pastos_invierno_site,\n    AVG(avg_hierbas)         AS hierbas_site,\n    AVG(avg_arboles)         AS arboles_site,\n    AVG(avg_raras)           AS raras_site,\n    AVG(avg_indeseables)     AS indeseables_site\n  FROM site_event_avg\n  GROUP BY sampling_area_id, site_id\n),\n\n/* 3) Subir a ESTRATO: promedio simple ENTRE SITIOS */\narea_avg AS (\n  SELECT\n    sps.sampling_area_id,\n    AVG(canopeo_site)         AS avg_canopeo,\n    AVG(suelo_site)           AS avg_suelo,\n    AVG(mantillo_site)        AS avg_mantillo,\n    AVG(encostramiento_site)  AS avg_encostramiento,\n    AVG(erosion_eolica_site)  AS avg_erosion_eolica,\n    AVG(erosion_hidrica_site) AS avg_erosion_hidrica,\n    AVG(estiercol_site)       AS avg_estiercol,\n    AVG(pastos_verano_site)   AS avg_pastos_verano,\n    AVG(pastos_invierno_site) AS avg_pastos_invierno,\n    AVG(hierbas_site)         AS avg_hierbas,\n    AVG(arboles_site)         AS avg_arboles,\n    AVG(raras_site)           AS avg_raras,\n    AVG(indeseables_site)     AS avg_indeseables\n  FROM site_avg_per_site sps\n  GROUP BY sps.sampling_area_id\n),\n\n/* 4) Métricas de finca: ponderado por hectáreas con denominador fijo */\nfarm_metrics AS (\n  SELECT\n    SUM(aa.avg_canopeo         * sa.\"totalHectares\") / thf.total_hectares AS farm_canopeo,\n    SUM(aa.avg_suelo           * sa.\"totalHectares\") / thf.total_hectares AS farm_suelo,\n    SUM(aa.avg_mantillo        * sa.\"totalHectares\") / thf.total_hectares AS farm_mantillo,\n    SUM(aa.avg_encostramiento  * sa.\"totalHectares\") / thf.total_hectares AS farm_encostramiento,\n    SUM(aa.avg_erosion_eolica  * sa.\"totalHectares\") / thf.total_hectares AS farm_erosion_eolica,\n    SUM(aa.avg_erosion_hidrica * sa.\"totalHectares\") / thf.total_hectares AS farm_erosion_hidrica,\n    SUM(aa.avg_estiercol       * sa.\"totalHectares\") / thf.total_hectares AS farm_estiercol,\n    SUM(aa.avg_pastos_verano   * sa.\"totalHectares\") / thf.total_hectares AS farm_pastos_verano,\n    SUM(aa.avg_pastos_invierno * sa.\"totalHectares\") / thf.total_hectares AS farm_pastos_invierno,\n    SUM(aa.avg_hierbas         * sa.\"totalHectares\") / thf.total_hectares AS farm_hierbas,\n    SUM(aa.avg_arboles         * sa.\"totalHectares\") / thf.total_hectares AS farm_arboles,\n    SUM(aa.avg_raras           * sa.\"totalHectares\") / thf.total_hectares AS farm_raras,\n    SUM(aa.avg_indeseables     * sa.\"totalHectares\") / thf.total_hectares AS farm_indeseables\n  FROM area_avg aa\n  JOIN public.\"samplingAreas\" sa\n    ON sa.\"id\" = aa.sampling_area_id AND sa.\"farmId\" = '$farm'\n  CROSS JOIN total_hectares_farm thf\n  GROUP BY thf.total_hectares\n)\n\n/* 5) Salida final (4 filas, una por función) */\nSELECT\n  'Ciclo del Agua' AS \"Función\",\n  ROUND((\n    ((fm.farm_suelo\n     + fm.farm_mantillo\n     + fm.farm_encostramiento\n     + fm.farm_erosion_eolica\n     + fm.farm_erosion_hidrica\n     - (-70)) / 100 * 100)\n  )::NUMERIC, 1) AS \"Valor\"\nFROM farm_metrics fm\n\nUNION ALL\nSELECT\n  'Ciclo Mineral' AS \"Función\",\n  ROUND((\n    ((fm.farm_suelo\n     + fm.farm_mantillo\n     + fm.farm_encostramiento\n     + fm.farm_estiercol\n     - (-30)) / 90 * 100)\n  )::NUMERIC, 1) AS \"Valor\"\nFROM farm_metrics fm\n\nUNION ALL\nSELECT\n  'Flujo de Energía' AS \"Función\",\n  ROUND((\n    ((fm.farm_canopeo - (-10)) / 20 * 100)\n  )::NUMERIC, 1) AS \"Valor\"\nFROM farm_metrics fm\n\nUNION ALL\nSELECT\n  'Dinámica de las comunidades' AS \"Función\",\n  ROUND((\n    ((fm.farm_pastos_verano\n     + fm.farm_pastos_invierno\n     + fm.farm_hierbas\n     + fm.farm_arboles\n     + fm.farm_raras\n     + fm.farm_indeseables\n     - (-50)) / 100 * 100)\n  )::NUMERIC, 1) AS \"Valor\"\nFROM farm_metrics fm\n\nORDER BY \"Función\";\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "\"monitoringActivity\""
+            }
+          ],
+          "title": "Análisis de la función del paisaje - Total Establecimiento",
+          "type": "barchart"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "mappings": [],
+              "thresholds": {
+                "mode": "percentage",
+                "steps": [
+                  {
+                    "color": "dark-red"
+                  },
+                  {
+                    "color": "light-red",
+                    "value": 20
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 40
+                  },
+                  {
+                    "color": "green",
+                    "value": 60
+                  },
+                  {
+                    "color": "dark-green",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 27
+          },
+          "id": 302,
+          "options": {
+            "minVizHeight": 75,
+            "minVizWidth": 75,
+            "orientation": "auto",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true,
+            "sizing": "auto"
+          },
+          "pluginVersion": "11.1.3",
+          "repeat": "samplingArea",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH\n/* 0) Total de hectáreas de la finca (denominador fijo) */\ntotal_hectares_farm AS (\n  SELECT SUM(sa.\"totalHectares\") AS total_hectares\n  FROM public.\"samplingAreas\" sa\n  WHERE sa.\"farmId\" = '$farm'\n),\n\n/* 1) Promedio por SITIO × EVENTO (primero promediamos tareas dentro del sitio) */\nsite_event_avg AS (\n  SELECT\n    ms.\"id\"             AS site_id,\n    ms.\"samplingAreaId\" AS sampling_area_id,\n    me.\"id\"             AS event_id,\n\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'bareSoil-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'bareSoil')::NUMERIC END)             AS avg_suelo,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'litterAbundance-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'litterAbundance')::NUMERIC END)      AS avg_mantillo,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'capping-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'capping')::NUMERIC END)              AS avg_encostramiento,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'windErosion-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'windErosion')::NUMERIC END)          AS avg_erosion_eolica,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'waterErosion-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'waterErosion')::NUMERIC END)         AS avg_erosion_hidrica,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'dungDecomposition-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'dungDecomposition')::NUMERIC END)    AS avg_estiercol,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'liveCanopyAbundance-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'liveCanopyAbundance')::NUMERIC END)  AS avg_canopeo,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'warmSeasonGrasses-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'warmSeasonGrasses')::NUMERIC END)    AS avg_pastos_verano,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'coolSeasonGrasses-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'coolSeasonGrasses')::NUMERIC END)    AS avg_pastos_invierno,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'forbsAndLegumes-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'forbsAndLegumes')::NUMERIC END)      AS avg_hierbas,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'treesAndShrubs-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'treesAndShrubs')::NUMERIC END)       AS avg_arboles,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'desirableRareSpecies-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'desirableRareSpecies')::NUMERIC END) AS avg_raras,\n    AVG(CASE WHEN (mt.\"dataPayload\"->>'nonDesirableRareSpecies-check')::BOOLEAN\n             THEN (mt.\"dataPayload\"->>'nonDesirableRareSpecies')::NUMERIC END) AS avg_indeseables\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE\n    mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"               IN ($samplingArea)\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\"\n),\n\n/* 2) Promedio por SITIO (apilado sobre los EVENTOS seleccionados) */\nsite_avg_per_site AS (\n  SELECT\n    sampling_area_id,\n    site_id,\n    AVG(avg_suelo)           AS suelo_site,\n    AVG(avg_mantillo)        AS mantillo_site,\n    AVG(avg_encostramiento)  AS encostramiento_site,\n    AVG(avg_erosion_eolica)  AS erosion_eolica_site,\n    AVG(avg_erosion_hidrica) AS erosion_hidrica_site,\n    AVG(avg_estiercol)       AS estiercol_site,\n    AVG(avg_canopeo)         AS canopeo_site,\n    AVG(avg_pastos_verano)   AS pastos_verano_site,\n    AVG(avg_pastos_invierno) AS pastos_invierno_site,\n    AVG(avg_hierbas)         AS hierbas_site,\n    AVG(avg_arboles)         AS arboles_site,\n    AVG(avg_raras)           AS raras_site,\n    AVG(avg_indeseables)     AS indeseables_site\n  FROM site_event_avg\n  GROUP BY sampling_area_id, site_id\n),\n\n/* 3) Promedio por ESTRATO (entre SITIOS) */\narea_avg AS (\n  SELECT\n    sampling_area_id,\n    AVG(suelo_site)           AS avg_suelo,\n    AVG(mantillo_site)        AS avg_mantillo,\n    AVG(encostramiento_site)  AS avg_encostramiento,\n    AVG(erosion_eolica_site)  AS avg_erosion_eolica,\n    AVG(erosion_hidrica_site) AS avg_erosion_hidrica,\n    AVG(estiercol_site)       AS avg_estiercol,\n    AVG(canopeo_site)         AS avg_canopeo,\n    AVG(pastos_verano_site)   AS avg_pastos_verano,\n    AVG(pastos_invierno_site) AS avg_pastos_invierno,\n    AVG(hierbas_site)         AS avg_hierbas,\n    AVG(arboles_site)         AS avg_arboles,\n    AVG(raras_site)           AS avg_raras,\n    AVG(indeseables_site)     AS avg_indeseables\n  FROM site_avg_per_site\n  GROUP BY sampling_area_id\n),\n\n/* 4) Establecimiento: ponderado por hectáreas (denominador fijo) */\nfarm_metrics AS (\n  SELECT\n    SUM(aa.avg_suelo           * sa.\"totalHectares\") / thf.total_hectares AS farm_suelo,\n    SUM(aa.avg_mantillo        * sa.\"totalHectares\") / thf.total_hectares AS farm_mantillo,\n    SUM(aa.avg_encostramiento  * sa.\"totalHectares\") / thf.total_hectares AS farm_encostramiento,\n    SUM(aa.avg_erosion_eolica  * sa.\"totalHectares\") / thf.total_hectares AS farm_erosion_eolica,\n    SUM(aa.avg_erosion_hidrica * sa.\"totalHectares\") / thf.total_hectares AS farm_erosion_hidrica,\n    SUM(aa.avg_estiercol       * sa.\"totalHectares\") / thf.total_hectares AS farm_estiercol,\n    SUM(aa.avg_canopeo         * sa.\"totalHectares\") / thf.total_hectares AS farm_canopeo,\n    SUM(aa.avg_pastos_verano   * sa.\"totalHectares\") / thf.total_hectares AS farm_pastos_verano,\n    SUM(aa.avg_pastos_invierno * sa.\"totalHectares\") / thf.total_hectares AS farm_pastos_invierno,\n    SUM(aa.avg_hierbas         * sa.\"totalHectares\") / thf.total_hectares AS farm_hierbas,\n    SUM(aa.avg_arboles         * sa.\"totalHectares\") / thf.total_hectares AS farm_arboles,\n    SUM(aa.avg_raras           * sa.\"totalHectares\") / thf.total_hectares AS farm_raras,\n    SUM(aa.avg_indeseables     * sa.\"totalHectares\") / thf.total_hectares AS farm_indeseables\n  FROM area_avg aa\n  JOIN public.\"samplingAreas\" sa\n    ON sa.\"id\" = aa.sampling_area_id AND sa.\"farmId\" = '$farm'\n  CROSS JOIN total_hectares_farm thf\n  GROUP BY thf.total_hectares\n)\n\n/* 5) Salida: 4 funciones en columnas (una fila) */\nSELECT\n  ROUND((\n    ((fm.farm_suelo\n     + fm.farm_mantillo\n     + fm.farm_encostramiento\n     + fm.farm_erosion_eolica\n     + fm.farm_erosion_hidrica\n     - (-70)) / 100 * 100)\n  )::NUMERIC, 1) AS \"Ciclo del Agua\",\n\n  ROUND((\n    ((fm.farm_suelo\n     + fm.farm_mantillo\n     + fm.farm_encostramiento\n     + fm.farm_estiercol\n     - (-30)) / 90 * 100)\n  )::NUMERIC, 1) AS \"Ciclo Mineral\",\n\n  ROUND((\n    ((fm.farm_canopeo - (-10)) / 20 * 100)\n  )::NUMERIC, 1) AS \"Flujo de Energía\",\n\n  ROUND((\n    ((fm.farm_pastos_verano\n     + fm.farm_pastos_invierno\n     + fm.farm_hierbas\n     + fm.farm_arboles\n     + fm.farm_raras\n     + fm.farm_indeseables\n     - (-50)) / 100 * 100)\n  )::NUMERIC, 1) AS \"Dinámica de las comunidades\"\nFROM farm_metrics fm;\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "\"monitoringActivity\""
+            }
+          ],
+          "title": "Índices de Función Ecosistémica - $samplingArea",
+          "type": "gauge"
+        }
+      ],
+      "title": "Función ecosistémica",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 68
+      },
+      "id": 1983,
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "fieldMinMax": false,
+              "min": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 20
+          },
+          "id": 4480,
+          "maxPerRow": 3,
+          "options": {
+            "baidu": {
+              "callback": "bmapReady",
+              "key": ""
+            },
+            "editor": {
+              "format": "auto"
+            },
+            "editorMode": "visual",
+            "gaode": {
+              "key": "",
+              "plugin": "AMap.Scale,AMap.ToolBar"
+            },
+            "getOption": "const series = context.panel.data.series.map((s) => {\n  const sData = s.fields.find((f) => f.type === 'number').values.buffer || s.fields.find((f) => f.type === 'number').values;\n  const sTime = s.fields.find((f) => f.type === 'time').values.buffer || s.fields.find((f) => f.type === 'time').values;\n\n  return {\n    name: s.refId,\n    type: 'line',\n    showSymbol: true,\n    label: {\n      show: true,\n      position: 'top',\n      formatter: function (params) {\n        return params.value[1]; // muestra el valor Y\n      }\n    },\n    areaStyle: {\n      opacity: 0.1,\n    },\n    lineStyle: {\n      width: 1,\n    },\n    data: sData.map((d, i) => [sTime[i], d.toFixed(2)]),\n  };\n});\n",
+            "google": {
+              "callback": "gmapReady",
+              "key": ""
+            },
+            "map": "none",
+            "renderer": "canvas",
+            "themeEditor": {
+              "config": "{}",
+              "name": "default"
+            },
+            "visualEditor": {
+              "code": "return {\n  dataset: context.editor.dataset,\n\n  legend: {\n    show: true,\n    bottom: 10,\n    left: 'center',\n    orient: 'horizontal',\n    data: context.editor.series.map(s => s.name || s.id),\n    textStyle: { fontSize: 12 }\n  },\n\n  series: context.editor.series.map(serie => ({\n    ...serie,\n    name: serie.name || serie.id,\n    type: 'line',\n    lineStyle: { width: 3 },\n    label: { show: false }\n    // yAxisIndex: serie.id === 'DC' ? 1 : 0\n  })),\n\n  xAxis: {\n    type: 'time',\n    boundaryGap: false,\n    axisTick: { alignWithLabel: true },\n    axisLabel: {\n      // solo mostramos 1 etiqueta cada 4 ticks\n      interval: (idx) => idx % 4 === 0,\n      formatter: ts => {\n        const d = new Date(ts);\n        const names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];\n        return `${names[d.getMonth()]}-${d.getFullYear().toString().slice(-2)}`;\n      }\n    }\n  },\n\n  yAxis: [\n    {\n      type: 'value',\n      position: 'left',\n      min: 0, max: 100, interval: 10,\n      axisLabel: { formatter: '{value} %' },\n      splitLine: { show: true, lineStyle: { type: 'dashed' } }\n    },\n    {\n      type: 'value',\n      position: 'right',\n      min: 0, max: 100, interval: 10,\n      axisLabel: { formatter: '{value} %' },\n      splitLine: { show: false }\n    }\n  ],\n\n  tooltip: {\n    trigger: 'axis',\n    axisPointer: { type: 'cross' }\n  },\n\n  grid: { left: 60, right: 60, top: 40, bottom: 60 }\n};\n",
+              "dataset": [
+                {
+                  "name": "time",
+                  "source": "A"
+                },
+                {
+                  "name": "Ciclo del Agua",
+                  "source": "A"
+                },
+                {
+                  "name": "Ciclo Mineral",
+                  "source": "A"
+                },
+                {
+                  "name": "Flujo de Energía",
+                  "source": "A"
+                },
+                {
+                  "name": "Dinámica de las comunidades",
+                  "source": "A"
+                }
+              ],
+              "series": [
+                {
+                  "encode": {
+                    "x": [
+                      "A:time"
+                    ],
+                    "y": [
+                      "A:Ciclo del Agua"
+                    ]
+                  },
+                  "id": "ca",
+                  "name": "Ciclo del Agua",
+                  "type": "line",
+                  "uid": "c934c27f-f87e-4aa5-99fb-60166ac6a481"
+                },
+                {
+                  "encode": {
+                    "x": [
+                      "A:time"
+                    ],
+                    "y": [
+                      "A:Ciclo Mineral"
+                    ]
+                  },
+                  "id": "cm",
+                  "name": "Ciclo Mineral",
+                  "type": "line",
+                  "uid": "bc40b3dc-825c-4297-a024-80f29051e2c1"
+                },
+                {
+                  "encode": {
+                    "x": [
+                      "A:time"
+                    ],
+                    "y": [
+                      "A:Dinámica de las comunidades"
+                    ]
+                  },
+                  "id": "dc",
+                  "name": "Dinámica de las comunidades",
+                  "type": "line",
+                  "uid": "35e172a9-f09f-472d-83ed-42637544f0bd"
+                },
+                {
+                  "encode": {
+                    "x": [],
+                    "y": [
+                      "A:Flujo de Energía"
+                    ]
+                  },
+                  "id": "fe",
+                  "name": "Flujo de Energía",
+                  "type": "line",
+                  "uid": "3f5198c0-b404-46b5-9b07-ebef7e17f0e9"
+                }
+              ]
+            }
+          },
+          "pluginVersion": "6.5.0",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH monitoring_data AS (\n  SELECT\n    sa.\"totalHectares\"::NUMERIC AS area,\n    me.\"date\"                   AS date,\n    -- Raw scores sin ponderar por punto\n    (\n      COALESCE((mt.\"dataPayload\"->>'bareSoil')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'litterAbundance')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'capping')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'windErosion')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'waterErosion')::NUMERIC, 0)\n      - (-70)\n    ) / 100.0 * 100 AS ciclo_agua_raw,\n    (\n      COALESCE((mt.\"dataPayload\"->>'bareSoil')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'litterAbundance')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'capping')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'dungDecomposition')::NUMERIC, 0)\n      - (-30)\n    ) / 90.0 * 100  AS ciclo_mineral_raw,\n    (\n      COALESCE((mt.\"dataPayload\"->>'bareSoil')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'liveCanopyAbundance')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'warmSeasonGrasses')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'coolSeasonGrasses')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'forbsAndLegumes')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'treesAndShrubs')::NUMERIC, 0)\n      - (-30)\n    ) / 60.0 * 100  AS flujo_energia_raw,\n    (\n      COALESCE((mt.\"dataPayload\"->>'bareSoil')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'desirableRareSpecies')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'nonDesirableRareSpecies')::NUMERIC, 0)\n      - (-70)\n    ) / 140.0 * 100 AS dinamica_com_raw\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringEvents\"    me ON mt.\"monitoringEventId\"    = me.\"id\"\n  LEFT JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  LEFT JOIN public.\"samplingAreas\"       sa ON ma.\"samplingAreaId\"       = sa.\"id\"\n  WHERE\n    mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\"      IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\"     = FALSE\n    AND sa.\"farmId\"        = '$farm'\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n),\n\nmonthly AS (\n  SELECT\n    date_trunc('month', md.date)                   AS month_date,\n    -- Ponderamos por área y consolidamos todos los eventos en el mismo mes\n    SUM(md.ciclo_agua_raw   * md.area)   / NULLIF(SUM(md.area),0)   AS ciclo_agua,\n    SUM(md.ciclo_mineral_raw * md.area)   / NULLIF(SUM(md.area),0)   AS ciclo_mineral,\n    SUM(md.flujo_energia_raw * md.area)   / NULLIF(SUM(md.area),0)   AS flujo_energia,\n    SUM(md.dinamica_com_raw * md.area)    / NULLIF(SUM(md.area),0)   AS dinamica_com\n  FROM monitoring_data md\n  GROUP BY date_trunc('month', md.date)\n)\n\nSELECT\n  month_date                                       AS \"time\",\n  ROUND(ciclo_agua::NUMERIC,     0)                AS \"Ciclo del Agua\",\n  ROUND(ciclo_mineral::NUMERIC,  0)                AS \"Ciclo Mineral\",\n  ROUND(flujo_energia::NUMERIC,  0)                AS \"Flujo de Energía\",\n  ROUND(dinamica_com::NUMERIC,   0)                AS \"Dinámica de las comunidades\"\nFROM monthly\nORDER BY month_date;\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Procesos del Ecosistema - Total Establecimiento",
+          "type": "volkovlabs-echarts-panel"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "fieldMinMax": false,
+              "min": 0
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 30
+          },
+          "id": 4649,
+          "maxPerRow": 3,
+          "options": {
+            "baidu": {
+              "callback": "bmapReady",
+              "key": ""
+            },
+            "editor": {
+              "format": "auto"
+            },
+            "editorMode": "visual",
+            "gaode": {
+              "key": "",
+              "plugin": "AMap.Scale,AMap.ToolBar"
+            },
+            "getOption": "const series = context.panel.data.series.map((s) => {\n  const sData = s.fields.find((f) => f.type === 'number').values.buffer || s.fields.find((f) => f.type === 'number').values;\n  const sTime = s.fields.find((f) => f.type === 'time').values.buffer || s.fields.find((f) => f.type === 'time').values;\n\n  return {\n    name: s.refId,\n    type: 'line',\n    showSymbol: true,\n    label: {\n      show: true,\n      position: 'top',\n      formatter: function (params) {\n        return params.value[1]; // muestra el valor Y\n      }\n    },\n    areaStyle: {\n      opacity: 0.1,\n    },\n    lineStyle: {\n      width: 1,\n    },\n    data: sData.map((d, i) => [sTime[i], d.toFixed(2)]),\n  };\n});\n",
+            "google": {
+              "callback": "gmapReady",
+              "key": ""
+            },
+            "map": "none",
+            "renderer": "canvas",
+            "themeEditor": {
+              "config": "{}",
+              "name": "default"
+            },
+            "visualEditor": {
+              "code": "return {\n  dataset: context.editor.dataset,\n\n  legend: {\n    show: true,\n    bottom: 10,\n    left: 'center',\n    orient: 'horizontal',\n    data: context.editor.series.map(s => s.name || s.id),\n    textStyle: { fontSize: 12 }\n  },\n\n  series: context.editor.series.map(serie => ({\n    ...serie,\n    name: serie.name || serie.id,\n    type: 'line',\n    lineStyle: { width: 3 },\n    label: { show: false }\n    // yAxisIndex: serie.id === 'DC' ? 1 : 0\n  })),\n\n  xAxis: {\n    type: 'time',\n    boundaryGap: false,\n    axisTick: { alignWithLabel: true },\n    axisLabel: {\n      // solo mostramos 1 etiqueta cada 4 ticks\n      interval: (idx) => idx % 4 === 0,\n      formatter: ts => {\n        const d = new Date(ts);\n        const names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];\n        return `${names[d.getMonth()]}-${d.getFullYear().toString().slice(-2)}`;\n      }\n    }\n  },\n\n  yAxis: [\n    {\n      type: 'value',\n      position: 'left',\n      min: 0, max: 100, interval: 10,\n      axisLabel: { formatter: '{value} %' },\n      splitLine: { show: true, lineStyle: { type: 'dashed' } }\n    },\n    {\n      type: 'value',\n      position: 'right',\n      min: 0, max: 100, interval: 10,\n      axisLabel: { formatter: '{value} %' },\n      splitLine: { show: false }\n    }\n  ],\n\n  tooltip: {\n    trigger: 'axis',\n    axisPointer: { type: 'cross' }\n  },\n\n  grid: { left: 60, right: 60, top: 40, bottom: 60 }\n};\n",
+              "dataset": [
+                {
+                  "name": "time",
+                  "source": "A"
+                },
+                {
+                  "name": "Ciclo del Agua",
+                  "source": "A"
+                },
+                {
+                  "name": "Ciclo Mineral",
+                  "source": "A"
+                },
+                {
+                  "name": "Flujo de Energía",
+                  "source": "A"
+                },
+                {
+                  "name": "Dinámica de las comunidades",
+                  "source": "A"
+                }
+              ],
+              "series": [
+                {
+                  "encode": {
+                    "x": [
+                      "A:time"
+                    ],
+                    "y": [
+                      "A:Ciclo del Agua"
+                    ]
+                  },
+                  "id": "ca",
+                  "name": "Ciclo del Agua",
+                  "type": "line",
+                  "uid": "c934c27f-f87e-4aa5-99fb-60166ac6a481"
+                },
+                {
+                  "encode": {
+                    "x": [
+                      "A:time"
+                    ],
+                    "y": [
+                      "A:Ciclo Mineral"
+                    ]
+                  },
+                  "id": "cm",
+                  "name": "Ciclo Mineral",
+                  "type": "line",
+                  "uid": "bc40b3dc-825c-4297-a024-80f29051e2c1"
+                },
+                {
+                  "encode": {
+                    "x": [
+                      "A:time"
+                    ],
+                    "y": [
+                      "A:Dinámica de las comunidades"
+                    ]
+                  },
+                  "id": "dc",
+                  "name": "Dinámica de las comunidades",
+                  "type": "line",
+                  "uid": "35e172a9-f09f-472d-83ed-42637544f0bd"
+                },
+                {
+                  "encode": {
+                    "x": [],
+                    "y": [
+                      "A:Flujo de Energía"
+                    ]
+                  },
+                  "id": "fe",
+                  "name": "Flujo de Energía",
+                  "type": "line",
+                  "uid": "3f5198c0-b404-46b5-9b07-ebef7e17f0e9"
+                }
+              ]
+            }
+          },
+          "pluginVersion": "6.5.0",
+          "repeat": "samplingArea",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH monitoring_data AS (\n  SELECT\n    sa.\"id\"                                    AS sampling_area_id,\n    sa.\"name\"                                  AS sampling_area_name,\n    me.\"date\"                                  AS date,\n\n    /* Raw scores sin ponderar */\n    (\n      COALESCE((mt.\"dataPayload\"->>'bareSoil')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'litterAbundance')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'capping')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'windErosion')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'waterErosion')::NUMERIC, 0)\n      - (-70)\n    ) / 100.0 * 100 AS ciclo_agua_raw,\n\n    (\n      COALESCE((mt.\"dataPayload\"->>'bareSoil')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'litterAbundance')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'capping')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'dungDecomposition')::NUMERIC, 0)\n      - (-30)\n    ) / 90.0 * 100 AS ciclo_mineral_raw,\n\n    (\n      COALESCE((mt.\"dataPayload\"->>'bareSoil')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'liveCanopyAbundance')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'warmSeasonGrasses')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'coolSeasonGrasses')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'forbsAndLegumes')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'treesAndShrubs')::NUMERIC, 0)\n      - (-30)\n    ) / 60.0 * 100 AS flujo_energia_raw,\n\n    (\n      COALESCE((mt.\"dataPayload\"->>'bareSoil')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'desirableRareSpecies')::NUMERIC, 0)\n      + COALESCE((mt.\"dataPayload\"->>'nonDesirableRareSpecies')::NUMERIC, 0)\n      - (-70)\n    ) / 140.0 * 100 AS dinamica_com_raw\n\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringEvents\"    me ON mt.\"monitoringEventId\"    = me.\"id\"\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"       sa ON ma.\"samplingAreaId\"       = sa.\"id\"\n  WHERE\n    mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\"           IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\"          = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\"            = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n),\n\nmonthly_by_area AS (\n  SELECT\n    sampling_area_id,\n    sampling_area_name,\n    date_trunc('month', date) AS month_date,\n    AVG(ciclo_agua_raw)      AS ciclo_agua,\n    AVG(ciclo_mineral_raw)   AS ciclo_mineral,\n    AVG(flujo_energia_raw)   AS flujo_energia,\n    AVG(dinamica_com_raw)    AS dinamica_com\n  FROM monitoring_data\n  GROUP BY sampling_area_id, sampling_area_name, date_trunc('month', date)\n)\n\nSELECT\n  sampling_area_id,\n  sampling_area_name,\n  month_date                   AS \"time\",\n  ROUND(ciclo_agua::NUMERIC,     0) AS \"Ciclo del Agua\",\n  ROUND(ciclo_mineral::NUMERIC,  0) AS \"Ciclo Mineral\",\n  ROUND(flujo_energia::NUMERIC,  0) AS \"Flujo de Energía\",\n  ROUND(dinamica_com::NUMERIC,   0) AS \"Dinámica de las comunidades\"\nFROM monthly_by_area\nORDER BY sampling_area_id, month_date;\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Procesos del Ecosistema - $samplingArea",
+          "type": "volkovlabs-echarts-panel"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 3,
+                "pointSize": 6,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": true,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red"
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Ciclo Mineral"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  },
+                  {
+                    "id": "custom.lineStyle",
+                    "value": {
+                      "fill": "solid"
+                    }
+                  },
+                  {
+                    "id": "custom.lineWidth",
+                    "value": 2
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 0,
+            "y": 38
+          },
+          "id": 3018,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.1.3",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH monitoring_data_ciclo_mineral AS (\n    SELECT\n        me.\"date\" AS monitoring_event_date,\n        sa.\"totalHectares\",\n        \n        -- Atributos determinantes para Ciclo Mineral\n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'bareSoil-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'bareSoil', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Suelo desnudo\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'litterAbundance-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'litterAbundance', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Abundancia de mantillo\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'capping-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'capping', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Encostramiento\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'dungDecomposition-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'dungDecomposition', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Descomposición de estiércol\"\n    FROM \n        public.\"monitoringTasks\" mt\n        INNER JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\" = me.\"id\"\n        LEFT JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n        LEFT JOIN public.\"samplingAreas\" sa ON ma.\"samplingAreaId\" = sa.\"id\"\n    WHERE \n        mt.\"dataPayload\" IS NOT NULL \n        AND mt.\"formName\" IN ('StmForagePictures', 'StmIseForm') \n        AND mt.\"isDeleted\" = FALSE\n        AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n        AND sa.\"farmId\" = '$farm'\n        AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n        AND mt.\"monitoringSiteId\" IN ($monitoringSite)\n        AND sa.\"id\" IN ($samplingArea)\n)\n\nSELECT\n    md.monitoring_event_date,\n    SUM(md.\"Suelo desnudo\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Suelo desnudo\",\n    SUM(md.\"Abundancia de mantillo\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Abundancia de mantillo\",\n    SUM(md.\"Encostramiento\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Encostramiento\",\n    SUM(md.\"Descomposición de estiércol\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Descomposición de estiércol\"\nFROM \n    monitoring_data_ciclo_mineral md\nGROUP BY \n    md.monitoring_event_date\nORDER BY \n    md.monitoring_event_date;\n",
+              "refId": "Ciclo del agua",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "\"monitoringActivity\""
+            }
+          ],
+          "title": "Ciclo mineral - Interanual (2)",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 3,
+                "pointSize": 6,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": true,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red"
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Ciclo del Agua"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineWidth",
+                    "value": 2
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  },
+                  {
+                    "id": "custom.lineStyle"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 38
+          },
+          "id": 3019,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.1.3",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH monitoring_data_ciclo_agua AS (\n    SELECT\n        me.\"date\" AS monitoring_event_date,\n        sa.\"totalHectares\",\n        \n        -- Atributos determinantes para Ciclo del Agua\n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'bareSoil-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'bareSoil', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Suelo desnudo\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'litterAbundance-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'litterAbundance', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Abundancia de mantillo\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'capping-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'capping', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Encostramiento\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'windErosion-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'windErosion', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Erosión eólica\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'waterErosion-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'waterErosion', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Erosión hídrica\"\n    FROM \n        public.\"monitoringTasks\" mt\n        INNER JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\" = me.\"id\"\n        LEFT JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n        LEFT JOIN public.\"samplingAreas\" sa ON ma.\"samplingAreaId\" = sa.\"id\"\n    WHERE \n        mt.\"dataPayload\" IS NOT NULL \n        AND mt.\"formName\" IN ('StmForagePictures', 'StmIseForm') \n        AND mt.\"isDeleted\" = FALSE\n        AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n        AND sa.\"farmId\" = '$farm'\n        AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n        AND mt.\"monitoringSiteId\" IN ($monitoringSite)\n        AND sa.\"id\" IN ($samplingArea)\n)\n\nSELECT\n    md.monitoring_event_date,\n    \n    -- Ponderación por hectáreas\n    SUM(md.\"Suelo desnudo\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Suelo desnudo\",\n    SUM(md.\"Abundancia de mantillo\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Abundancia de mantillo\",\n    SUM(md.\"Encostramiento\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Encostramiento\",\n    SUM(md.\"Erosión eólica\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Erosión eólica\",\n    SUM(md.\"Erosión hídrica\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Erosión hídrica\"\nFROM \n    monitoring_data_ciclo_agua md\nGROUP BY \n    md.monitoring_event_date\nORDER BY \n    md.monitoring_event_date;\n",
+              "refId": "Ciclo del agua",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "\"monitoringActivity\""
+            }
+          ],
+          "title": "Ciclo del agua - Interanual (2)",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 3,
+                "pointSize": 6,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": true,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red"
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Flujo de Energía"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineWidth",
+                    "value": 2
+                  },
+                  {
+                    "id": "custom.lineStyle"
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 47
+          },
+          "id": 3020,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.1.3",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH monitoring_data_flujo_energia AS (\n    SELECT\n        me.\"date\" AS monitoring_event_date,\n        sa.\"totalHectares\",\n        \n        -- Atributos determinantes para Flujo de Energía\n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'bareSoil-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'bareSoil', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Suelo desnudo\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'liveCanopyAbundance-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'liveCanopyAbundance', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Abundancia de canopeo\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'warmSeasonGrasses-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'warmSeasonGrasses', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Pastos de verano\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'coolSeasonGrasses-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'coolSeasonGrasses', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Pastos de invierno\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'forbsAndLegumes-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'forbsAndLegumes', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Hierbas y leguminosas\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'treesAndShrubs-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'treesAndShrubs', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Árboles y arbustos\"\n    FROM \n        public.\"monitoringTasks\" mt\n        INNER JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\" = me.\"id\"\n        LEFT JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n        LEFT JOIN public.\"samplingAreas\" sa ON ma.\"samplingAreaId\" = sa.\"id\"\n    WHERE \n        mt.\"dataPayload\" IS NOT NULL \n        AND mt.\"formName\" IN ('StmForagePictures', 'StmIseForm') \n        AND mt.\"isDeleted\" = FALSE\n        AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n        AND sa.\"farmId\" = '$farm'\n        AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n        AND mt.\"monitoringSiteId\" IN ($monitoringSite)\n        AND sa.\"id\" IN ($samplingArea)\n)\n\nSELECT\n    md.monitoring_event_date,\n    -- Ponderación por hectáreas\n    SUM(md.\"Suelo desnudo\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Suelo desnudo\",\n    SUM(md.\"Abundancia de canopeo\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Abundancia de canopeo\",\n    SUM(md.\"Pastos de verano\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Pastos de verano\",\n    SUM(md.\"Pastos de invierno\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Pastos de invierno\",\n    SUM(md.\"Hierbas y leguminosas\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Hierbas y leguminosas\",\n    SUM(md.\"Árboles y arbustos\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Árboles y arbustos\"\nFROM \n    monitoring_data_flujo_energia md\nGROUP BY \n    md.monitoring_event_date\nORDER BY \n    md.monitoring_event_date;\n",
+              "refId": "Ciclo del agua",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "\"monitoringActivity\""
+            }
+          ],
+          "title": "Flujo de energía - Interanual (2)",
+          "transparent": true,
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "linear",
+                "lineStyle": {
+                  "fill": "solid"
+                },
+                "lineWidth": 3,
+                "pointSize": 6,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "fieldMinMax": true,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red"
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Dinámica de las comunidades"
+                },
+                "properties": [
+                  {
+                    "id": "custom.lineStyle"
+                  },
+                  {
+                    "id": "custom.lineWidth",
+                    "value": 2
+                  },
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 47
+          },
+          "id": 3021,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.1.3",
+          "repeatDirection": "v",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH monitoring_data_dinamica_comunidades AS (\n    SELECT\n        me.\"date\" AS monitoring_event_date,\n        sa.\"totalHectares\",\n        \n        -- Atributos determinantes para Dinámica de las Comunidades\n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'bareSoil-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'bareSoil', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Suelo desnudo\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'desirableRareSpecies-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'desirableRareSpecies', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Especies raras\",\n        \n        CASE \n            WHEN CAST(NULLIF(mt.\"dataPayload\"->> 'nonDesirableRareSpecies-check', '') AS BOOLEAN)\n            THEN CAST(NULLIF(mt.\"dataPayload\"->> 'nonDesirableRareSpecies', '') AS NUMERIC)\n            ELSE NULL \n        END AS \"Especies indeseables\"\n    FROM \n        public.\"monitoringTasks\" mt\n        INNER JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\" = me.\"id\"\n        LEFT JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n        LEFT JOIN public.\"samplingAreas\" sa ON ma.\"samplingAreaId\" = sa.\"id\"\n    WHERE \n        mt.\"dataPayload\" IS NOT NULL \n        AND mt.\"formName\" IN ('StmForagePictures', 'StmIseForm') \n        AND mt.\"isDeleted\" = FALSE\n        AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n        AND sa.\"farmId\" = '$farm'\n        AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n        AND mt.\"monitoringSiteId\" IN ($monitoringSite)\n        AND sa.\"id\" IN ($samplingArea)\n)\n\nSELECT\n    md.monitoring_event_date,\n    -- Ponderación por hectáreas\n    SUM(md.\"Suelo desnudo\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Suelo desnudo\",\n    SUM(md.\"Especies raras\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Especies raras\",\n    SUM(md.\"Especies indeseables\" * md.\"totalHectares\") / SUM(md.\"totalHectares\") AS \"Promedio Especies indeseables\"\nFROM \n    monitoring_data_dinamica_comunidades md\nGROUP BY \n    md.monitoring_event_date\nORDER BY \n    md.monitoring_event_date;",
+              "refId": "Ciclo del agua",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "\"monitoringActivity\""
+            }
+          ],
+          "title": "Dinámica de las comunidades - Interanual (2)",
+          "transparent": true,
+          "type": "timeseries"
+        }
+      ],
+      "title": "Función ecosistémica - Interanual",
+      "type": "row"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 69
+      },
+      "id": 4703,
+      "panels": [],
+      "title": "Disponibilidad y Calidad Forrajera - Año del monitoreo",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMax": 6000,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "orange",
+                "value": 1000
+              },
+              {
+                "color": "yellow",
+                "value": 2000
+              },
+              {
+                "color": "light-green",
+                "value": 3000
+              },
+              {
+                "color": "dark-green",
+                "value": 4000
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Biomasa (kgMS/ha)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "kgMS/ha"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 70
+      },
+      "id": 216,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "colorByField": "Biomasa (kgMS/ha)",
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.1.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\n/* 1) Biomasa por SITIO × EVENTO (promedio de tareas del sitio) */\nbiomass_site_event AS (\n  SELECT\n    ms.\"id\"                   AS site_id,\n    ms.\"samplingAreaId\"       AS sampling_area_id,\n    me.\"id\"                   AS event_id,\n    me.\"date\"                 AS event_date,\n    AVG(NULLIF(mt.\"dataPayload\"->>'dryMatterPerHectare','')::NUMERIC) AS dm_site_event\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND me.\"id\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n    AND NULLIF(mt.\"dataPayload\"->>'dryMatterPerHectare','') IS NOT NULL\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\n),\n\n/* 2) Promedio final por SITIO (apilado entre los eventos seleccionados) */\nsite_final AS (\n  SELECT\n    bse.site_id,\n    bse.sampling_area_id,\n    AVG(bse.dm_site_event) AS biomass_site_avg\n  FROM biomass_site_event bse\n  GROUP BY bse.site_id, bse.sampling_area_id\n),\n\n/* 3) Subir a ESTRATO: promedio simple entre sitios */\nestrato_final AS (\n  SELECT\n    sf.sampling_area_id,\n    AVG(sf.biomass_site_avg) AS biomass_kgms_ha\n  FROM site_final sf\n  GROUP BY sf.sampling_area_id\n)\n\n/* 4) Resultado final */\nSELECT\n  sa.\"name\"                                      AS \"Estrato\",\n  ROUND(ef.biomass_kgms_ha::NUMERIC, 1)          AS \"Biomasa (kgMS/ha)\"\nFROM estrato_final ef\nJOIN public.\"samplingAreas\" sa\n  ON sa.\"id\" = ef.sampling_area_id AND sa.\"farmId\" = '$farm'\nORDER BY sa.\"name\";\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Disponibilidad Forrajera por estrato",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMax": 5,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "green",
+                "value": 3
+              },
+              {
+                "color": "semi-dark-green",
+                "value": 4
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 70
+      },
+      "id": 262,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "colorByField": "Calidad forrajera",
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "orientation": "auto",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "none",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "11.1.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\n/* 1) Calidad por SITIO × EVENTO (promedio de tareas del sitio) */\nquality_site_event AS (\n  SELECT\n    ms.\"id\"                   AS site_id,\n    ms.\"samplingAreaId\"       AS sampling_area_id,\n    me.\"id\"                   AS event_id,\n    me.\"date\"                 AS event_date,\n    AVG(NULLIF(mt.\"dataPayload\"->>'forageQuality','')::NUMERIC) AS q_site_event\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND me.\"id\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n    AND NULLIF(mt.\"dataPayload\"->>'forageQuality','') IS NOT NULL\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\n),\n\n/* 2) Promedio final por SITIO (apilado entre los eventos seleccionados) */\nsite_final AS (\n  SELECT\n    qse.site_id,\n    qse.sampling_area_id,\n    AVG(qse.q_site_event) AS quality_site_avg\n  FROM quality_site_event qse\n  GROUP BY qse.site_id, qse.sampling_area_id\n),\n\n/* 3) Subir a ESTRATO: promedio simple entre sitios */\nestrato_final AS (\n  SELECT\n    sf.sampling_area_id,\n    AVG(sf.quality_site_avg) AS quality\n  FROM site_final sf\n  GROUP BY sf.sampling_area_id\n)\n\n/* 4) Resultado final */\nSELECT\n  sa.\"name\"                       AS \"Estrato\",\n  ROUND(ef.quality::NUMERIC, 1)   AS \"Calidad forrajera\"\nFROM estrato_final ef\nJOIN public.\"samplingAreas\" sa\n  ON sa.\"id\" = ef.sampling_area_id AND sa.\"farmId\" = '$farm'\nORDER BY sa.\"name\";\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Calidad Forrajera  por estrato",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_RUUTS-DB}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Eventos"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 97
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 78
+      },
+      "id": 4739,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "11.1.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH\r\n/* 1) Biomasa por SITIO × EVENTO (promedio de tareas del sitio) */\r\nbiomass_site_event AS (\r\n  SELECT\r\n    ms.\"id\"                   AS site_id,\r\n    ms.\"samplingAreaId\"       AS sampling_area_id,\r\n    me.\"id\"                   AS event_id,\r\n    me.\"date\"                 AS event_date,\r\n    AVG(NULLIF(mt.\"dataPayload\"->>'dryMatterPerHectare','')::NUMERIC) AS dm_site_event\r\n  FROM public.\"monitoringTasks\" mt\r\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\r\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\r\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\r\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\r\n  WHERE mt.\"dataPayload\" IS NOT NULL\r\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\r\n    AND mt.\"isDeleted\" = FALSE\r\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\r\n    AND sa.\"farmId\" = '$farm'\r\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\r\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\r\n    AND sa.\"id\"                IN ($samplingArea)\r\n    AND NULLIF(mt.\"dataPayload\"->>'dryMatterPerHectare','') IS NOT NULL\r\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\r\n),\r\n\r\n/* 2) Calidad por SITIO × EVENTO (promedio de tareas del sitio) */\r\nquality_site_event AS (\r\n  SELECT\r\n    ms.\"id\"                   AS site_id,\r\n    ms.\"samplingAreaId\"       AS sampling_area_id,\r\n    me.\"id\"                   AS event_id,\r\n    me.\"date\"                 AS event_date,\r\n    AVG(NULLIF(mt.\"dataPayload\"->>'forageQuality','')::NUMERIC) AS q_site_event\r\n  FROM public.\"monitoringTasks\" mt\r\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\r\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\r\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\r\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\r\n  WHERE mt.\"dataPayload\" IS NOT NULL\r\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\r\n    AND mt.\"isDeleted\" = FALSE\r\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\r\n    AND sa.\"farmId\" = '$farm'\r\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\r\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\r\n    AND sa.\"id\"                IN ($samplingArea)\r\n    AND NULLIF(mt.\"dataPayload\"->>'forageQuality','') IS NOT NULL\r\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\", me.\"date\"\r\n),\r\n\r\n/* 3) Promedio final por SITIO (apilado entre eventos seleccionados) */\r\nbiomass_site_final AS (\r\n  SELECT\r\n    bse.site_id,\r\n    bse.sampling_area_id,\r\n    AVG(bse.dm_site_event) AS biomass_site_avg,\r\n    COUNT(*)               AS n_eventos,\r\n    MIN(bse.event_date)    AS first_event,\r\n    MAX(bse.event_date)    AS last_event\r\n  FROM biomass_site_event bse\r\n  GROUP BY bse.site_id, bse.sampling_area_id\r\n),\r\nquality_site_final AS (\r\n  SELECT\r\n    qse.site_id,\r\n    qse.sampling_area_id,\r\n    AVG(qse.q_site_event) AS quality_site_avg\r\n  FROM quality_site_event qse\r\n  GROUP BY qse.site_id, qse.sampling_area_id\r\n),\r\n\r\n/* 4) Unir ambas métricas a nivel SITIO */\r\nsite_final AS (\r\n  SELECT\r\n    b.site_id,\r\n    b.sampling_area_id,\r\n    b.biomass_site_avg,\r\n    q.quality_site_avg,\r\n    b.n_eventos,\r\n    b.first_event,\r\n    b.last_event\r\n  FROM biomass_site_final b\r\n  LEFT JOIN quality_site_final q\r\n    ON q.site_id = b.site_id\r\n   AND q.sampling_area_id = b.sampling_area_id\r\n)\r\n\r\n/* 5) Tabla de depuración sitio×sitio */\r\nSELECT\r\n  sa.\"name\"                               AS \"Estrato\",\r\n  ms.\"name\"                               AS \"Sitio\",\r\n  sf.n_eventos                            AS \"Eventos\",\r\n  TO_CHAR(sf.first_event, 'YYYY-MM-DD')   AS \"Desde\",\r\n  TO_CHAR(sf.last_event,  'YYYY-MM-DD')   AS \"Hasta\",\r\n  ROUND(sf.biomass_site_avg::NUMERIC, 1)  AS \"Biomasa (kgMS/ha)\",\r\n  ROUND(sf.quality_site_avg::NUMERIC, 1)  AS \"Calidad forrajera\"\r\nFROM site_final sf\r\nJOIN public.\"monitoringSites\" ms\r\n  ON ms.\"id\" = sf.site_id AND ms.\"isDeleted\" = FALSE\r\nJOIN public.\"samplingAreas\" sa\r\n  ON sa.\"id\" = sf.sampling_area_id AND sa.\"farmId\" = '$farm'\r\nORDER BY sa.\"name\", ms.\"name\";\r\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Debug",
+      "type": "table"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 86
+      },
+      "id": 217,
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "decimals": 0,
+              "mappings": [],
+              "unit": "percent"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Sobre Pastoreo (%)"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 22
+          },
+          "id": 263,
+          "options": {
+            "displayLabels": [
+              "value"
+            ],
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "11.1.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH\n/* 0) Total de hectáreas de la finca (denominador fijo) */\ntotal_hectares_farm AS (\n  SELECT SUM(sa.\"totalHectares\") AS total_hectares\n  FROM public.\"samplingAreas\" sa\n  WHERE sa.\"farmId\" = '$farm'\n),\n\n/* 1) Conteos por SITIO × EVENTO */\npatrones_por_sitio_evento AS (\n  SELECT\n    ms.\"id\"                   AS site_id,\n    ms.\"samplingAreaId\"       AS estrato_id,\n    me.\"id\"                   AS event_id,\n\n    COUNT(*) AS total_obs,\n    SUM(CASE WHEN TRIM(mt.\"dataPayload\"->>'forageUsePattern') = 'PP' THEN 1 ELSE 0 END) AS cnt_pp,\n    SUM(CASE WHEN TRIM(mt.\"dataPayload\"->>'forageUsePattern') = 'SP' THEN 1 ELSE 0 END) AS cnt_sp,\n    SUM(CASE WHEN TRIM(mt.\"dataPayload\"->>'forageUsePattern') = 'SD' THEN 1 ELSE 0 END) AS cnt_sd,\n    SUM(CASE WHEN TRIM(mt.\"dataPayload\"->>'forageUsePattern') = 'DP' THEN 1 ELSE 0 END) AS cnt_dp\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE\n    mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n    AND mt.\"dataPayload\"->>'forageUsePattern' IS NOT NULL\n    AND TRIM(mt.\"dataPayload\"->>'forageUsePattern') <> ''\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\"\n),\n\n/* 2) Porcentajes por SITIO × EVENTO */\npct_por_sitio_evento AS (\n  SELECT\n    pse.estrato_id,\n    pse.site_id,\n    pse.event_id,\n    CASE WHEN pse.total_obs > 0 THEN pse.cnt_pp*100.0/pse.total_obs ELSE 0 END AS pct_pp,\n    CASE WHEN pse.total_obs > 0 THEN pse.cnt_sp*100.0/pse.total_obs ELSE 0 END AS pct_sp,\n    CASE WHEN pse.total_obs > 0 THEN pse.cnt_sd*100.0/pse.total_obs ELSE 0 END AS pct_sd,\n    CASE WHEN pse.total_obs > 0 THEN pse.cnt_dp*100.0/pse.total_obs ELSE 0 END AS pct_dp\n  FROM patrones_por_sitio_evento pse\n),\n\n/* 3) Promedio entre SITIOS → ESTRATO × EVENTO */\npct_estrato_evento AS (\n  SELECT\n    p.estrato_id,\n    p.event_id,\n    AVG(p.pct_pp) AS pct_pp_e,\n    AVG(p.pct_sp) AS pct_sp_e,\n    AVG(p.pct_sd) AS pct_sd_e,\n    AVG(p.pct_dp) AS pct_dp_e\n  FROM pct_por_sitio_evento p\n  GROUP BY p.estrato_id, p.event_id\n),\n\n/* 4) APILAR: promedio entre EVENTOS → ESTRATO */\npromedio_por_estrato AS (\n  SELECT\n    ee.estrato_id,\n    AVG(ee.pct_pp_e) AS avg_pp,\n    AVG(ee.pct_sp_e) AS avg_sp,\n    AVG(ee.pct_sd_e) AS avg_sd,\n    AVG(ee.pct_dp_e) AS avg_dp\n  FROM pct_estrato_evento ee\n  GROUP BY ee.estrato_id\n)\n\n/* 5) Establecimiento ponderado por hectáreas (denominador fijo de la finca) */\nSELECT\n  ROUND( (SUM(pe.avg_pp * sa.\"totalHectares\") / NULLIF( (SELECT total_hectares FROM total_hectares_farm), 0))::NUMERIC , 2) AS \"Pastoreo Planificado (%)\",\n  ROUND( (SUM(pe.avg_sp * sa.\"totalHectares\") / NULLIF( (SELECT total_hectares FROM total_hectares_farm), 0))::NUMERIC , 2) AS \"Sobre Pastoreo (%)\",\n  ROUND( (SUM(pe.avg_sd * sa.\"totalHectares\") / NULLIF( (SELECT total_hectares FROM total_hectares_farm), 0))::NUMERIC , 2) AS \"Sobre Descanso (%)\",\n  ROUND( (SUM(pe.avg_dp * sa.\"totalHectares\") / NULLIF( (SELECT total_hectares FROM total_hectares_farm), 0))::NUMERIC , 2) AS \"Descanso Parcial (%)\"\nFROM promedio_por_estrato pe\nJOIN public.\"samplingAreas\" sa\n  ON sa.\"id\" = pe.estrato_id AND sa.\"farmId\" = '$farm';\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Patrón de uso - Total Establecimiento",
+          "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "fillOpacity": 100,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineWidth": 1,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  }
+                ]
+              },
+              "unit": "percentunit"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Intenso (%)"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Moderado (%)"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Leve (%)"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Nulo (%)"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "blue",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 6,
+            "y": 22
+          },
+          "id": 264,
+          "options": {
+            "barRadius": 0,
+            "barWidth": 0.97,
+            "fullHighlight": false,
+            "groupWidth": 0.7,
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "orientation": "auto",
+            "showValue": "auto",
+            "stacking": "percent",
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            },
+            "xTickLabelRotation": 0,
+            "xTickLabelSpacing": 0
+          },
+          "pluginVersion": "11.1.3",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH\n/* 0) Eventos seleccionados (con fecha) */\nselected_events AS (\n  SELECT me.\"id\" AS event_id, me.\"date\" AS event_date\n  FROM public.\"monitoringEvents\" me\n  WHERE me.\"farmId\" = '$farm'\n    AND me.\"isDeleted\" = FALSE\n    AND me.\"monitoringWorkflowIds\" && ARRAY[0,1,3]\n    AND me.\"id\" IN ($monitoringEvent)\n),\n\n/* 1) CONTEOS por SITIO × EVENTO (evita sesgo por #tareas) */\nper_site_event AS (\n  SELECT\n    ms.\"id\"             AS site_id,\n    ms.\"samplingAreaId\" AS estrato_id,\n    me.\"id\"             AS event_id,\n    COUNT(*) AS total_obs,\n    SUM(CASE WHEN TRIM(mt.\"dataPayload\"->>'forageIntensity') = 'intense'  THEN 1 ELSE 0 END) AS cnt_intense,\n    SUM(CASE WHEN TRIM(mt.\"dataPayload\"->>'forageIntensity') = 'moderate' THEN 1 ELSE 0 END) AS cnt_moderate,\n    SUM(CASE WHEN TRIM(mt.\"dataPayload\"->>'forageIntensity') = 'light'    THEN 1 ELSE 0 END) AS cnt_light,\n    SUM(CASE WHEN TRIM(mt.\"dataPayload\"->>'forageIntensity') = 'none'     THEN 1 ELSE 0 END) AS cnt_none\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE\n    mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n    AND mt.\"dataPayload\"->>'forageIntensity' IS NOT NULL\n    AND TRIM(mt.\"dataPayload\"->>'forageIntensity') <> ''\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", me.\"id\"\n),\n\n/* 2) % por SITIO × EVENTO */\npct_site_event AS (\n  SELECT\n    pse.estrato_id,\n    pse.site_id,\n    pse.event_id,\n    CASE WHEN pse.total_obs > 0 THEN pse.cnt_intense  * 100.0 / pse.total_obs ELSE 0 END AS pct_intense,\n    CASE WHEN pse.total_obs > 0 THEN pse.cnt_moderate * 100.0 / pse.total_obs ELSE 0 END AS pct_moderate,\n    CASE WHEN pse.total_obs > 0 THEN pse.cnt_light    * 100.0 / pse.total_obs ELSE 0 END AS pct_light,\n    CASE WHEN pse.total_obs > 0 THEN pse.cnt_none     * 100.0 / pse.total_obs ELSE 0 END AS pct_none\n  FROM per_site_event pse\n),\n\n/* 3) APILAR por AÑO a nivel SITIO (si hay varios eventos en el mismo año) */\nsite_year AS (\n  SELECT\n    p.estrato_id,\n    p.site_id,\n    date_trunc('year', se.event_date) AS year_bucket,\n    AVG(p.pct_intense)  AS intense_y,\n    AVG(p.pct_moderate) AS moderate_y,\n    AVG(p.pct_light)    AS light_y,\n    AVG(p.pct_none)     AS none_y\n  FROM pct_site_event p\n  JOIN selected_events se ON se.event_id = p.event_id\n  GROUP BY p.estrato_id, p.site_id, date_trunc('year', se.event_date)\n),\n\n/* 4) SUBIR a ESTRATO: promedio simple ENTRE SITIOS por AÑO */\nestrato_year AS (\n  SELECT\n    sy.estrato_id,\n    sy.year_bucket,\n    AVG(sy.intense_y)  AS intense_e,\n    AVG(sy.moderate_y) AS moderate_e,\n    AVG(sy.light_y)    AS light_e,\n    AVG(sy.none_y)     AS none_e\n  FROM site_year sy\n  GROUP BY sy.estrato_id, sy.year_bucket\n),\n\n/* 5) PROMEDIO FINAL por ESTRATO (promedio simple entre los AÑOS seleccionados ya apilados) */\nestrato_final AS (\n  SELECT\n    ey.estrato_id,\n    AVG(ey.intense_e)  AS intense,\n    AVG(ey.moderate_e) AS moderate,\n    AVG(ey.light_e)    AS light,\n    AVG(ey.none_e)     AS none\n  FROM estrato_year ey\n  GROUP BY ey.estrato_id\n)\n\n/* 6) Salida */\nSELECT\n  sa.\"name\"                  AS \"Estrato\",\n  ROUND(ef.intense,  2)      AS \"Intenso (%)\",\n  ROUND(ef.moderate, 2)      AS \"Moderado (%)\",\n  ROUND(ef.light,    2)      AS \"Leve (%)\",\n  ROUND(ef.none,     2)      AS \"Nulo (%)\"\nFROM estrato_final ef\nJOIN public.\"samplingAreas\" sa\n  ON sa.\"id\" = ef.estrato_id AND sa.\"farmId\" = '$farm'\nORDER BY sa.\"name\";\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Intensidad del pastoreo por estrato",
+          "type": "barchart"
+        }
+      ],
+      "title": "Patron e intensidad del pastoreo - Año del monitoreo",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 87
+      },
+      "id": 3991,
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "fieldMinMax": false,
+              "min": 0
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Biomasa (kgMS/ha)"
+                },
+                "properties": []
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Calidad forrajera"
+                },
+                "properties": [
+                  {
+                    "id": "max",
+                    "value": 5
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 23
+          },
+          "id": 4346,
+          "maxPerRow": 3,
+          "options": {
+            "baidu": {
+              "callback": "bmapReady",
+              "key": ""
+            },
+            "editor": {
+              "format": "auto"
+            },
+            "editorMode": "visual",
+            "gaode": {
+              "key": "",
+              "plugin": "AMap.Scale,AMap.ToolBar"
+            },
+            "getOption": "const series = context.panel.data.series.map((s) => {\n  const sData = s.fields.find((f) => f.type === 'number').values.buffer || s.fields.find((f) => f.type === 'number').values;\n  const sTime = s.fields.find((f) => f.type === 'time').values.buffer || s.fields.find((f) => f.type === 'time').values;\n\n  return {\n    name: s.refId,\n    type: 'line',\n    showSymbol: true,\n    label: {\n      show: true,\n      position: 'top',\n      formatter: function (params) {\n        return params.value[1]; // muestra el valor Y\n      }\n    },\n    areaStyle: {\n      opacity: 0.1,\n    },\n    lineStyle: {\n      width: 1,\n    },\n    data: sData.map((d, i) => [sTime[i], d.toFixed(2)]),\n  };\n});\n",
+            "google": {
+              "callback": "gmapReady",
+              "key": ""
+            },
+            "map": "none",
+            "renderer": "canvas",
+            "themeEditor": {
+              "config": "{}",
+              "name": "default"
+            },
+            "visualEditor": {
+              "code": "return {\n  dataset: context.editor.dataset,\n\n  legend: {\n    show: true,\n    bottom: 10,\n    left: 'center',\n    orient: 'horizontal',\n    data: context.editor.series.map(s => s.name || s.id),\n    textStyle: { fontSize: 12 }\n  },\n\n  series: context.editor.series.map(serie => {\n    const newSerie = {\n      ...serie,\n      label: { show: true, position: 'inside' }\n    };\n\n    // Calidad (yAxisIndex 1) en azul\n    if (serie.id === '1') {\n      return {\n        ...newSerie,\n        yAxisIndex: 1,\n        color: 'orange'\n      };\n    }\n\n    // Biomasa en un verde tipo “Perennial Green” (#47694F) :contentReference[oaicite:0]{index=0}\n    return {\n      ...newSerie,\n      color: '#6F8F07'\n    };\n  }),\n\n  xAxis: {\n    type: 'time',\n    splitNumber: 10,\n    minInterval: 31536000000,\n  },\n\n  yAxis: [\n    {\n      type: 'value',\n      position: 'left',\n      min: 0,\n      axisLabel: {\n        formatter: '{value} kgMS/ha'\n      }\n    },\n    {\n      type: 'value',\n      position: 'right',\n      min: 0,\n      max: 5\n    }\n  ],\n\n  tooltip: {\n    trigger: 'axis',\n    axisPointer: { type: 'cross' }\n  },\n\n  grid: {\n    left: 100,\n    right: 60,\n    top: 40,\n    bottom: 60\n  }\n};\n",
+              "dataset": [
+                {
+                  "name": "Biomasa (kgMS/ha)",
+                  "source": "A"
+                },
+                {
+                  "name": "Calidad forrajera",
+                  "source": "A"
+                },
+                {
+                  "name": "x_axis",
+                  "source": "A"
+                }
+              ],
+              "series": [
+                {
+                  "encode": {
+                    "x": [
+                      "A:x_axis"
+                    ],
+                    "y": [
+                      "A:Biomasa (kgMS/ha)"
+                    ]
+                  },
+                  "id": "0",
+                  "name": "Biomasa kgMS/ha",
+                  "type": "bar",
+                  "uid": "4ce2697e-3d9b-462f-b24a-5cfb11edc825"
+                },
+                {
+                  "encode": {
+                    "x": [
+                      "A:x_axis"
+                    ],
+                    "y": [
+                      "A:Calidad forrajera"
+                    ]
+                  },
+                  "id": "1",
+                  "name": "Calidad (eje der)",
+                  "type": "line",
+                  "uid": "1d134c02-05f8-41cd-926b-b1ce448314fa"
+                }
+              ]
+            }
+          },
+          "pluginVersion": "6.5.0",
+          "repeat": "samplingArea",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "WITH\n/* 1) Métricas por SITIO × EVENTO (promedio de tareas del sitio) */\nsite_event AS (\n  SELECT\n    ms.\"id\"             AS site_id,\n    ms.\"samplingAreaId\" AS sampling_area_id,\n    sa.\"name\"           AS sampling_area_name,\n    me.\"id\"             AS event_id,\n    me.\"date\"           AS event_date,\n    /* Promedios dentro del sitio-evento para evitar sesgo por #tareas */\n    AVG(NULLIF(mt.\"dataPayload\"->>'dryMatterPerHectare','')::NUMERIC) AS dm_site_event,\n    AVG(NULLIF(mt.\"dataPayload\"->>'forageQuality','')::NUMERIC)       AS qual_site_event\n  FROM public.\"monitoringTasks\" mt\n  JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\n  JOIN public.\"samplingAreas\"    sa ON ma.\"samplingAreaId\"         = sa.\"id\"\n  JOIN public.\"monitoringSites\"  ms ON mt.\"monitoringSiteId\"       = ms.\"id\"\n  JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\"      = me.\"id\"\n  WHERE\n    mt.\"dataPayload\" IS NOT NULL\n    AND mt.\"formName\" IN ('StmForagePictures','StmIseForm')\n    AND mt.\"isDeleted\" = FALSE\n    AND ma.\"monitoringWorkflowId\" IN (0,1,3)\n    AND sa.\"farmId\" = '$farm'\n    AND mt.\"monitoringEventId\" IN ($monitoringEvent)\n    AND mt.\"monitoringSiteId\"  IN ($monitoringSite)\n    AND sa.\"id\"                IN ($samplingArea)\n  GROUP BY ms.\"id\", ms.\"samplingAreaId\", sa.\"name\", me.\"id\", me.\"date\"\n),\n\n/* 2) APILAR por AÑO a nivel SITIO (si hay varios eventos en el mismo año) */\nsite_year AS (\n  SELECT\n    se.sampling_area_id,\n    se.sampling_area_name,\n    se.site_id,\n    date_trunc('year', se.event_date) AS year_bucket,\n    AVG(se.dm_site_event)   AS dm_y,\n    AVG(se.qual_site_event) AS qual_y\n  FROM site_event se\n  GROUP BY se.sampling_area_id, se.sampling_area_name, se.site_id, date_trunc('year', se.event_date)\n  HAVING\n    AVG(se.dm_site_event) IS NOT NULL OR AVG(se.qual_site_event) IS NOT NULL\n),\n\n/* 3) SUBIR a ESTRATO: promedio simple ENTRE SITIOS por AÑO */\narea_year AS (\n  SELECT\n    sy.sampling_area_id,\n    sy.sampling_area_name,\n    sy.year_bucket,\n    AVG(sy.dm_y)   AS dm_area_y,\n    AVG(sy.qual_y) AS qual_area_y\n  FROM site_year sy\n  GROUP BY sy.sampling_area_id, sy.sampling_area_name, sy.year_bucket\n)\n\n/* 4) Salida final para repeat panel por samplingArea (interanual) */\nSELECT\n  ay.sampling_area_name                  AS \"name\",\n  ay.year_bucket                         AS \"time\",\n  TO_CHAR(ay.year_bucket, 'YYYY')        AS x_axis,\n  ROUND(ay.dm_area_y::NUMERIC, 0)::INT   AS \"Biomasa (kgMS/ha)\",\n  ROUND(ay.qual_area_y::NUMERIC, 1)      AS \"Calidad forrajera\"\nFROM area_year ay\nORDER BY ay.sampling_area_name, ay.year_bucket;\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          ],
+          "title": "Disponibilidad y Calidad Forrajera - Estrato $samplingArea",
+          "transformations": [
+            {
+              "id": "formatTime",
+              "options": {
+                "outputFormat": "YYYY",
+                "timeField": "date",
+                "useTimezone": true
+              }
+            }
+          ],
+          "type": "volkovlabs-echarts-panel"
+        }
+      ],
+      "title": "Forraje y calidad por estrato - Interanual",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 88
+      },
+      "id": 924,
+      "panels": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_RUUTS-DB}"
+          },
+          "fieldConfig": {
+            "defaults": {},
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "sitio"
+                },
+                "properties": []
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "image_url"
+                },
+                "properties": []
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 14,
+            "w": 6,
+            "x": 0,
+            "y": 41
+          },
+          "id": 4275,
+          "options": {
+            "alt_field": "fecha_label",
+            "autofit": true,
+            "height": "75",
+            "icon_field": "image_url",
+            "open_url": {
+              "base_url": "",
+              "enable": false,
+              "metric_field": "",
+              "open_in_tab": false,
+              "suffix": ""
+            },
+            "overlay": {
+              "bindings": {
+                "bindings": [],
+                "has_text": true,
+                "unbounded": "#66666620"
+              },
+              "field": "",
+              "height": {
+                "size": 5,
+                "unit": "%"
+              },
+              "position": "Bottom left",
+              "width": {
+                "size": 5,
+                "unit": "%"
+              }
+            },
+            "shared_cross_hair": {
+              "backgroundColor": "#FFFFFF10",
+              "borderColor": "#FFFFFF20"
+            },
+            "singleFill": true,
+            "slideshow": {
+              "duration": 5000,
+              "enable": false,
+              "infinite": true,
+              "pauseOnHover": true,
+              "transition": "Slide",
+              "transition_duration": 1000
+            },
+            "tooltip": true,
+            "tooltip_date_elapsed": false,
+            "tooltip_field": "etiqueta",
+            "tooltip_include_date": false,
+            "tooltip_include_field": true,
+            "underline": {
+              "bindings": {
+                "bindings": [],
+                "has_text": true,
+                "unbounded": "#CCCCDCFF"
+              },
+              "bindings_field": "",
+              "field": "etiqueta",
+              "text_align": "center",
+              "text_size": "18"
+            },
+            "width": "75"
+          },
+          "pluginVersion": "11.1.3",
+          "repeat": "monitoringSite",
+          "repeatDirection": "h",
+          "targets": [
+            {
+              "datasource": {
+                "type": "grafana-postgresql-datasource",
+                "uid": "${DS_RUUTS-DB}"
+              },
+              "editorMode": "code",
+              "format": "table",
+              "rawQuery": true,
+              "rawSql": "SELECT\r\n  mp.\"link\" AS image_url,\r\n  EXTRACT(YEAR FROM me.\"date\") AS anio,\r\n  to_char(me.\"date\", 'YYYY-MM-DD') AS fecha_label,\r\n  CASE\r\n      WHEN mp.\"link\" ILIKE '%-90degrees.%' THEN '90°'\r\n      WHEN mp.\"link\" ILIKE '%-45degrees.%' THEN '45°'\r\n      WHEN mp.\"link\" ILIKE '%-panoramic.%' THEN 'PANORÁMICA'\r\n      ELSE 'OTRO'\r\n  END AS tipo_foto,\r\n  -- Campo concatenado año + tipo foto\r\n  CONCAT(EXTRACT(YEAR FROM me.\"date\"), ' - ',\r\n         CASE\r\n            WHEN mp.\"link\" ILIKE '%-90degrees.%' THEN '90°'\r\n            WHEN mp.\"link\" ILIKE '%-45degrees.%' THEN '45°'\r\n            WHEN mp.\"link\" ILIKE '%-panoramic.%' THEN 'PANORÁMICA'\r\n            ELSE 'OTRO'\r\n         END\r\n  ) AS etiqueta\r\nFROM \r\n  public.\"monitoringTasks\" mt\r\n  INNER JOIN public.\"monitoringPictures\" mp ON mt.\"id\" = mp.\"entityId\"\r\n  INNER JOIN public.\"monitoringActivity\" ma ON mt.\"monitoringActivityId\" = ma.\"id\"\r\n  INNER JOIN public.\"monitoringSites\" ms ON mt.\"monitoringSiteId\" = ms.\"id\"\r\n  INNER JOIN public.\"monitoringEvents\" me ON mt.\"monitoringEventId\" = me.\"id\"\r\n  LEFT JOIN public.\"samplingAreas\" sa ON ma.\"samplingAreaId\" = sa.\"id\"\r\nWHERE \r\n  mt.\"isDeleted\" = false\r\n  AND mt.\"formName\" = 'StmForagePictures'\r\n  AND sa.\"farmId\" = '$farm'\r\n  AND mt.\"monitoringEventId\" IN ($monitoringEvent)\r\n  AND mt.\"monitoringSiteId\" IN ($monitoringSite)\r\n  AND sa.\"id\" IN ($samplingArea)\r\n  AND mt.\"id\" IN ($monitoringTask)\r\nORDER BY\r\n  me.\"date\" ASC;\r\n",
+              "refId": "A",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [
+                      {
+                        "name": "id",
+                        "type": "functionParameter"
+                      }
+                    ],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              },
+              "table": "\"monitoringPictures\""
+            }
+          ],
+          "title": "STM $monitoringSite",
+          "type": "dalvany-image-panel"
+        }
+      ],
+      "repeat": "monitoringEvent",
+      "repeatDirection": "h",
+      "title": "Fotos $monitoringEvent",
+      "type": "row"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "marcusolsson-json-datasource",
+          "uid": "${DS_AUTH0-USERS}"
+        },
+        "definition": "$[0].user_metadata.hubId",
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "userHub",
+        "options": [],
+        "query": {
+          "cacheDurationSeconds": 300,
+          "fields": [
+            {
+              "jsonPath": "$[0].user_metadata.hubId"
+            }
+          ],
+          "method": "GET",
+          "params": [
+            [
+              "email",
+              "${__user.email}"
+            ]
+          ],
+          "queryParams": "",
+          "urlPath": ""
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_RUUTS-DB}"
+        },
+        "definition": "select\nh.\"name\" as __text,\nh.\"id\" as __value\nfrom public.\"hubs\" h\nwhere \nh.\"name\" NOT IN ('ruuts','Native Energy Test Nodo')\nand (\n    '$userHub' = 'all'\n    or h.id::text = '$userHub'\n    or h.id::text in ('$userHub') \n    )",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Nodo",
+        "multi": false,
+        "name": "hub",
+        "options": [],
+        "query": "select\nh.\"name\" as __text,\nh.\"id\" as __value\nfrom public.\"hubs\" h\nwhere \nh.\"name\" NOT IN ('ruuts','Native Energy Test Nodo')\nand (\n    '$userHub' = 'all'\n    or h.id::text = '$userHub'\n    or h.id::text in ('$userHub') \n    )",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_RUUTS-DB}"
+        },
+        "definition": "SELECT\n  f.\"id\" AS __value,\n  CONCAT(f.\"name\", ' (', COUNT(me.\"id\"), ')') AS __text\nFROM\n  public.\"farms\" f\nINNER JOIN\n  public.\"monitoringEvents\" me ON me.\"farmId\" = f.\"id\"\nWHERE\n  f.\"isDeleted\" = false\n  AND f.\"hubId\" = '$hub'\n  AND me.\"isDeleted\" = false\n  AND me.\"taskStatusId\" <> 0\n  AND NOT me.\"monitoringWorkflowIds\" @> ARRAY[4]\nGROUP BY\n  f.\"id\", f.\"name\";\n",
+        "description": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Establecimiento",
+        "multi": false,
+        "name": "farm",
+        "options": [],
+        "query": "SELECT\n  f.\"id\" AS __value,\n  CONCAT(f.\"name\", ' (', COUNT(me.\"id\"), ')') AS __text\nFROM\n  public.\"farms\" f\nINNER JOIN\n  public.\"monitoringEvents\" me ON me.\"farmId\" = f.\"id\"\nWHERE\n  f.\"isDeleted\" = false\n  AND f.\"hubId\" = '$hub'\n  AND me.\"isDeleted\" = false\n  AND me.\"taskStatusId\" <> 0\n  AND NOT me.\"monitoringWorkflowIds\" @> ARRAY[4]\nGROUP BY\n  f.\"id\", f.\"name\";\n",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_RUUTS-DB}"
+        },
+        "definition": "SELECT\n  me.\"id\" AS __value,\n  TO_CHAR(me.\"date\", 'DD-MM-YYYY') || ' - ' ||\n    COALESCE((\n      SELECT STRING_AGG(mw.\"name\", ', ')\n      FROM public.\"monitoringWorkflows\" mw\n      WHERE mw.\"id\" = ANY(me.\"monitoringWorkflowIds\")\n    ), 'Sin workflows') AS __text,\n  me.\"monitoringWorkflowIds\"\nFROM\n  public.\"monitoringEvents\" me\nWHERE\n  me.\"isDeleted\" = false\n  AND me.\"farmId\" = '$farm'\n  AND me.\"taskStatusId\" <> 0\n  AND NOT (\n    array_length(me.\"monitoringWorkflowIds\", 1) = 1\n    AND 4 = ANY(me.\"monitoringWorkflowIds\")\n  )\nORDER BY\n  me.\"date\" ASC;\n",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Evento de monitoreo",
+        "multi": true,
+        "name": "monitoringEvent",
+        "options": [],
+        "query": "SELECT\n  me.\"id\" AS __value,\n  TO_CHAR(me.\"date\", 'DD-MM-YYYY') || ' - ' ||\n    COALESCE((\n      SELECT STRING_AGG(mw.\"name\", ', ')\n      FROM public.\"monitoringWorkflows\" mw\n      WHERE mw.\"id\" = ANY(me.\"monitoringWorkflowIds\")\n    ), 'Sin workflows') AS __text,\n  me.\"monitoringWorkflowIds\"\nFROM\n  public.\"monitoringEvents\" me\nWHERE\n  me.\"isDeleted\" = false\n  AND me.\"farmId\" = '$farm'\n  AND me.\"taskStatusId\" <> 0\n  AND NOT (\n    array_length(me.\"monitoringWorkflowIds\", 1) = 1\n    AND 4 = ANY(me.\"monitoringWorkflowIds\")\n  )\nORDER BY\n  me.\"date\" ASC;\n",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_RUUTS-DB}"
+        },
+        "definition": "SELECT\n  sa.\"id\" AS __value,\n  sa.\"name\" AS __text\nFROM\n  public.\"samplingAreas\" sa\nWHERE\n  sa.\"isDeleted\" = false\n  AND sa.\"farmId\" = '$farm'\nORDER BY\n  __text ASC;",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Estrato",
+        "multi": true,
+        "name": "samplingArea",
+        "options": [],
+        "query": "SELECT\n  sa.\"id\" AS __value,\n  sa.\"name\" AS __text\nFROM\n  public.\"samplingAreas\" sa\nWHERE\n  sa.\"isDeleted\" = false\n  AND sa.\"farmId\" = '$farm'\nORDER BY\n  __text ASC;",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": "",
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_RUUTS-DB}"
+        },
+        "definition": "SELECT\n  ms.\"id\" AS __value,\n  ms.\"name\" AS __text\nFROM\n  public.\"monitoringSites\" ms\nWHERE\n  ms.\"isDeleted\" = false\n  AND ms.\"farmId\" = '$farm'\n  AND ms.\"samplingAreaId\" IN ($samplingArea)\nORDER BY\nCAST(\n    COALESCE(\n      NULLIF(\n        REGEXP_REPLACE(ms.\"name\", '[^0-9]', '', 'g'),\n        ''\n      ),\n      '0'\n    )\n    AS INTEGER\n  ) ASC",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Sitio de monitoreo",
+        "multi": true,
+        "name": "monitoringSite",
+        "options": [],
+        "query": "SELECT\n  ms.\"id\" AS __value,\n  ms.\"name\" AS __text\nFROM\n  public.\"monitoringSites\" ms\nWHERE\n  ms.\"isDeleted\" = false\n  AND ms.\"farmId\" = '$farm'\n  AND ms.\"samplingAreaId\" IN ($samplingArea)\nORDER BY\nCAST(\n    COALESCE(\n      NULLIF(\n        REGEXP_REPLACE(ms.\"name\", '[^0-9]', '', 'g'),\n        ''\n      ),\n      '0'\n    )\n    AS INTEGER\n  ) ASC",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "${DS_RUUTS-DB}"
+        },
+        "definition": "SELECT\n  mt.\"id\" AS __value,\n  mt.\"key\" AS __text\nFROM\n  public.\"monitoringTasks\" mt\nINNER JOIN\n   public.\"monitoringSites\" ms on mt.\"monitoringSiteId\" = ms.\"id\"\nINNER JOIN\n   public.\"monitoringPictures\" mp on mt.\"id\" = mp.\"entityId\"\nINNER JOIN \n   public.\"samplingAreas\" sa on ms.\"samplingAreaId\" = sa.\"id\"\nWHERE\n  mt.\"isDeleted\" = false\n  AND sa.\"farmId\" = '$farm'\n  AND sa.\"id\" IN ($samplingArea)\n  AND ms.\"id\" IN ($monitoringSite)\n  AND mt.\"taskStatusId\" = 2\n  AND mp.\"link\" IS NOT NULL",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Tarea",
+        "multi": true,
+        "name": "monitoringTask",
+        "options": [],
+        "query": "SELECT\n  mt.\"id\" AS __value,\n  mt.\"key\" AS __text\nFROM\n  public.\"monitoringTasks\" mt\nINNER JOIN\n   public.\"monitoringSites\" ms on mt.\"monitoringSiteId\" = ms.\"id\"\nINNER JOIN\n   public.\"monitoringPictures\" mp on mt.\"id\" = mp.\"entityId\"\nINNER JOIN \n   public.\"samplingAreas\" sa on ms.\"samplingAreaId\" = sa.\"id\"\nWHERE\n  mt.\"isDeleted\" = false\n  AND sa.\"farmId\" = '$farm'\n  AND sa.\"id\" IN ($samplingArea)\n  AND ms.\"id\" IN ($monitoringSite)\n  AND mt.\"taskStatusId\" = 2\n  AND mp.\"link\" IS NOT NULL",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "MCP - Version Definitiva 1 link MEGA no fake",
+  "uid": "aestr4akmxbswd",
+  "version": 12,
+  "weekStart": ""
+}

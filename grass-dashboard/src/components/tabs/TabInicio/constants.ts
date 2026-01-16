@@ -1,7 +1,13 @@
 import type { KPIType } from '@/lib/dashboard-store';
 
 // Types for chart handling
-export type ChartType = 'evolucion-ise' | 'ise-estrato' | 'procesos' | 'procesos-evolucion';
+export type ChartType =
+  | 'evolucion-ise'
+  | 'ise-estrato'
+  | 'procesos'
+  | 'procesos-evolucion'
+  | 'materia-seca-evolucion'
+  | 'materia-seca-estrato';
 
 export interface ChartOption {
   id: ChartType;
@@ -22,6 +28,8 @@ export const CHART_OPTIONS: ChartOption[] = [
   { id: 'ise-estrato', name: 'ISE por Estrato', description: 'Comparación entre ambientes' },
   { id: 'procesos', name: 'Procesos Ecosistémicos', description: 'Estado de los 4 procesos' },
   { id: 'procesos-evolucion', name: 'Evolución Procesos', description: 'Tendencia de procesos' },
+  { id: 'materia-seca-evolucion', name: 'Evolución Materia Seca', description: 'kg MS ponderado interanual' },
+  { id: 'materia-seca-estrato', name: 'Materia Seca por Estrato', description: 'kg MS/ha por ambiente' },
 ] as const;
 
 // KPI options available for selection

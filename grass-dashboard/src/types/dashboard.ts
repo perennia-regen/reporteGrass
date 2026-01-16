@@ -1,5 +1,70 @@
 // Tipos para el Dashboard GRASS
 
+// ============================================
+// Tipos GeoJSON (compatibles con ruuts-api/PostGIS)
+// ============================================
+
+export interface EstratoGeometry {
+  type: 'Polygon' | 'MultiPolygon';
+  coordinates: number[][][] | number[][][][];
+}
+
+export interface EstratoGeoJSON {
+  type: 'Feature';
+  properties: {
+    id: string;
+    nombre: string;
+    codigo: string;
+    color: string;
+    superficie: number;
+  };
+  geometry: EstratoGeometry;
+}
+
+// Perímetro del establecimiento
+export interface Perimetro {
+  nombre: string;
+  area: number;
+  geometry: EstratoGeometry;
+  color: string;
+}
+
+// Áreas de exclusión (zonas sin pastoreo)
+export interface AreaExclusion {
+  id: string;
+  area: number;
+  geometry: EstratoGeometry;
+  color: string;
+  descripcion?: string;
+  hasGrazingManagement?: boolean;
+}
+
+// GeoJSON Feature Collection type
+export interface LaUnionGeoJSON {
+  type: 'FeatureCollection';
+  features: Array<{
+    type: 'Feature';
+    properties: {
+      type: 'perimeter' | 'strata' | 'exclusion_area' | 'monitoring_site';
+      name?: string;
+      area?: number;
+      color?: string;
+      lat?: number;
+      lon?: number;
+      exclusionAreaTypeDescription?: string;
+      hasGrazingManagement?: boolean;
+    };
+    geometry: {
+      type: 'Polygon' | 'MultiPolygon' | 'Point';
+      coordinates: unknown;
+    };
+  }>;
+}
+
+// ============================================
+// Tipos del Dashboard
+// ============================================
+
 export interface Establecimiento {
   nombre: string;
   codigo: string;
@@ -24,11 +89,29 @@ export interface Estrato {
   estaciones: number;
   areaPorEstacion: number;
   color: string;
-  coordenadas?: Array<[number, number]>; // Polígono para el mapa
+  coordenadas?: Array<[number, number]>; // Legacy: Polígono simple
+  geometry?: EstratoGeometry; // GeoJSON geometry (compatible con SamplingArea de ruuts-api)
+}
+
+// Datos de forraje del evento de monitoreo
+export interface ForrajeData {
+  biomasaKgMSHa: number | null; // kg de materia seca por hectárea
+  biomasaM2DiaAnimal: number | null; // m2 para un día animal
+  calidadForraje: number | null; // 1-5 scale
+  patronUso: 'PP' | 'SD' | 'SP' | null; // Pastoreo Parejo, Sin Datos, Sin Pastoreo
+  intensidad: 'none' | 'moderate' | 'intense' | null;
+}
+
+// Fotos del sitio de monitoreo
+export interface SiteFotos {
+  panoramic?: string;
+  degrees45?: string;
+  degrees90?: string;
 }
 
 export interface MonitorMCP {
-  id: number;
+  id: number | string;
+  nombre?: string; // Nombre del sitio (LAU001, LAU002, etc.)
   estrato: string;
   estratoCodigo: string;
   coordenadas: [number, number];
@@ -52,6 +135,12 @@ export interface MonitorMCP {
   };
   ise1: number;
   ise2: number;
+  // Datos de forraje (del evento de monitoreo)
+  forraje?: ForrajeData;
+  // Fotos del sitio
+  fotos?: SiteFotos;
+  // Fecha del monitoreo
+  fechaMonitoreo?: string;
 }
 
 export interface ISEData {
@@ -151,6 +240,8 @@ export interface DashboardData {
   establecimiento: Establecimiento;
   estratos: Estrato[];
   monitores: MonitorMCP[];
+  perimetro?: Perimetro;
+  areasExclusion?: AreaExclusion[];
   ise: ISEData;
   procesos: ProcesosEcosistemicos;
   procesosHistorico: Array<{
@@ -212,4 +303,51 @@ export interface SugerenciaItem {
   chartType?: WidgetType;
   colSpan?: SugerenciaLayout; // Cuántas columnas ocupa (1=full, 2=mitad, 3=tercio)
   order?: number; // Para reordenar
+}
+
+// ============================================
+// Tipos para Forraje y Pastoreo (Grafana)
+// ============================================
+
+// Datos de forraje agregados por estrato
+export interface ForrajeEstrato {
+  estrato: string;
+  codigo: string; // AG, ML, BD
+  biomasa: number; // kgMS/ha
+  calidad: number; // 1-5 scale
+}
+
+// Patrón de pastoreo total del establecimiento (para PieChart)
+export interface PastoreoPatron {
+  intenso: number;   // % de sitios con pastoreo intenso
+  moderado: number;  // % de sitios con pastoreo moderado
+  leve: number;      // % de sitios con pastoreo leve
+  nulo: number;      // % de sitios sin pastoreo
+}
+
+// Intensidad de pastoreo por estrato (para barras apiladas)
+export interface IntensidadPastoreoEstrato {
+  estrato: string;
+  codigo: string;
+  intenso: number;   // %
+  moderado: number;  // %
+  leve: number;      // %
+  nulo: number;      // %
+}
+
+// Datos de pastoreo completos
+export interface PastoreoData {
+  patronTotal: PastoreoPatron;
+  intensidadPorEstrato: IntensidadPastoreoEstrato[];
+}
+
+// Datos históricos de forraje por estrato (para gráfico interanual)
+export interface ForrajeHistoricoItem {
+  año: number;
+  estratos: {
+    estrato: string;
+    codigo: string;
+    biomasa: number;
+    calidad: number;
+  }[];
 }

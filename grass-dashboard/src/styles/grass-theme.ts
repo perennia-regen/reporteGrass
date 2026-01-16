@@ -36,6 +36,23 @@ export const grassTheme = {
       flujoEnergia: '#8aca53',     // Verde grass - var(--grass-green)
       dinamicaComunidades: '#c4b896', // Beige/oliva apagado (tierra)
     },
+
+    // Colores de intensidad de pastoreo (basados en Grafana)
+    pastoreo: {
+      intenso: '#dc2626',   // Rojo - pastoreo intenso
+      moderado: '#facc15',  // Amarillo - pastoreo moderado
+      leve: '#22c55e',      // Verde - pastoreo leve
+      nulo: '#3b82f6',      // Azul - sin pastoreo
+    },
+
+    // Colores de calidad forrajera (1-5 scale)
+    calidadForraje: {
+      1: '#dc2626',  // Muy baja - rojo
+      2: '#f97316',  // Baja - naranja
+      3: '#facc15',  // Media - amarillo
+      4: '#22c55e',  // Buena - verde
+      5: '#16a34a',  // Muy buena - verde oscuro
+    },
     
     // Colores neutrales
     neutral: {

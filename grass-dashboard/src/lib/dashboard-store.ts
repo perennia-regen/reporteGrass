@@ -97,7 +97,7 @@ interface DashboardState {
 const defaultTabs: TabConfig[] = [
   {
     id: 'inicio',
-    name: 'Inicio',
+    name: 'Resumen',
     locked: true,
     widgets: [],
   },
@@ -109,7 +109,7 @@ const defaultTabs: TabConfig[] = [
   },
   {
     id: 'resultados',
-    name: 'Resultados',
+    name: 'Detalle',
     locked: true,
     widgets: [],
   },
@@ -343,3 +343,61 @@ export const useDashboardStore = create<DashboardState>()(
 
 // Helper para generar IDs únicos
 export const generateWidgetId = () => `widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+// ============================================================================
+// SELECTORES GRANULARES - Usar estos para evitar re-renders innecesarios
+// ============================================================================
+// Cada selector suscribe al componente SOLO al slice de estado que necesita.
+// Ejemplo: useIsEditing() solo re-renderiza cuando isEditing cambia.
+
+// Estado de edición
+export const useIsEditing = () => useDashboardStore((s) => s.isEditing);
+export const useSetIsEditing = () => useDashboardStore((s) => s.setIsEditing);
+
+// Tab activa
+export const useActiveTab = () => useDashboardStore((s) => s.activeTab);
+export const useSetActiveTab = () => useDashboardStore((s) => s.setActiveTab);
+
+// KPIs
+export const useSelectedKPIs = () => useDashboardStore((s) => s.selectedKPIs);
+export const useUpdateKPI = () => useDashboardStore((s) => s.updateKPI);
+
+// Contenido editable
+export const useEditableContent = () => useDashboardStore((s) => s.editableContent);
+export const useUpdateContent = () => useDashboardStore((s) => s.updateContent);
+export const useUpdateBulkContent = () => useDashboardStore((s) => s.updateBulkContent);
+
+// Widget seleccionado
+export const useSelectedWidget = () => useDashboardStore((s) => s.selectedWidget);
+export const useSetSelectedWidget = () => useDashboardStore((s) => s.setSelectedWidget);
+
+// Tabs y widgets
+export const useTabs = () => useDashboardStore((s) => s.tabs);
+export const useSetTabs = () => useDashboardStore((s) => s.setTabs);
+
+// Sidebar
+export const useSidebarCollapsed = () => useDashboardStore((s) => s.sidebarCollapsed);
+export const useSetSidebarCollapsed = () => useDashboardStore((s) => s.setSidebarCollapsed);
+
+// Tour
+export const useTourCompleted = () => useDashboardStore((s) => s.tourCompleted);
+export const useSetTourCompleted = () => useDashboardStore((s) => s.setTourCompleted);
+
+// Sugerencias
+export const useSugerenciaItems = () => useDashboardStore((s) => s.sugerenciaItems);
+export const useAddSugerenciaItem = () => useDashboardStore((s) => s.addSugerenciaItem);
+export const useUpdateSugerenciaItem = () => useDashboardStore((s) => s.updateSugerenciaItem);
+export const useRemoveSugerenciaItem = () => useDashboardStore((s) => s.removeSugerenciaItem);
+export const useReorderSugerenciaItems = () => useDashboardStore((s) => s.reorderSugerenciaItems);
+export const useSetSugerenciaItems = () => useDashboardStore((s) => s.setSugerenciaItems);
+
+// Widget actions
+export const useAddWidget = () => useDashboardStore((s) => s.addWidget);
+export const useUpdateWidget = () => useDashboardStore((s) => s.updateWidget);
+export const useRemoveWidget = () => useDashboardStore((s) => s.removeWidget);
+export const useMoveWidget = () => useDashboardStore((s) => s.moveWidget);
+export const useResizeWidget = () => useDashboardStore((s) => s.resizeWidget);
+export const useReorderWidgets = () => useDashboardStore((s) => s.reorderWidgets);
+
+// Reset
+export const useResetDashboard = () => useDashboardStore((s) => s.resetDashboard);

@@ -17,7 +17,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { mockDashboardData } from '@/lib/mock-data';
+import { mockDashboardData, calculateBiomasaByEstrato, forrajeData, pastoreoData, forrajeHistorico } from '@/lib/mock-data';
+import { ForrajeBiomasaChart, ForrajeCalidadChart, ForrajeInteranualChart } from '@/components/charts/forraje';
+import { PatronPastoreoChart, IntensidadPastoreoChart } from '@/components/charts/pastoreo';
 import { ISE_THRESHOLD, grassTheme } from '@/styles/grass-theme';
 import { useDashboardStore } from '@/lib/dashboard-store';
 import { EditableText } from '@/components/editor';
@@ -216,6 +218,8 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
             value={estratoSeleccionado}
             onChange={(e) => setEstratoSeleccionado(e.target.value)}
             className="text-sm border rounded px-2 py-1 bg-white"
+            name="estrato-filter"
+            aria-label="Filtrar por estrato"
           >
             {estratos.map((e) => (
               <option key={e} value={e}>
@@ -235,7 +239,7 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: procesosDeterminantes.dinamicaComunidades.color }} />
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: procesosDeterminantes.dinamicaComunidades.color }} aria-hidden="true" />
               {procesosDeterminantes.dinamicaComunidades.nombre}
             </CardTitle>
           </CardHeader>
@@ -265,7 +269,7 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: procesosDeterminantes.flujoEnergia.color }} />
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: procesosDeterminantes.flujoEnergia.color }} aria-hidden="true" />
               {procesosDeterminantes.flujoEnergia.nombre}
             </CardTitle>
           </CardHeader>
@@ -299,7 +303,7 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: procesosDeterminantes.cicloMineral.color }} />
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: procesosDeterminantes.cicloMineral.color }} aria-hidden="true" />
               {procesosDeterminantes.cicloMineral.nombre}
             </CardTitle>
           </CardHeader>
@@ -329,7 +333,7 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="w-3 h-3 rounded" style={{ backgroundColor: procesosDeterminantes.cicloAgua.color }} />
+              <div className="w-3 h-3 rounded" style={{ backgroundColor: procesosDeterminantes.cicloAgua.color }} aria-hidden="true" />
               {procesosDeterminantes.cicloAgua.nombre}
             </CardTitle>
           </CardHeader>
@@ -352,6 +356,123 @@ function DeterminantesSection({ monitores, procesosHistorico }: DeterminantesSec
                 )}
               </LineChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+}
+
+// Componente para mostrar biomasa/materia seca por estrato
+function BiomasaSection({ estratos }: { estratos: typeof mockDashboardData.estratos }) {
+  const biomasaData = useMemo(() => calculateBiomasaByEstrato(), []);
+
+  const chartData = useMemo(() =>
+    estratos.map((e) => ({
+      nombre: e.nombre,
+      promedio: biomasaData[e.nombre]?.promedio || 0,
+      sitios: biomasaData[e.nombre]?.sitios || 0,
+      color: e.color,
+    })), [estratos, biomasaData]);
+
+  // Calcular total de materia seca (promedio * superficie para cada estrato)
+  const totalMateriaSeca = useMemo(() => {
+    let total = 0;
+    estratos.forEach((e) => {
+      const promedio = biomasaData[e.nombre]?.promedio || 0;
+      // kg MS/ha * ha = kg MS total, luego convertir a toneladas
+      total += (promedio * e.superficie) / 1000;
+    });
+    return Math.round(total);
+  }, [estratos, biomasaData]);
+
+  return (
+    <section>
+      <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
+        Materia Seca Disponible
+      </h3>
+      <p className="text-sm text-gray-600 mb-6">
+        Estimación de biomasa forrajera (kg de materia seca por hectárea) por estrato,
+        basada en los datos del evento de monitoreo de Marzo 2025.
+      </p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* KPI Card - Total estimado */}
+        <Card className="lg:col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Total Estimado</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-4">
+              <p className="text-4xl font-bold text-[var(--grass-green-dark)]">
+                {totalMateriaSeca.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">toneladas de MS</p>
+              <p className="text-xs text-gray-400 mt-3">
+                Calculado como promedio por estrato × superficie
+              </p>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {estratos.map((e) => {
+                const data = biomasaData[e.nombre];
+                const totalEstrato = data ? Math.round((data.promedio * e.superficie) / 1000) : 0;
+                return (
+                  <div key={e.id} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded" style={{ backgroundColor: e.color }} aria-hidden="true" />
+                      <span>{e.nombre}</span>
+                    </div>
+                    <span className="font-medium">{totalEstrato.toLocaleString()} t</span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gráfico de barras */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Biomasa Promedio por Estrato (kg MS/ha)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={chartData} layout="vertical" barSize={40} margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" domain={[0, 'auto']} tickFormatter={(v) => v.toLocaleString()} />
+                <YAxis
+                  dataKey="nombre"
+                  type="category"
+                  width={100}
+                  tick={{ fontSize: 13 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  formatter={(value) => [`${(value as number).toLocaleString()} kg MS/ha`, 'Promedio']}
+                />
+                <Bar dataKey="promedio" radius={[4, 4, 4, 4]}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+
+            <div className="mt-4 grid grid-cols-3 gap-4 text-center text-sm">
+              {chartData.map((d) => (
+                <div key={d.nombre} className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded" style={{ backgroundColor: d.color }} aria-hidden="true" />
+                    <span className="font-medium">{d.nombre}</span>
+                  </div>
+                  <p className="text-lg font-bold">{d.promedio.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">kg MS/ha</p>
+                  <p className="text-xs text-gray-400 mt-1">{d.sitios} sitios</p>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -454,7 +575,7 @@ export function TabResultados() {
                 </BarChart>
               </ResponsiveContainer>
               <EditableText
-                value={editableContent.comentarioISEEstrato || `El valor promedio del ISE fue de ${ise.promedio}, por debajo del umbral deseable de ${ISE_THRESHOLD} puntos.`}
+                value={editableContent.comentarioISEEstrato || `ISE promedio de ${ise.promedio}, por debajo del umbral deseable (${ISE_THRESHOLD}). Loma con menor valor por uso agrícola. Bajo y Media Loma con mejores resultados pero aún con margen de mejora.`}
                 onChange={(v) => updateContent('comentarioISEEstrato', v)}
                 placeholder="Comentario sobre ISE por estrato…"
                 className="text-xs text-gray-500 mt-2"
@@ -481,7 +602,7 @@ export function TabResultados() {
                 </BarChart>
               </ResponsiveContainer>
               <EditableText
-                value={editableContent.comentarioEvolucionISE || 'Se observa una marcada disminución inicial por sequía severa (2023), con recuperación parcial posterior.'}
+                value={editableContent.comentarioEvolucionISE || 'Caída inicial marcada por sequía severa, con recuperación parcial posterior. El ISE refleja el impacto del clima y las decisiones de manejo.'}
                 onChange={(v) => updateContent('comentarioEvolucionISE', v)}
                 placeholder="Comentario sobre evolución del ISE…"
                 className="text-xs text-gray-500 mt-2"
@@ -526,7 +647,7 @@ export function TabResultados() {
               )}
             </ResponsiveContainer>
             <EditableText
-              value={editableContent.comentarioEvolucionISEEstrato || 'Al analizar la evolución por estratos, se identifican situaciones diferenciadas. El estrato Bajo muestra una leve mejora, mientras que Media Loma presenta una tendencia negativa más marcada.'}
+              value={editableContent.comentarioEvolucionISEEstrato || 'Loma estable en valores bajos por uso agrícola. Media Loma con tendencia negativa por conversión a cultivos anuales. Bajo con leve mejora por mejor gestión de descansos.'}
               onChange={(v) => updateContent('comentarioEvolucionISEEstrato', v)}
               placeholder="Comentario sobre evolución ISE por estrato…"
               className="text-xs text-gray-500 mt-2"
@@ -572,24 +693,24 @@ export function TabResultados() {
               </ResponsiveContainer>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.cicloAgua }} />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.cicloAgua }} aria-hidden="true" />
                   <span>Ciclo del Agua: {procesos.cicloAgua}%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.cicloMineral }} />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.cicloMineral }} aria-hidden="true" />
                   <span>Ciclo Mineral: {procesos.cicloMineral}%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.flujoEnergia }} />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.flujoEnergia }} aria-hidden="true" />
                   <span>Flujo de Energía: {procesos.flujoEnergia}%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.dinamicaComunidades }} />
+                  <div className="w-3 h-3 rounded" style={{ backgroundColor: grassTheme.colors.procesos.dinamicaComunidades }} aria-hidden="true" />
                   <span>Din. Comunidades: {procesos.dinamicaComunidades}%</span>
                 </div>
               </div>
               <EditableText
-                value={editableContent.comentarioProcesosActual || `A nivel de todo el establecimiento, se observa un funcionamiento relativamente adecuado del ciclo del agua (${procesos.cicloAgua}%), y un desempeño intermedio en el ciclo mineral (${procesos.cicloMineral}%) y el flujo de energía (${procesos.flujoEnergia}%).`}
+                value={editableContent.comentarioProcesosActual || `Ciclo del agua adecuado (${procesos.cicloAgua}%). Ciclo mineral y flujo de energía intermedios. Dinámica de comunidades limitada (${procesos.dinamicaComunidades}%), reflejando menor diversidad biológica.`}
                 onChange={(v) => updateContent('comentarioProcesosActual', v)}
                 placeholder="Comentario sobre procesos ecosistémicos…"
                 className="text-xs text-gray-500 mt-3"
@@ -619,9 +740,131 @@ export function TabResultados() {
                 </LineChart>
               </ResponsiveContainer>
               <EditableText
-                value={editableContent.comentarioEvolucionProcesos || 'En los tres años evaluados, se observa una relativa estabilidad en los ciclos del agua y mineral. El flujo de energía mostró una fuerte caída inicial, con recuperación parcial posterior.'}
+                value={editableContent.comentarioEvolucionProcesos || 'Ciclos del agua y mineral estables. Flujo de energía con caída inicial y recuperación parcial. Dinámica de comunidades con tendencia descendente que requiere atención.'}
                 onChange={(v) => updateContent('comentarioEvolucionProcesos', v)}
                 placeholder="Comentario sobre evolución de procesos…"
+                className="text-xs text-gray-500 mt-2"
+                showPencilOnHover
+                multiline
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* SECCIÓN BIOMASA / MATERIA SECA POR ESTRATO */}
+      <BiomasaSection estratos={estratos} />
+
+      {/* SECCIÓN DISPONIBILIDAD Y CALIDAD FORRAJERA */}
+      <section>
+        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
+          Disponibilidad y Calidad Forrajera
+        </h3>
+        <p className="text-sm text-gray-600 mb-6">
+          Análisis de la biomasa disponible (kg de materia seca por hectárea) y calidad forrajera (escala 1-5)
+          por estrato, basado en los datos del evento de monitoreo.
+        </p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Biomasa por Estrato */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Disponibilidad Forrajera por Estrato</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ForrajeBiomasaChart data={forrajeData} />
+              <EditableText
+                value={editableContent.comentarioForrajeBiomasa || 'Bajo con mayor disponibilidad por mejores condiciones hídricas y gestión de descansos. La carga animal puede limitar la acumulación de biomasa.'}
+                onChange={(v) => updateContent('comentarioForrajeBiomasa', v)}
+                placeholder="Comentario sobre disponibilidad forrajera…"
+                className="text-xs text-gray-500 mt-2"
+                showPencilOnHover
+                multiline
+              />
+            </CardContent>
+          </Card>
+
+          {/* Calidad Forrajera por Estrato */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Calidad Forrajera por Estrato</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ForrajeCalidadChart data={forrajeData} />
+              <p className="text-xs text-gray-400 mt-2 mb-2">
+                Escala: 1 (muy baja) - 5 (muy buena). Línea punteada indica calidad media (3).
+              </p>
+              <EditableText
+                value={editableContent.comentarioForrajeCalidad || 'Valores superiores a 3 indican buena presencia de gramíneas perennes y leguminosas. El envejecimiento de pasturas puede reducir la calidad.'}
+                onChange={(v) => updateContent('comentarioForrajeCalidad', v)}
+                placeholder="Comentario sobre calidad forrajera…"
+                className="text-xs text-gray-500"
+                showPencilOnHover
+                multiline
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Evolución Interanual de Forraje */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Evolución Interanual de Forraje por Estrato</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ForrajeInteranualChart data={forrajeHistorico} />
+            <EditableText
+              value={editableContent.comentarioForrajeInteranual || 'Las condiciones climáticas y decisiones de manejo inciden directamente en la biomasa acumulada. Mayor canopeo refleja mejor aprovechamiento de la radiación solar.'}
+              onChange={(v) => updateContent('comentarioForrajeInteranual', v)}
+              placeholder="Comentario sobre evolución del forraje…"
+              className="text-xs text-gray-500 mt-2"
+              showPencilOnHover
+              multiline
+            />
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* SECCIÓN PATRÓN DE PASTOREO */}
+      <section>
+        <h3 className="text-xl font-semibold text-[var(--grass-green-dark)] mb-4 border-b pb-2">
+          Patrón e Intensidad de Pastoreo
+        </h3>
+        <p className="text-sm text-gray-600 mb-6">
+          Distribución del patrón de uso del pastoreo a nivel de establecimiento y la intensidad de pastoreo
+          por estrato, basado en las observaciones del evento de monitoreo.
+        </p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Patrón de Pastoreo - Pie Chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Patrón de Uso - Total Establecimiento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PatronPastoreoChart data={pastoreoData.patronTotal} />
+              <EditableText
+                value={editableContent.comentarioPatronPastoreo || 'La carga animal y las salidas intensas de potreros pueden limitar la acumulación de biomasa. Un patrón equilibrado favorece la regeneración.'}
+                onChange={(v) => updateContent('comentarioPatronPastoreo', v)}
+                placeholder="Comentario sobre patrón de pastoreo…"
+                className="text-xs text-gray-500 mt-2"
+                showPencilOnHover
+                multiline
+              />
+            </CardContent>
+          </Card>
+
+          {/* Intensidad de Pastoreo por Estrato - Barras Apiladas */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Intensidad de Pastoreo por Estrato</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <IntensidadPastoreoChart data={pastoreoData.intensidadPorEstrato} />
+              <EditableText
+                value={editableContent.comentarioIntensidadPastoreo || 'Gestión cuidadosa de descansos favorece la recuperación ecológica. Ajustar tiempos de recuperación según época y receptividad del sistema.'}
+                onChange={(v) => updateContent('comentarioIntensidadPastoreo', v)}
+                placeholder="Comentario sobre intensidad de pastoreo…"
                 className="text-xs text-gray-500 mt-2"
                 showPencilOnHover
                 multiline
@@ -664,6 +907,7 @@ export function TabResultados() {
                           <div
                             className="w-3 h-3 rounded flex-shrink-0"
                             style={{ backgroundColor: estrato?.color || '#757575' }}
+                            aria-hidden="true"
                           />
                           {rec.estrato}
                         </div>

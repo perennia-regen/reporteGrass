@@ -7,7 +7,12 @@ import 'leaflet/dist/leaflet.css';
 import type { MonitorMCP, Estrato } from '@/types/dashboard';
 
 // Fix para los iconos de Leaflet en Next.js
-const createCustomIcon = (color: string, number: number) => {
+const createCustomIcon = (color: string, label: string | number) => {
+  // Extraer solo el número del nombre del sitio si es string (LAU001 -> 1)
+  const displayLabel = typeof label === 'string'
+    ? label.replace(/[^0-9]/g, '').replace(/^0+/, '') || label.slice(-2)
+    : label;
+
   return L.divIcon({
     className: 'custom-marker',
     html: `
@@ -21,10 +26,10 @@ const createCustomIcon = (color: string, number: number) => {
         justify-content: center;
         color: white;
         font-weight: bold;
-        font-size: 12px;
+        font-size: 10px;
         border: 2px solid white;
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      ">${number}</div>
+      ">${displayLabel}</div>
     `,
     iconSize: [28, 28],
     iconAnchor: [14, 14],

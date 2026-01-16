@@ -1,11 +1,255 @@
 // Mock data basado en el informe de La Unión - Marzo 2025
+// Geometrías reales importadas del GeoJSON de regen-project-dev
 
 import type {
   DashboardData,
   ComunidadData,
   MonitorMCP,
+  EstratoGeometry,
+  LaUnionGeoJSON,
+  Perimetro,
+  AreaExclusion,
+  ForrajeData,
+  SiteFotos,
+  ForrajeEstrato,
+  PastoreoData,
+  IntensidadPastoreoEstrato,
+  ForrajeHistoricoItem,
 } from '@/types/dashboard';
 import { grassTheme } from '@/styles/grass-theme';
+import laUnionGeoJSONRaw from '@/data/la-union.json';
+import monitoringEventData from '@/data/monitoring-event-2025.json';
+
+// Cast del JSON importado
+const laUnionGeoJSON = laUnionGeoJSONRaw as LaUnionGeoJSON;
+
+// Type for monitoring event data
+interface MonitoringEventSite {
+  sitio: string;
+  lat: number;
+  lng: number;
+  estrato: string;
+  scoreTotal: number;
+  indicadores: {
+    abundanciaCanopeo: number | null;
+    organismosVivos: number | null;
+    pastosVerano: number | null;
+    pastosInvierno: number | null;
+    hierbasLeguminosas: number | null;
+    arbolesArbustos: number | null;
+    especiesDeseables: number | null;
+    especiesIndeseables: number | null;
+    mantillo: number | null;
+    incorporacionMantillo: number | null;
+    desaparicionExcrementos: number | null;
+    sueloDesnudo: number | null;
+    encostramiento: number | null;
+    erosionEolica: number | null;
+    erosionHidrica: number | null;
+  };
+  forraje: {
+    biomasaKgMSHa: number | null;
+    biomasaM2DiaAnimal: number | null;
+    calidadForraje: number | null;
+    patronUso: string | null;
+    intensidad: string | null;
+  };
+  fechaMonitoreo: string;
+}
+
+interface MonitoringEventFotos {
+  panoramic?: string;
+  degrees45?: string;
+  degrees90?: string;
+}
+
+interface MonitoringEventJSON {
+  eventoNombre: string;
+  fecha: string;
+  sitios: MonitoringEventSite[];
+  fotos: Record<string, MonitoringEventFotos>;
+}
+
+// Cast monitoring event data
+const eventData = monitoringEventData as MonitoringEventJSON;
+
+// Create a lookup map for monitoring event sites by name
+const eventSiteMap = new Map<string, MonitoringEventSite>();
+eventData.sitios.forEach((site) => {
+  // Normalize site name (remove spaces, handle "LAU 14" vs "LAU14")
+  const normalizedName = site.sitio.replace(/\s+/g, '');
+  eventSiteMap.set(normalizedName, site);
+  // Also store with original name for exact matches
+  eventSiteMap.set(site.sitio, site);
+});
+
+// ============================================
+// Parseo del GeoJSON real de La Unión
+// Coordenadas centro: ~[-32.68, -61.36] (lat, lng)
+// ============================================
+
+// Extraer features por tipo
+const perimeterFeature = laUnionGeoJSON.features.find(
+  (f) => f.properties.type === 'perimeter'
+);
+const strataFeatures = laUnionGeoJSON.features.filter(
+  (f) => f.properties.type === 'strata'
+);
+const exclusionFeatures = laUnionGeoJSON.features.filter(
+  (f) => f.properties.type === 'exclusion_area'
+);
+const siteFeatures = laUnionGeoJSON.features.filter(
+  (f) => f.properties.type === 'monitoring_site'
+);
+
+// Perímetro del establecimiento
+const perimetroData: Perimetro | undefined = perimeterFeature
+  ? {
+      nombre: perimeterFeature.properties.name || 'La Unión',
+      area: perimeterFeature.properties.area || 591,
+      geometry: perimeterFeature.geometry as EstratoGeometry,
+      color: perimeterFeature.properties.color || 'hsl(61, 90%, 71%)',
+    }
+  : undefined;
+
+// Áreas de exclusión
+const areasExclusionData: AreaExclusion[] = exclusionFeatures.map((f, idx) => ({
+  id: `exclusion-${idx + 1}`,
+  area: f.properties.area || 0,
+  geometry: f.geometry as EstratoGeometry,
+  color: f.properties.color || 'hsl(0, 0%, 20%)',
+  descripcion: f.properties.exclusionAreaTypeDescription,
+  hasGrazingManagement: f.properties.hasGrazingManagement,
+}));
+
+// Mapeo de nombres de estratos del GeoJSON a IDs del sistema
+const estratoNameMap: Record<string, { id: string; codigo: string }> = {
+  LOMA: { id: 'loma', codigo: 'AG' },
+  'MEDIA LOMA': { id: 'media-loma', codigo: 'ML' },
+  BAJO: { id: 'bajo', codigo: 'BD' },
+};
+
+// Extraer geometrías y áreas de estratos del GeoJSON real (un solo loop)
+const estratoGeometries: Record<string, EstratoGeometry> = {};
+const estratoAreas: Record<string, number> = {};
+strataFeatures.forEach((f) => {
+  const name = f.properties.name || '';
+  const mapping = estratoNameMap[name];
+  if (mapping) {
+    estratoGeometries[mapping.id] = f.geometry as EstratoGeometry;
+    estratoAreas[mapping.id] = Math.round(f.properties.area || 0);
+  }
+});
+
+// Calcular centro del establecimiento desde el perímetro
+function calculateCenter(): [number, number] {
+  if (!perimeterFeature) return [-32.68, -61.36];
+  const coords = perimeterFeature.geometry.coordinates as number[][][];
+  const points = coords[0];
+  const sumLat = points.reduce((sum, p) => sum + p[1], 0);
+  const sumLng = points.reduce((sum, p) => sum + p[0], 0);
+  return [sumLat / points.length, sumLng / points.length];
+}
+
+// Mapeo de estratos del CSV al sistema
+const estratoCSVMap: Record<string, { codigo: string; nombre: string }> = {
+  'LOMA': { codigo: 'AG', nombre: 'Loma' },
+  'MEDIA LOMA': { codigo: 'ML', nombre: 'Media Loma' },
+  'BAJO': { codigo: 'BD', nombre: 'Bajo' },
+};
+
+// Generar monitores desde el evento de monitoreo real
+// Usa datos del CSV con ISE, forraje y fotos reales
+function generateMonitores(): MonitorMCP[] {
+  // Usar datos del evento de monitoreo (prioridad sobre GeoJSON)
+  return eventData.sitios.map((site) => {
+    const estratoMapping = estratoCSVMap[site.estrato] || { codigo: 'BD', nombre: 'Bajo' };
+
+    // Buscar fotos para este sitio
+    const siteKey = site.sitio;
+    const normalizedKey = site.sitio.replace(/\s+/g, '');
+    const fotos = eventData.fotos[siteKey] || eventData.fotos[normalizedKey];
+
+    // Mapear datos de forraje
+    const forraje: ForrajeData = {
+      biomasaKgMSHa: site.forraje.biomasaKgMSHa,
+      biomasaM2DiaAnimal: site.forraje.biomasaM2DiaAnimal,
+      calidadForraje: site.forraje.calidadForraje,
+      patronUso: site.forraje.patronUso as 'PP' | 'SD' | 'SP' | null,
+      intensidad: site.forraje.intensidad as 'none' | 'moderate' | 'intense' | null,
+    };
+
+    // Mapear fotos
+    const siteFotos: SiteFotos | undefined = fotos ? {
+      panoramic: fotos.panoramic,
+      degrees45: fotos.degrees45,
+      degrees90: fotos.degrees90,
+    } : undefined;
+
+    return {
+      id: site.sitio, // Usar el nombre del sitio como ID (LAU01, LAU02, etc.)
+      nombre: site.sitio,
+      estrato: estratoMapping.nombre,
+      estratoCodigo: estratoMapping.codigo,
+      coordenadas: [site.lat, site.lng] as [number, number],
+      indicadores: {
+        abundanciaCanopeo: site.indicadores.abundanciaCanopeo ?? 0,
+        microfauna: site.indicadores.organismosVivos ?? 0,
+        gf1PastosVerano: site.indicadores.pastosVerano ?? 0,
+        gf2PastosInvierno: site.indicadores.pastosInvierno ?? 0,
+        gf3HierbasLeguminosas: site.indicadores.hierbasLeguminosas ?? 0,
+        gf4ArbolesArbustos: site.indicadores.arbolesArbustos ?? 0,
+        especiesDeseables: site.indicadores.especiesDeseables ?? 0,
+        especiesIndeseables: site.indicadores.especiesIndeseables ?? 0,
+        abundanciaMantillo: site.indicadores.mantillo ?? 0,
+        incorporacionMantillo: site.indicadores.incorporacionMantillo ?? 0,
+        descomposicionBostas: site.indicadores.desaparicionExcrementos ?? 0,
+        sueloDesnudo: site.indicadores.sueloDesnudo ?? 0,
+        encostramiento: site.indicadores.encostramiento ?? 0,
+        erosionEolica: site.indicadores.erosionEolica ?? 0,
+        erosionHidrica: site.indicadores.erosionHidrica ?? 0,
+        estructuraSuelo: 0, // No está en el CSV
+      },
+      ise1: site.scoreTotal,
+      ise2: site.scoreTotal,
+      forraje,
+      fotos: siteFotos,
+      fechaMonitoreo: site.fechaMonitoreo,
+    };
+  });
+}
+
+// Calcular biomasa promedio por estrato (kg MS/ha)
+export function calculateBiomasaByEstrato(): Record<string, { promedio: number; total: number; sitios: number }> {
+  const estratoBiomasa: Record<string, number[]> = {
+    'Bajo': [],
+    'Media Loma': [],
+    'Loma': [],
+  };
+
+  eventData.sitios.forEach((site) => {
+    const mapping = estratoCSVMap[site.estrato];
+    if (mapping && site.forraje.biomasaKgMSHa !== null) {
+      estratoBiomasa[mapping.nombre].push(site.forraje.biomasaKgMSHa);
+    }
+  });
+
+  const result: Record<string, { promedio: number; total: number; sitios: number }> = {};
+  Object.entries(estratoBiomasa).forEach(([nombre, biomasas]) => {
+    if (biomasas.length > 0) {
+      const total = biomasas.reduce((a, b) => a + b, 0);
+      result[nombre] = {
+        promedio: Math.round(total / biomasas.length),
+        total: Math.round(total),
+        sitios: biomasas.length,
+      };
+    } else {
+      result[nombre] = { promedio: 0, total: 0, sitios: 0 };
+    }
+  });
+
+  return result;
+}
 
 // Datos del establecimiento La Unión
 export const mockDashboardData: DashboardData = {
@@ -15,13 +259,13 @@ export const mockDashboardData: DashboardData = {
     fecha: '25 de Marzo de 2025',
     nodo: 'Perennia',
     tecnico: 'Juan Agüero, Gastón Codutti',
-    areaTotal: 560,
+    areaTotal: Math.round(perimetroData?.area || 591),
     ubicacion: {
       provincia: 'Santa Fe',
       departamento: 'Iriondo',
       distrito: 'Bustinza',
     },
-    coordenadas: [-32.45, -61.15],
+    coordenadas: calculateCenter(),
   },
 
   estratos: [
@@ -29,33 +273,40 @@ export const mockDashboardData: DashboardData = {
       id: 'loma',
       nombre: 'Loma',
       codigo: 'AG',
-      superficie: 207,
-      porcentaje: 37,
-      estaciones: 7,
-      areaPorEstacion: 30,
+      superficie: estratoAreas.loma || 206,
+      porcentaje: Math.round(((estratoAreas.loma || 206) / (perimetroData?.area || 591)) * 100),
+      estaciones: siteFeatures.length > 0 ? Math.round(siteFeatures.length / 3) : 7,
+      areaPorEstacion: Math.round((estratoAreas.loma || 206) / 7),
       color: grassTheme.colors.estratos.loma,
+      geometry: estratoGeometries.loma,
     },
     {
       id: 'media-loma',
       nombre: 'Media Loma',
       codigo: 'ML',
-      superficie: 206,
-      porcentaje: 37,
-      estaciones: 7,
-      areaPorEstacion: 29,
+      superficie: estratoAreas['media-loma'] || 206,
+      porcentaje: Math.round(((estratoAreas['media-loma'] || 206) / (perimetroData?.area || 591)) * 100),
+      estaciones: siteFeatures.length > 0 ? Math.round(siteFeatures.length / 3) : 7,
+      areaPorEstacion: Math.round((estratoAreas['media-loma'] || 206) / 7),
       color: grassTheme.colors.estratos.mediaLoma,
+      geometry: estratoGeometries['media-loma'],
     },
     {
       id: 'bajo',
       nombre: 'Bajo',
       codigo: 'BD',
-      superficie: 147,
-      porcentaje: 26,
-      estaciones: 6,
-      areaPorEstacion: 24,
+      superficie: estratoAreas.bajo || 146,
+      porcentaje: Math.round(((estratoAreas.bajo || 146) / (perimetroData?.area || 591)) * 100),
+      estaciones: siteFeatures.length > 0 ? Math.round(siteFeatures.length / 3) : 6,
+      areaPorEstacion: Math.round((estratoAreas.bajo || 146) / 6),
       color: grassTheme.colors.estratos.bajo,
+      geometry: estratoGeometries.bajo,
     },
   ],
+
+  // Perímetro y áreas de exclusión del GeoJSON real
+  perimetro: perimetroData,
+  areasExclusion: areasExclusionData,
 
   ise: {
     promedio: 34.6,
@@ -172,61 +423,6 @@ export const mockDashboardData: DashboardData = {
   ],
 };
 
-// Generar monitores con datos realistas
-function generateMonitores(): MonitorMCP[] {
-  const monitores: MonitorMCP[] = [];
-  const baseCoords: [number, number] = [-32.45, -61.15];
-
-  // Monitores para cada estrato
-  const estratosConfig = [
-    { codigo: 'AG', nombre: 'Loma', count: 7, offsetLat: 0.01 },
-    { codigo: 'BD', nombre: 'Bajo', count: 6, offsetLat: -0.01 },
-    { codigo: 'ML', nombre: 'Media Loma', count: 7, offsetLat: 0 },
-  ];
-
-  let id = 1;
-  estratosConfig.forEach((estrato) => {
-    for (let i = 0; i < estrato.count; i++) {
-      const lat = baseCoords[0] + estrato.offsetLat + (Math.random() - 0.5) * 0.02;
-      const lng = baseCoords[1] + (Math.random() - 0.5) * 0.03;
-
-      // Valores base según estrato (basados en datos del PDF)
-      const isLoma = estrato.codigo === 'AG';
-      const isBajo = estrato.codigo === 'BD';
-
-      monitores.push({
-        id,
-        estrato: estrato.nombre,
-        estratoCodigo: estrato.codigo,
-        coordenadas: [lat, lng],
-        indicadores: {
-          abundanciaCanopeo: isLoma ? -5 : isBajo ? 5 : 0,
-          microfauna: isLoma ? -5 : isBajo ? 5 : 5,
-          gf1PastosVerano: isLoma ? -10 : isBajo ? 5 : 0,
-          gf2PastosInvierno: isLoma ? -10 : isBajo ? 0 : 5,
-          gf3HierbasLeguminosas: isLoma ? 0 : isBajo ? 5 : 0,
-          gf4ArbolesArbustos: 0,
-          especiesDeseables: 0,
-          especiesIndeseables: 0,
-          abundanciaMantillo: 10,
-          incorporacionMantillo: 10,
-          descomposicionBostas: isLoma ? 0 : 10,
-          sueloDesnudo: 20,
-          encostramiento: 0,
-          erosionEolica: 0,
-          erosionHidrica: 0,
-          estructuraSuelo: isLoma ? 0 : isBajo ? 10 : 0,
-        },
-        ise1: isLoma ? 15 : isBajo ? 55 : 40,
-        ise2: isLoma ? 15 : isBajo ? 55 : 45,
-      });
-      id++;
-    }
-  });
-
-  return monitores;
-}
-
 // Datos de la comunidad GRASS
 export const mockComunidadData: ComunidadData = {
   establecimientos: [
@@ -269,3 +465,221 @@ export const indicadoresBiologicos = [
     indicadores: ['Pastos perennes de verano', 'Pastos perennes de invierno', 'Hierbas y leguminosas', 'Arbustos y Árboles', 'Plantas raras contextualmente deseables', 'Plantas contextualmente indeseables'],
   },
 ];
+
+// ============================================
+// Datos de Forraje y Pastoreo (para gráficos Grafana)
+// ============================================
+
+// Calcular forraje por estrato desde datos del evento
+export function calculateForrajeByEstrato(): ForrajeEstrato[] {
+  const estratoData: Record<string, { biomasa: number[]; calidad: number[] }> = {
+    'Loma': { biomasa: [], calidad: [] },
+    'Media Loma': { biomasa: [], calidad: [] },
+    'Bajo': { biomasa: [], calidad: [] },
+  };
+
+  eventData.sitios.forEach((site) => {
+    const mapping = estratoCSVMap[site.estrato];
+    if (mapping) {
+      if (site.forraje.biomasaKgMSHa !== null) {
+        estratoData[mapping.nombre].biomasa.push(site.forraje.biomasaKgMSHa);
+      }
+      if (site.forraje.calidadForraje !== null) {
+        estratoData[mapping.nombre].calidad.push(site.forraje.calidadForraje);
+      }
+    }
+  });
+
+  const codigoMap: Record<string, string> = {
+    'Loma': 'AG',
+    'Media Loma': 'ML',
+    'Bajo': 'BD',
+  };
+
+  return Object.entries(estratoData).map(([estrato, data]) => ({
+    estrato,
+    codigo: codigoMap[estrato],
+    biomasa: data.biomasa.length > 0
+      ? Math.round(data.biomasa.reduce((a, b) => a + b, 0) / data.biomasa.length)
+      : 0,
+    calidad: data.calidad.length > 0
+      ? Number((data.calidad.reduce((a, b) => a + b, 0) / data.calidad.length).toFixed(1))
+      : 0,
+  }));
+}
+
+// Calcular patrón e intensidad de pastoreo
+export function calculatePastoreoData(): PastoreoData {
+  // Mapeo de intensidades del CSV a categorías
+  const intensidadMap: Record<string, 'intenso' | 'moderado' | 'leve' | 'nulo'> = {
+    'intense': 'intenso',
+    'moderate': 'moderado',
+    'light': 'leve',
+    'none': 'nulo',
+  };
+
+  // Contador total para el patrón
+  const totalCounts = { intenso: 0, moderado: 0, leve: 0, nulo: 0 };
+  let totalSites = 0;
+
+  // Contador por estrato
+  const estratoCounts: Record<string, { intenso: number; moderado: number; leve: number; nulo: number; total: number }> = {
+    'Loma': { intenso: 0, moderado: 0, leve: 0, nulo: 0, total: 0 },
+    'Media Loma': { intenso: 0, moderado: 0, leve: 0, nulo: 0, total: 0 },
+    'Bajo': { intenso: 0, moderado: 0, leve: 0, nulo: 0, total: 0 },
+  };
+
+  eventData.sitios.forEach((site) => {
+    const mapping = estratoCSVMap[site.estrato];
+    if (mapping && site.forraje.intensidad) {
+      const categoria = intensidadMap[site.forraje.intensidad];
+      if (categoria) {
+        totalCounts[categoria]++;
+        totalSites++;
+        estratoCounts[mapping.nombre][categoria]++;
+        estratoCounts[mapping.nombre].total++;
+      }
+    }
+  });
+
+  // Calcular porcentajes del patrón total
+  const patronTotal = {
+    intenso: totalSites > 0 ? Math.round((totalCounts.intenso / totalSites) * 100) : 0,
+    moderado: totalSites > 0 ? Math.round((totalCounts.moderado / totalSites) * 100) : 0,
+    leve: totalSites > 0 ? Math.round((totalCounts.leve / totalSites) * 100) : 0,
+    nulo: totalSites > 0 ? Math.round((totalCounts.nulo / totalSites) * 100) : 0,
+  };
+
+  // Calcular intensidad por estrato
+  const codigoMap: Record<string, string> = {
+    'Loma': 'AG',
+    'Media Loma': 'ML',
+    'Bajo': 'BD',
+  };
+
+  const intensidadPorEstrato: IntensidadPastoreoEstrato[] = Object.entries(estratoCounts).map(([estrato, counts]) => ({
+    estrato,
+    codigo: codigoMap[estrato],
+    intenso: counts.total > 0 ? Math.round((counts.intenso / counts.total) * 100) : 0,
+    moderado: counts.total > 0 ? Math.round((counts.moderado / counts.total) * 100) : 0,
+    leve: counts.total > 0 ? Math.round((counts.leve / counts.total) * 100) : 0,
+    nulo: counts.total > 0 ? Math.round((counts.nulo / counts.total) * 100) : 0,
+  }));
+
+  return { patronTotal, intensidadPorEstrato };
+}
+
+// Datos históricos de forraje (mock data basado en evolución simulada)
+export const forrajeHistorico: ForrajeHistoricoItem[] = [
+  {
+    año: 2022,
+    estratos: [
+      { estrato: 'Loma', codigo: 'AG', biomasa: 1800, calidad: 2.5 },
+      { estrato: 'Media Loma', codigo: 'ML', biomasa: 2200, calidad: 3.0 },
+      { estrato: 'Bajo', codigo: 'BD', biomasa: 2800, calidad: 3.2 },
+    ],
+  },
+  {
+    año: 2023,
+    estratos: [
+      { estrato: 'Loma', codigo: 'AG', biomasa: 1200, calidad: 2.0 }, // Sequía
+      { estrato: 'Media Loma', codigo: 'ML', biomasa: 1800, calidad: 2.5 },
+      { estrato: 'Bajo', codigo: 'BD', biomasa: 2400, calidad: 2.8 },
+    ],
+  },
+  {
+    año: 2024,
+    estratos: [
+      { estrato: 'Loma', codigo: 'AG', biomasa: 2100, calidad: 2.8 },
+      { estrato: 'Media Loma', codigo: 'ML', biomasa: 2600, calidad: 3.2 },
+      { estrato: 'Bajo', codigo: 'BD', biomasa: 3200, calidad: 3.5 },
+    ],
+  },
+  {
+    año: 2025,
+    estratos: calculateForrajeByEstrato(), // Datos reales del evento actual
+  },
+];
+
+// Export datos calculados para uso directo
+export const forrajeData = calculateForrajeByEstrato();
+export const pastoreoData = calculatePastoreoData();
+
+// ============================================
+// Fotos de sitios con datos de ISE (para galería de fotos en Inicio)
+// ============================================
+
+export interface SitePhotoWithISE {
+  siteId: string;
+  siteName: string;
+  estrato: string;
+  ise: number;
+  url: string;
+  photoType: 'panoramic' | '45°' | '90°';
+}
+
+/**
+ * Get site photos with ISE data for the photo gallery
+ * Returns photos from sites with the highest variability in ISE scores
+ */
+export function getSitePhotosForGallery(count = 4): SitePhotoWithISE[] {
+  const photos: SitePhotoWithISE[] = [];
+
+  // Get all sites with photos and sort by ISE to show variety
+  const sitesWithPhotos: Array<{
+    sitio: string;
+    estrato: string;
+    ise: number;
+    fotos: typeof eventData.fotos[string];
+  }> = [];
+
+  eventData.sitios.forEach((site) => {
+    const normalizedName = site.sitio.replace(/\s+/g, '');
+    const sitePhotos = eventData.fotos[site.sitio] || eventData.fotos[normalizedName];
+    if (sitePhotos?.panoramic) {
+      sitesWithPhotos.push({
+        sitio: site.sitio,
+        estrato: site.estrato,
+        ise: site.scoreTotal,
+        fotos: sitePhotos,
+      });
+    }
+  });
+
+  // Sort by ISE to get variety (mix of high and low ISE sites)
+  sitesWithPhotos.sort((a, b) => b.ise - a.ise);
+
+  // Select sites with variety: best, worst, and some in between
+  const selectedIndices = [
+    0, // Best ISE
+    Math.floor(sitesWithPhotos.length / 3),
+    Math.floor(sitesWithPhotos.length * 2 / 3),
+    sitesWithPhotos.length - 1, // Worst ISE
+  ];
+
+  const estratoNameMap: Record<string, string> = {
+    LOMA: 'Loma',
+    'MEDIA LOMA': 'Media Loma',
+    BAJO: 'Bajo',
+  };
+
+  for (let i = 0; i < count && i < selectedIndices.length; i++) {
+    const idx = selectedIndices[i];
+    if (idx < sitesWithPhotos.length) {
+      const site = sitesWithPhotos[idx];
+      photos.push({
+        siteId: site.sitio.replace(/\s+/g, ''),
+        siteName: site.sitio,
+        estrato: estratoNameMap[site.estrato] || site.estrato,
+        ise: site.ise,
+        url: site.fotos.panoramic!,
+        photoType: 'panoramic',
+      });
+    }
+  }
+
+  return photos;
+}
+
+// Pre-calculated site photos for gallery
+export const sitePhotosGallery = getSitePhotosForGallery(4);
