@@ -159,7 +159,7 @@ export function TabPlanMonitoreo() {
               </div>
 
               {/* ISE Color Scale */}
-              <div>
+              <div className="ml-6">
                 <p className="text-xs font-medium text-gray-500 mb-2">Sitios por ISE</p>
                 <div className="flex gap-3">
                   <div className="flex items-center gap-1.5">

@@ -23,6 +23,10 @@ const createSiteIcon = (color: string, label: string | number, isSelected: boole
     ? label.replace(/[^0-9]/g, '').replace(/^0+/, '') || label.slice(-2)
     : label;
 
+  const borderStyle = isSelected
+    ? `${borderWidth}px solid white`
+    : 'none';
+
   return L.divIcon({
     className: 'custom-site-marker',
     html: `
@@ -37,7 +41,7 @@ const createSiteIcon = (color: string, label: string | number, isSelected: boole
         color: white;
         font-weight: bold;
         font-size: ${isSelected ? 12 : 10}px;
-        border: ${borderWidth}px solid white;
+        border: ${borderStyle};
         box-shadow: 0 2px 6px rgba(0,0,0,${isSelected ? 0.5 : 0.3});
         transition: all 0.2s ease;
       ">${displayLabel}</div>

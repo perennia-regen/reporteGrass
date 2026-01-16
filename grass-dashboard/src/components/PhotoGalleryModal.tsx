@@ -2,19 +2,17 @@
 
 import { useState } from 'react';
 import { X, MapPin, Check } from 'lucide-react';
-import { mockDashboardData } from '@/lib/mock-data';
-import type { FotoMonitoreo } from '@/types/dashboard';
+import { allSitePhotos, type SitePhotoWithISE } from '@/lib/mock-data';
 
 interface PhotoGalleryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (foto: FotoMonitoreo) => void;
+  onSelect: (foto: { url: string; sitio: string; ise?: number; estrato?: string }) => void;
   currentPhotoUrl?: string;
 }
 
 export function PhotoGalleryModal({ isOpen, onClose, onSelect, currentPhotoUrl }: PhotoGalleryModalProps) {
-  const { fotos, establecimiento } = mockDashboardData;
-  const [selectedPhoto, setSelectedPhoto] = useState<FotoMonitoreo | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<SitePhotoWithISE | null>(null);
 
   if (!isOpen) return null;
 
@@ -26,13 +24,15 @@ export function PhotoGalleryModal({ isOpen, onClose, onSelect, currentPhotoUrl }
 
   const handleConfirm = () => {
     if (selectedPhoto) {
-      onSelect(selectedPhoto);
+      onSelect({
+        url: selectedPhoto.url,
+        sitio: selectedPhoto.siteName,
+        ise: selectedPhoto.ise,
+        estrato: selectedPhoto.estrato,
+      });
       onClose();
     }
   };
-
-  // Location string from establecimiento
-  const ubicacionStr = `${establecimiento.ubicacion.distrito}, ${establecimiento.ubicacion.departamento}, ${establecimiento.ubicacion.provincia}`;
 
   return (
     <div
@@ -61,13 +61,14 @@ export function PhotoGalleryModal({ isOpen, onClose, onSelect, currentPhotoUrl }
         {/* Gallery Grid */}
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {fotos.map((foto, index) => {
+            {allSitePhotos.map((foto) => {
               const isSelected = selectedPhoto?.url === foto.url;
               const isCurrent = currentPhotoUrl === foto.url;
+              const iseColor = foto.ise >= 60 ? '#22c55e' : foto.ise >= 40 ? '#eab308' : foto.ise >= 20 ? '#f97316' : '#ef4444';
 
               return (
                 <div
-                  key={index}
+                  key={foto.siteId}
                   className={`group cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                     isSelected
                       ? 'border-[var(--grass-green)] ring-2 ring-[var(--grass-green)]/20'
@@ -77,21 +78,13 @@ export function PhotoGalleryModal({ isOpen, onClose, onSelect, currentPhotoUrl }
                   }`}
                   onClick={() => setSelectedPhoto(foto)}
                 >
-                  {/* Photo placeholder */}
-                  <div className="aspect-video bg-gray-100 flex items-center justify-center text-gray-400 relative">
-                    <svg
-                      className="w-10 h-10"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+                  {/* Photo with real image */}
+                  <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                    <img
+                      src={foto.url}
+                      alt={`Sitio ${foto.siteName}`}
+                      className="w-full h-full object-cover"
+                    />
 
                     {/* Selection indicator */}
                     {isSelected && (
@@ -110,16 +103,21 @@ export function PhotoGalleryModal({ isOpen, onClose, onSelect, currentPhotoUrl }
 
                   {/* Photo info */}
                   <div className="p-3 bg-white">
-                    <p className="font-medium text-sm text-[var(--grass-green-dark)] truncate">
-                      {foto.sitio}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-sm text-[var(--grass-green-dark)] truncate">
+                        {foto.siteName}
+                      </p>
+                      <span
+                        className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                        style={{ backgroundColor: `${iseColor}20`, color: iseColor }}
+                      >
+                        ISE {foto.ise}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
                       <MapPin className="w-3 h-3" />
-                      <span className="truncate">{ubicacionStr}</span>
+                      <span className="truncate">{foto.estrato}</span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                      {foto.comentario}
-                    </p>
                   </div>
                 </div>
               );

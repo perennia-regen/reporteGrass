@@ -19,10 +19,13 @@ function StratumLayersComponent({ estratos, selectedIds, onStratumClick }: Strat
   const getStyle = useCallback(
     (estrato: Estrato): PathOptions => {
       const isSelected = selectedIds.has(estrato.id);
+      // Loma usa borde brillante para verse sobre suelo oscuro
+      const isLoma = estrato.id === 'loma';
+      const strokeColor = isLoma ? '#90EE90' : estrato.color; // Verde brillante para loma
       return {
         fillColor: estrato.color,
         fillOpacity: isSelected ? 0.4 : 0.15,
-        color: estrato.color,
+        color: strokeColor,
         weight: isSelected ? 3 : 1,
         opacity: 1,
       };
