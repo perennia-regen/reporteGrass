@@ -1,50 +1,43 @@
 -- Domain: Monitoring
--- Table: monitoring_task
--- Description: Specific tasks within monitoring activities
+-- Table: monitoringTasks (from ruuts-api dump)
+-- Description: Individual monitoring tasks with dataPayload containing GRASS data
 
-CREATE TABLE monitoring_task (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    key VARCHAR(100) NOT NULL,
-    monitoring_activity_id UUID NOT NULL REFERENCES monitoring_activity(id) ON DELETE CASCADE,
-    monitoring_event_id UUID NOT NULL REFERENCES monitoring_event(id) ON DELETE CASCADE,
-    monitoring_site_id UUID REFERENCES monitoring_site(id),
-    -- Order and state
-    task_order INTEGER,
-    enabled BOOLEAN NOT NULL DEFAULT TRUE,
-    -- Status
-    task_status_id INTEGER REFERENCES ref_task_status(id) DEFAULT 0,
-    -- Details
-    description TEXT,
-    form_name VARCHAR(100),
-    task_type VARCHAR(50),
-    grid_position_key VARCHAR(50),
-    -- Location
-    actual_location JSONB,
-    planned_location JSONB,
-    action_range_mts INTEGER,
-    device_location_data JSONB,
-    -- Dependencies
-    dependencies INTEGER[],
-    -- Data
-    data_payload JSONB DEFAULT '{}'::jsonb,
-    pictures TEXT[],
-    -- Versioning
-    _rev UUID,
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN DEFAULT FALSE
+CREATE TABLE public."monitoringTasks" (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    key character varying(255) NOT NULL,
+    "order" integer,
+    enabled boolean NOT NULL,
+    "monitoringSiteId" uuid,
+    "monitoringActivityId" uuid NOT NULL,
+    "monitoringEventId" uuid NOT NULL,
+    "taskStatusId" integer DEFAULT 0 NOT NULL,
+    "formName" character varying(255) DEFAULT 0,
+    type character varying(255),
+    "gridPositionKey" character varying(255),
+    "actualLocation" json,
+    "actionRangeMts" integer,
+    "plannedLocation" json,
+    dependencies integer[],
+    description character varying(255) NOT NULL,
+    "dataPayload" json,
+    pictures character varying(255)[],
+    _rev uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    "isDeleted" boolean DEFAULT false,
+    "updatedBy" character varying(255),
+    "updatedAt" timestamp with time zone,
+    "createdBy" character varying(255),
+    "createdAt" timestamp with time zone,
+    "deviceLocationData" json,
+    CONSTRAINT "monitoringTasks_pkey" PRIMARY KEY (id)
 );
 
 -- Indexes
-CREATE INDEX idx_monitoring_task_activity_id ON monitoring_task(monitoring_activity_id);
-CREATE INDEX idx_monitoring_task_event_id ON monitoring_task(monitoring_event_id);
-CREATE INDEX idx_monitoring_task_site_id ON monitoring_task(monitoring_site_id);
-CREATE INDEX idx_monitoring_task_status ON monitoring_task(task_status_id);
-CREATE INDEX idx_monitoring_task_not_deleted ON monitoring_task(id) WHERE is_deleted = FALSE;
+CREATE INDEX "idx_monitoringTasks_eventId" ON public."monitoringTasks"("monitoringEventId");
+CREATE INDEX "idx_monitoringTasks_activityId" ON public."monitoringTasks"("monitoringActivityId");
+CREATE INDEX "idx_monitoringTasks_siteId" ON public."monitoringTasks"("monitoringSiteId");
+CREATE INDEX "idx_monitoringTasks_formName" ON public."monitoringTasks"("formName");
+CREATE INDEX "idx_monitoringTasks_not_deleted" ON public."monitoringTasks"(id) WHERE "isDeleted" = FALSE;
 
-COMMENT ON TABLE monitoring_task IS 'Specific tasks within monitoring activities';
-COMMENT ON COLUMN monitoring_task.data_payload IS 'Flexible JSONB for indicator data';
-COMMENT ON COLUMN monitoring_task.pictures IS 'Array of picture URLs/keys';
+COMMENT ON TABLE public."monitoringTasks" IS 'Individual monitoring tasks - dataPayload contains GRASS/ISE data';
+COMMENT ON COLUMN public."monitoringTasks"."dataPayload" IS 'JSON containing form data including ISE, indicators, ecosystem processes';
+COMMENT ON COLUMN public."monitoringTasks"._rev IS 'Revision UUID for mobile sync';

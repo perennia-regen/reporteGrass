@@ -1,22 +1,43 @@
 -- Domain: Core
--- Table: program
+-- Table: programs (from ruuts-api dump)
 -- Description: Monitoring program (e.g., GRASS)
 
-CREATE TABLE program (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    code VARCHAR(50) UNIQUE,
-    description TEXT,
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by UUID,
-    updated_by UUID,
-    is_deleted BOOLEAN DEFAULT FALSE
+CREATE TABLE public.programs (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    version character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    CONSTRAINT programs_pkey PRIMARY KEY (id)
 );
 
--- Seed data
-INSERT INTO program (name, code, description) VALUES
-    ('GRASS', 'GRASS', 'Programa de monitoreo regenerativo de pastizales');
+-- Program Config
+CREATE TABLE public."programConfig" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "programId" integer NOT NULL,
+    "formDefinitions" json NOT NULL,
+    "baselineYears" integer NOT NULL,
+    "dataCollectionEnabled" boolean DEFAULT true NOT NULL,
+    "monitoringWorkflowIds" integer[],
+    "exclusionAreasModesAllowed" character varying(255)[] NOT NULL,
+    "stratificationModesAllowed" character varying(255)[] NOT NULL,
+    "stratasConfigEndpoint" json NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "farmSubdivisionsYearsAllowed" character varying(255)[] NOT NULL,
+    "createdBy" character varying(255) NOT NULL,
+    "updatedBy" character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "allowedGrazingPaddockFieldUsages" integer[],
+    "randomizeVersion" character varying(255),
+    "enabledReports" character varying(255)[],
+    "blockedMonitoringPeriods" json[],
+    CONSTRAINT "programConfig_pkey" PRIMARY KEY (id)
+);
 
-COMMENT ON TABLE program IS 'Monitoring program definitions';
+-- Indexes
+CREATE INDEX "idx_programConfig_programId" ON public."programConfig"("programId");
+
+COMMENT ON TABLE public.programs IS 'Monitoring program definitions - from ruuts-api';
+COMMENT ON TABLE public."programConfig" IS 'Program configuration - from ruuts-api';

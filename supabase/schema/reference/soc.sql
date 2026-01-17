@@ -1,117 +1,128 @@
 -- Domain: Reference / SOC (Soil Organic Carbon)
--- Tables for SOC sampling and soil analysis
+-- Tables for SOC sampling and soil analysis (from ruuts-api dump)
 
--- DAP Method (Densidad Aparente)
-CREATE TABLE ref_dap_method (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    es_ar VARCHAR(100) NOT NULL,
-    es_py VARCHAR(100),
-    en_us VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+-- DAP Methods (Densidad Aparente)
+CREATE TABLE public."refDAPMethods" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "en_US" character varying(255),
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refDAPMethods_pkey" PRIMARY KEY (id)
 );
 
-INSERT INTO ref_dap_method (id, code, es_ar, en_us) VALUES
-    (0, 'undisturbed', 'Intacta', 'Undisturbed'),
-    (1, 'excavation', 'Excavación', 'Excavation'),
-    (2, 'ring', 'Anillo', 'Ring');
-
--- Sampling Number
-CREATE TABLE ref_sampling_number (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    es_ar VARCHAR(100) NOT NULL,
-    es_py VARCHAR(100),
-    en_us VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+-- Sampling Numbers
+CREATE TABLE public."refSamplingNumbers" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "en_US" character varying(255),
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refSamplingNumbers_pkey" PRIMARY KEY (id)
 );
-
-INSERT INTO ref_sampling_number (id, code, es_ar, en_us) VALUES
-    (0, 'baseline', 'Línea base', 'Baseline'),
-    (1, 'first_resampling', 'Primer re-muestreo', 'First Resampling'),
-    (2, 'second_resampling', 'Segundo re-muestreo', 'Second Resampling');
 
 -- Soil Texture
-CREATE TABLE ref_soil_texture (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    es_ar VARCHAR(100) NOT NULL,
-    es_ar_long VARCHAR(200),
-    en_us VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public."refSoilTexture" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_AR_long" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "es_PY_long" character varying(255),
+    "en_US" character varying(255),
+    "en_US_long" character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    CONSTRAINT "refSoilTexture_pkey" PRIMARY KEY (id)
 );
-
-INSERT INTO ref_soil_texture (id, code, es_ar, en_us) VALUES
-    (1, 'clay', 'Arcillosa', 'Clay'),
-    (2, 'sandy_clay', 'Arcillo arenosa', 'Sandy Clay'),
-    (3, 'silty_clay', 'Arcillo limosa', 'Silty Clay'),
-    (4, 'clay_loam', 'Franco arcillosa', 'Clay Loam'),
-    (5, 'sandy_clay_loam', 'Franco arcillo arenosa', 'Sandy Clay Loam'),
-    (6, 'silty_clay_loam', 'Franco arcillo limosa', 'Silty Clay Loam'),
-    (7, 'loam', 'Franca', 'Loam'),
-    (8, 'sandy_loam', 'Franco arenosa', 'Sandy Loam'),
-    (9, 'silt_loam', 'Franco limosa', 'Silt Loam'),
-    (10, 'silt', 'Limosa', 'Silt'),
-    (11, 'loamy_sand', 'Arenosa franca', 'Loamy Sand'),
-    (12, 'sand', 'Arenosa', 'Sand');
 
 -- Soil Sampling Disturbance
-CREATE TABLE ref_soil_sampling_disturbance (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    es_ar VARCHAR(100) NOT NULL,
-    en_us VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public."refSoilSamplingDisturbance" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_AR_long" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "es_PY_long" character varying(255),
+    "en_US" character varying(255),
+    "en_US_long" character varying(255),
+    "pt_BR" character varying(255),
+    "pt_BR_long" character varying(255),
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refSoilSamplingDisturbance_pkey" PRIMARY KEY (id)
 );
-
-INSERT INTO ref_soil_sampling_disturbance (id, code, es_ar, en_us) VALUES
-    (1, 'undisturbed', 'Intacta', 'Undisturbed'),
-    (2, 'disturbed', 'No intacta', 'Disturbed');
 
 -- Soil Sampling Tools
-CREATE TABLE ref_soil_sampling_tools (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    es_ar VARCHAR(100) NOT NULL,
-    en_us VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public."refSoilSamplingTools" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_AR_long" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "es_PY_long" character varying(255),
+    "en_US" character varying(255),
+    "en_US_long" character varying(255),
+    "pt_BR" character varying(255),
+    "pt_BR_long" character varying(255),
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refSoilSamplingTools_pkey" PRIMARY KEY (id)
 );
-
-INSERT INTO ref_soil_sampling_tools (id, code, es_ar, en_us) VALUES
-    (1, 'shovel', 'Pala', 'Shovel'),
-    (2, 'auger', 'Calador', 'Auger');
 
 -- Laboratory
-CREATE TABLE rel_laboratory (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL,
-    country VARCHAR(50),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public."RelLaboratory" (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "RelLaboratory_pkey" PRIMARY KEY (id)
 );
 
-INSERT INTO rel_laboratory (id, code, name, country) VALUES
-    (0, 'agrolabcs', 'AGROLABCS', 'Argentina'),
-    (1, 'cetapar', 'CETAPAR', 'Paraguay'),
-    (2, 'univ_austral_chile', 'Universidad Austral de Chile', 'Chile'),
-    (3, 'exata', 'EXATA', 'Brasil');
-
--- SOC Protocol
-CREATE TABLE rel_soc_protocol (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+-- SOC Protocols
+CREATE TABLE public."relSOCProtocols" (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "relSOCProtocols_pkey" PRIMARY KEY (id)
 );
 
-INSERT INTO rel_soc_protocol (id, code, name) VALUES
-    (0, 'grass_6_0', 'Grass 6.0', 'Protocolo GRASS versión 6.0'),
-    (1, 'before_grass_6_0', 'Before Grass 6.0', 'Protocolo anterior a GRASS 6.0');
+-- Horizon Code
+CREATE TABLE public."refHorizonCode" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_AR_long" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "es_PY_long" character varying(255),
+    "en_US" character varying(255),
+    "en_US_long" character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    CONSTRAINT "refHorizonCode_pkey" PRIMARY KEY (id)
+);
+
+-- Degree Degradation Soil
+CREATE TABLE public."refDegreeDegradationSoil" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "en_US" character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    CONSTRAINT "refDegreeDegradationSoil_pkey" PRIMARY KEY (id)
+);
+
+COMMENT ON TABLE public."refDAPMethods" IS 'DAP methods for soil sampling - from ruuts-api';
+COMMENT ON TABLE public."refSamplingNumbers" IS 'Sampling number types - from ruuts-api';
+COMMENT ON TABLE public."refSoilTexture" IS 'Soil texture types - from ruuts-api';
+COMMENT ON TABLE public."RelLaboratory" IS 'Laboratory reference - from ruuts-api';
+COMMENT ON TABLE public."relSOCProtocols" IS 'SOC protocols - from ruuts-api';

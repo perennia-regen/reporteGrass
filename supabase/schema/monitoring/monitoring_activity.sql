@@ -1,43 +1,37 @@
 -- Domain: Monitoring
--- Table: monitoring_activity
+-- Table: monitoringActivity (from ruuts-api dump)
 -- Description: Individual activities within monitoring events
 
-CREATE TABLE monitoring_activity (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    key VARCHAR(100) NOT NULL,
-    monitoring_event_id UUID NOT NULL REFERENCES monitoring_event(id) ON DELETE CASCADE,
-    monitoring_workflow_id INTEGER REFERENCES monitoring_workflow(id),
-    sampling_area_id UUID REFERENCES sampling_area(id),
-    monitoring_site_id UUID REFERENCES monitoring_site(id),
-    -- Details
-    description TEXT,
-    -- Status
-    task_status_id INTEGER REFERENCES ref_task_status(id) DEFAULT 0,
-    total_tasks INTEGER DEFAULT 0,
-    completed_tasks INTEGER DEFAULT 0,
-    -- Location
-    actual_location JSONB,
-    -- Layout
-    has_layout_pattern BOOLEAN DEFAULT FALSE,
-    activity_layout_id INTEGER REFERENCES ref_activity_layout(id),
-    activity_grid JSONB,
-    -- Versioning
-    _rev UUID,
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN DEFAULT FALSE,
-    -- Constraints
-    UNIQUE(key, monitoring_event_id)
+CREATE TABLE public."monitoringActivity" (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    key character varying(255) NOT NULL,
+    "taskStatusId" integer DEFAULT 0 NOT NULL,
+    "totalTasks" integer DEFAULT 1,
+    "completedTasks" integer DEFAULT 0,
+    "monitoringEventId" uuid NOT NULL,
+    "monitoringWorkflowId" integer NOT NULL,
+    description character varying(255) NOT NULL,
+    "samplingAreaId" uuid,
+    "monitoringSiteId" uuid,
+    "actualLocation" json,
+    "hasLayoutPattern" boolean DEFAULT false,
+    "activityLayoutId" integer,
+    "activityGrid" json,
+    _rev uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    "isDeleted" boolean DEFAULT false,
+    "updatedBy" character varying(255),
+    "updatedAt" timestamp with time zone,
+    "createdBy" character varying(255),
+    "createdAt" timestamp with time zone,
+    CONSTRAINT "monitoringActivity_pkey" PRIMARY KEY (id)
 );
 
 -- Indexes
-CREATE INDEX idx_monitoring_activity_event_id ON monitoring_activity(monitoring_event_id);
-CREATE INDEX idx_monitoring_activity_workflow_id ON monitoring_activity(monitoring_workflow_id);
-CREATE INDEX idx_monitoring_activity_site_id ON monitoring_activity(monitoring_site_id);
-CREATE INDEX idx_monitoring_activity_not_deleted ON monitoring_activity(id) WHERE is_deleted = FALSE;
+CREATE INDEX "idx_monitoringActivity_eventId" ON public."monitoringActivity"("monitoringEventId");
+CREATE INDEX "idx_monitoringActivity_workflowId" ON public."monitoringActivity"("monitoringWorkflowId");
+CREATE INDEX "idx_monitoringActivity_siteId" ON public."monitoringActivity"("monitoringSiteId");
+CREATE INDEX "idx_monitoringActivity_not_deleted" ON public."monitoringActivity"(id) WHERE "isDeleted" = FALSE;
 
-COMMENT ON TABLE monitoring_activity IS 'Individual activities within monitoring events';
-COMMENT ON COLUMN monitoring_activity.key IS 'Unique key within the event';
+COMMENT ON TABLE public."monitoringActivity" IS 'Individual activities within monitoring events - from ruuts-api';
+COMMENT ON COLUMN public."monitoringActivity".key IS 'Unique key within the event';
+COMMENT ON COLUMN public."monitoringActivity"._rev IS 'Revision UUID for mobile sync';

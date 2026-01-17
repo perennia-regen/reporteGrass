@@ -1,35 +1,26 @@
 -- Domain: Areas
--- Table: sampling_area
+-- Table: samplingAreas (from ruuts-api dump)
 -- Description: Strata/sampling units within farms for monitoring
 
-CREATE TABLE sampling_area (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    code VARCHAR(10),
-    farm_id UUID NOT NULL REFERENCES farm(id) ON DELETE CASCADE,
-    -- Spatial data
-    geometry GEOMETRY(MultiPolygon, 4326),
-    uncropped_geometry GEOMETRY(MultiPolygon, 4326),
-    total_hectares DECIMAL(10, 2),
-    percentage DECIMAL(5, 2),
-    -- Monitoring config
-    stations_count INTEGER DEFAULT 0,
-    area_per_station DECIMAL(10, 2),
-    -- Display
-    color VARCHAR(20),
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN DEFAULT FALSE
+CREATE TABLE public."samplingAreas" (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying(255) NOT NULL,
+    "farmId" uuid NOT NULL,
+    geometry public.geometry,
+    "uncroppedGeometry" public.geometry,
+    "totalHectares" double precision,
+    color character varying(255),
+    "createdBy" character varying(255),
+    "updatedBy" character varying(255),
+    "isDeleted" boolean DEFAULT false,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "samplingAreas_pkey" PRIMARY KEY (id)
 );
 
 -- Indexes
-CREATE INDEX idx_sampling_area_geometry ON sampling_area USING GIST (geometry);
-CREATE INDEX idx_sampling_area_farm_id ON sampling_area(farm_id);
-CREATE INDEX idx_sampling_area_not_deleted ON sampling_area(id) WHERE is_deleted = FALSE;
+CREATE INDEX "idx_samplingAreas_geometry" ON public."samplingAreas" USING GIST (geometry);
+CREATE INDEX "idx_samplingAreas_farmId" ON public."samplingAreas"("farmId");
+CREATE INDEX "idx_samplingAreas_not_deleted" ON public."samplingAreas"(id) WHERE "isDeleted" = FALSE;
 
-COMMENT ON TABLE sampling_area IS 'Strata/sampling units within farms (estratos)';
-COMMENT ON COLUMN sampling_area.code IS 'Short code like AG, ML, BD';
-COMMENT ON COLUMN sampling_area.percentage IS 'Percentage of total farm area';
+COMMENT ON TABLE public."samplingAreas" IS 'Strata/sampling units within farms (estratos) - from ruuts-api';

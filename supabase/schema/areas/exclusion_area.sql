@@ -1,33 +1,52 @@
 -- Domain: Areas
--- Table: exclusion_area
+-- Table: exclusionAreas (from ruuts-api dump)
 -- Description: Areas excluded from monitoring/management activities
 
-CREATE TABLE exclusion_area (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255),
-    other_name VARCHAR(255),
-    farm_id UUID NOT NULL REFERENCES farm(id) ON DELETE CASCADE,
-    exclusion_area_type_id INTEGER REFERENCES ref_exclusion_area_type(id),
-    -- Spatial data
-    geometry GEOMETRY(MultiPolygon, 4326),
-    uncropped_geometry GEOMETRY(MultiPolygon, 4326),
-    total_hectares DECIMAL(10, 2),
-    -- Grazing info
-    has_grazing_management BOOLEAN DEFAULT FALSE,
-    -- Display
-    color VARCHAR(20),
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN DEFAULT FALSE
+CREATE TABLE public."exclusionAreas" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    name character varying(255) NOT NULL,
+    "otherName" character varying(255),
+    "farmId" uuid NOT NULL,
+    geometry geometry,
+    "uncroppedGeometry" geometry,
+    "exclusionAreaTypeId" integer NOT NULL,
+    "totalHectares" double precision,
+    color character varying(255),
+    "createdBy" character varying(255),
+    "updatedBy" character varying(255),
+    "isDeleted" boolean DEFAULT false,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "hasGrazingManagement" boolean DEFAULT false NOT NULL,
+    CONSTRAINT "exclusionAreas_pkey" PRIMARY KEY (id)
+);
+
+-- Exclusion Area History
+CREATE TABLE public."exclusionAreaHistory" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "exclusionAreaId" uuid NOT NULL,
+    name character varying(255) NOT NULL,
+    "otherName" character varying(255),
+    "farmId" uuid NOT NULL,
+    geometry geometry,
+    "uncroppedGeometry" geometry,
+    "exclusionAreaTypeId" integer NOT NULL,
+    "totalHectares" double precision,
+    color character varying(255),
+    "createdBy" character varying(255),
+    "updatedBy" character varying(255),
+    "isDeleted" boolean DEFAULT false,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "exclusionAreaHistory_pkey" PRIMARY KEY (id)
 );
 
 -- Indexes
-CREATE INDEX idx_exclusion_area_geometry ON exclusion_area USING GIST (geometry);
-CREATE INDEX idx_exclusion_area_farm_id ON exclusion_area(farm_id);
-CREATE INDEX idx_exclusion_area_type_id ON exclusion_area(exclusion_area_type_id);
-CREATE INDEX idx_exclusion_area_not_deleted ON exclusion_area(id) WHERE is_deleted = FALSE;
+CREATE INDEX "idx_exclusionAreas_geometry" ON public."exclusionAreas" USING GIST (geometry);
+CREATE INDEX "idx_exclusionAreas_farmId" ON public."exclusionAreas"("farmId");
+CREATE INDEX "idx_exclusionAreas_typeId" ON public."exclusionAreas"("exclusionAreaTypeId");
+CREATE INDEX "idx_exclusionAreas_not_deleted" ON public."exclusionAreas"(id) WHERE "isDeleted" = FALSE;
+CREATE INDEX "idx_exclusionAreaHistory_areaId" ON public."exclusionAreaHistory"("exclusionAreaId");
 
-COMMENT ON TABLE exclusion_area IS 'Areas excluded from monitoring (water bodies, infrastructure, etc.)';
+COMMENT ON TABLE public."exclusionAreas" IS 'Areas excluded from monitoring - from ruuts-api';
+COMMENT ON TABLE public."exclusionAreaHistory" IS 'Exclusion area history - from ruuts-api';

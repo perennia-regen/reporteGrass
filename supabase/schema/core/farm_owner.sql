@@ -1,29 +1,25 @@
 -- Domain: Core
--- Table: farm_owner
+-- Table: farmOwners (from ruuts-api dump)
 -- Description: Legal entity owning farms
 
-CREATE TABLE farm_owner (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    legal_company_name VARCHAR(255),
-    cuit VARCHAR(20),
-    primary_contact_name VARCHAR(255),
-    address TEXT,
-    city VARCHAR(100),
-    province VARCHAR(100),
-    email VARCHAR(255),
-    phone VARCHAR(50),
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by UUID,
-    updated_by UUID,
-    is_deleted BOOLEAN DEFAULT FALSE
+CREATE TABLE public."farmOwners" (
+    id uuid NOT NULL,
+    name character varying(255) NOT NULL,
+    "legalCompanyName" character varying(255) NOT NULL,
+    cuit character varying(255) NOT NULL,
+    "primaryContactName" character varying(255) NOT NULL,
+    "legalAddress" character varying(255) NOT NULL,
+    city character varying(255) NOT NULL,
+    province character varying(255) NOT NULL,
+    "primaryContactPhone" character varying(255),
+    "primaryContactEmail" character varying(255) NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "farmOwners_pkey" PRIMARY KEY (id)
 );
 
 -- Indexes
-CREATE INDEX idx_farm_owner_cuit ON farm_owner(cuit) WHERE cuit IS NOT NULL;
-CREATE INDEX idx_farm_owner_not_deleted ON farm_owner(id) WHERE is_deleted = FALSE;
+CREATE INDEX "idx_farmOwners_cuit" ON public."farmOwners"(cuit);
 
-COMMENT ON TABLE farm_owner IS 'Legal entity owning one or more farms';
-COMMENT ON COLUMN farm_owner.cuit IS 'Tax ID (Argentina)';
+COMMENT ON TABLE public."farmOwners" IS 'Legal entity owning farms - from ruuts-api';
+COMMENT ON COLUMN public."farmOwners".cuit IS 'Tax ID (Argentina)';

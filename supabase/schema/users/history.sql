@@ -1,127 +1,152 @@
 -- Domain: History/Audit
--- History tables for tracking changes
+-- History tables for tracking changes (from ruuts-api dump)
 
--- Monitoring Site History
-CREATE TABLE monitoring_site_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    monitoring_site_id UUID NOT NULL REFERENCES monitoring_site(id) ON DELETE CASCADE,
-    -- Mirror all monitoring_site fields
-    name VARCHAR(255),
-    code VARCHAR(50),
-    farm_id UUID,
-    sampling_area_id UUID,
-    allocated BOOLEAN,
-    planned_location JSONB,
-    actual_location JSONB,
-    backup_location JSONB,
-    location_confirmed BOOLEAN,
-    location_moved BOOLEAN,
-    location_moved_reason_id INTEGER,
-    location_moved_comments TEXT,
-    location_confirmation_type_id INTEGER,
-    field_relocation_method_id INTEGER,
-    allow_contingency_offset BOOLEAN,
-    is_random_site BOOLEAN,
-    is_validation_site BOOLEAN,
-    offset_mts DECIMAL(10,2),
-    distance_to_planned_location DECIMAL(10,2),
-    randomize_counter INTEGER,
-    randomize_reason TEXT[],
-    color VARCHAR(20),
-    seed INTEGER,
-    randomizer_type_id INTEGER,
-    device_location_data JSONB,
-    _rev UUID,
-    -- History metadata
-    changed_at TIMESTAMPTZ DEFAULT NOW(),
-    changed_by VARCHAR(255),
-    change_type VARCHAR(20) -- 'INSERT', 'UPDATE', 'DELETE'
+-- Farms History
+CREATE TABLE public."farmsHistory" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "farmId" uuid NOT NULL,
+    "hubspotId" character varying(255),
+    name character varying(255) NOT NULL,
+    "programId" integer NOT NULL,
+    "shortName" character varying(255),
+    "ownerId" uuid,
+    "hubId" uuid,
+    address character varying(255),
+    city character varying(255),
+    province character varying(255),
+    country character varying(255),
+    "primaryContact" character varying(255),
+    geolocation character varying(255),
+    "totalHectares" double precision,
+    "totalHectaresDeclared" double precision,
+    lat double precision,
+    lng double precision,
+    "totalHectaresMgmt" double precision,
+    "elegibleHectaresDeclared" double precision,
+    "hasNonRuutsProjects" character varying(255),
+    "localLawCompliance" character varying(255),
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    geometry geometry,
+    "uncroppedGeometry" geometry,
+    color character varying(255),
+    "phoneNumber" character varying(255),
+    email character varying(255),
+    "createdBy" character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "ecoregionId" integer,
+    CONSTRAINT "farmsHistory_pkey" PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_monitoring_site_history_site ON monitoring_site_history(monitoring_site_id);
-CREATE INDEX idx_monitoring_site_history_changed_at ON monitoring_site_history(changed_at);
-
--- Monitoring Task History
-CREATE TABLE monitoring_task_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    monitoring_task_id UUID NOT NULL REFERENCES monitoring_task(id) ON DELETE CASCADE,
-    -- Mirror all monitoring_task fields
-    key VARCHAR(100),
-    "order" INTEGER,
-    enabled BOOLEAN,
-    monitoring_site_id UUID,
-    monitoring_activity_id UUID,
-    monitoring_event_id UUID,
-    task_status_id INTEGER,
-    form_name VARCHAR(100),
-    type VARCHAR(50),
-    grid_position_key VARCHAR(50),
-    actual_location JSONB,
-    planned_location JSONB,
-    action_range_mts DECIMAL(10,2),
-    dependencies TEXT[],
-    description TEXT,
-    data_payload JSONB,
-    pictures TEXT[],
-    device_location_data JSONB,
-    _rev UUID,
-    -- History metadata
-    changed_at TIMESTAMPTZ DEFAULT NOW(),
-    changed_by VARCHAR(255),
-    change_type VARCHAR(20)
+-- Paddocks History
+CREATE TABLE public."paddocksHistory" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "paddockId" uuid NOT NULL,
+    name character varying(255) NOT NULL,
+    "farmId" uuid NOT NULL,
+    "totalHectares" double precision,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    geometry geometry,
+    "uncroppedGeometry" geometry,
+    color character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "paddocksHistory_pkey" PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_monitoring_task_history_task ON monitoring_task_history(monitoring_task_id);
-CREATE INDEX idx_monitoring_task_history_changed_at ON monitoring_task_history(changed_at);
-
--- Data Collection Statement History
-CREATE TABLE data_collection_statement_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    data_collection_statement_id UUID NOT NULL REFERENCES data_collection_statement(id) ON DELETE CASCADE,
-    -- Mirror fields
-    data_collection_statement_status_id INTEGER,
-    owner_user_role_id INTEGER,
-    farm_subdivision_id UUID,
-    metrics_events_ids UUID[],
-    created_at TIMESTAMPTZ,
-    updated_at TIMESTAMPTZ,
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN,
-    -- History metadata
-    changed_at TIMESTAMPTZ DEFAULT NOW(),
-    changed_by VARCHAR(255),
-    change_type VARCHAR(20)
+-- Sampling Areas History
+CREATE TABLE public."samplingAreasHistory" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "samplingAreaId" uuid NOT NULL,
+    name character varying(255) NOT NULL,
+    "farmId" uuid NOT NULL,
+    geometry geometry,
+    "uncroppedGeometry" geometry,
+    "totalHectares" double precision,
+    color character varying(255),
+    "createdBy" character varying(255),
+    "updatedBy" character varying(255),
+    "isDeleted" boolean DEFAULT false,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "samplingAreasHistory_pkey" PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_dcs_history_dcs ON data_collection_statement_history(data_collection_statement_id);
-CREATE INDEX idx_dcs_history_changed_at ON data_collection_statement_history(changed_at);
-
--- Finding History
-CREATE TABLE finding_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    finding_id UUID NOT NULL REFERENCES finding(id) ON DELETE CASCADE,
-    -- Mirror fields
-    metric_event_id UUID,
-    type INTEGER,
-    metric_events_fields_observed JSONB[],
-    comment TEXT,
-    resolved BOOLEAN,
-    created_at TIMESTAMPTZ,
-    updated_at TIMESTAMPTZ,
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN,
-    -- History metadata
-    changed_at TIMESTAMPTZ DEFAULT NOW(),
-    changed_by_user VARCHAR(255),
-    change_type VARCHAR(20)
+-- Monitoring Sites History
+CREATE TABLE public."monitoringSitesHistory" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "monitoringSiteId" uuid DEFAULT uuid_generate_v4() NOT NULL,
+    name character varying(255) NOT NULL,
+    allocated boolean DEFAULT false,
+    "samplingAreaId" uuid,
+    "farmId" uuid,
+    "plannedLocation" json NOT NULL,
+    "actualLocation" json,
+    "backupLocation" json,
+    "locationConfirmed" boolean DEFAULT false,
+    "locationMoved" boolean DEFAULT false,
+    "locationMovedReason" text,
+    "locationMovedComments" text,
+    "allowContingencyOffset" boolean DEFAULT false,
+    "isRandomSite" boolean DEFAULT false,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "offsetMts" integer DEFAULT 100,
+    "distanceToPlannedLocation" double precision,
+    pictures bytea[],
+    "randomizeCounter" integer,
+    "randomizeReason" character varying(255)[],
+    color character varying(255),
+    _rev uuid DEFAULT uuid_generate_v4(),
+    "isValidationSite" boolean DEFAULT false,
+    "updatedBy" character varying(255),
+    "updatedAt" timestamp with time zone,
+    "createdBy" character varying(255),
+    "createdAt" timestamp with time zone,
+    "deviceLocationData" json,
+    "locationMovedReasonId" integer,
+    CONSTRAINT "monitoringSitesHistory_pkey" PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_finding_history_finding ON finding_history(finding_id);
-CREATE INDEX idx_finding_history_changed_at ON finding_history(changed_at);
+-- Monitoring Tasks History
+CREATE TABLE public."monitoringTasksHistory" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "monitoringTaskId" uuid DEFAULT uuid_generate_v4() NOT NULL,
+    key character varying(255) NOT NULL,
+    "order" integer,
+    enabled boolean NOT NULL,
+    "monitoringSiteId" uuid,
+    "monitoringActivityId" uuid NOT NULL,
+    "monitoringEventId" uuid NOT NULL,
+    "taskStatusId" integer DEFAULT 0 NOT NULL,
+    "formName" character varying(255) DEFAULT 0,
+    type character varying(255),
+    "gridPositionKey" character varying(255),
+    "actualLocation" json,
+    "actionRangeMts" integer,
+    "plannedLocation" json,
+    dependencies integer[],
+    description character varying(255) NOT NULL,
+    "dataPayload" json,
+    pictures character varying(255)[],
+    _rev uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "isDeleted" boolean DEFAULT false,
+    "deviceLocationData" json,
+    "updatedBy" character varying(255),
+    "updatedAt" timestamp with time zone,
+    "createdBy" character varying(255),
+    "createdAt" timestamp with time zone,
+    CONSTRAINT "monitoringTasksHistory_pkey" PRIMARY KEY (id)
+);
 
-COMMENT ON TABLE monitoring_site_history IS 'Audit trail for monitoring site changes';
-COMMENT ON TABLE monitoring_task_history IS 'Audit trail for monitoring task changes';
-COMMENT ON TABLE data_collection_statement_history IS 'Audit trail for data collection statement changes';
-COMMENT ON TABLE finding_history IS 'Audit trail for finding changes';
+-- Indexes
+CREATE INDEX "idx_farmsHistory_farmId" ON public."farmsHistory"("farmId");
+CREATE INDEX "idx_paddocksHistory_paddockId" ON public."paddocksHistory"("paddockId");
+CREATE INDEX "idx_samplingAreasHistory_areaId" ON public."samplingAreasHistory"("samplingAreaId");
+CREATE INDEX "idx_monitoringSitesHistory_siteId" ON public."monitoringSitesHistory"("monitoringSiteId");
+CREATE INDEX "idx_monitoringTasksHistory_taskId" ON public."monitoringTasksHistory"("monitoringTaskId");
+
+COMMENT ON TABLE public."farmsHistory" IS 'Audit trail for farm changes - from ruuts-api';
+COMMENT ON TABLE public."paddocksHistory" IS 'Audit trail for paddock changes - from ruuts-api';
+COMMENT ON TABLE public."samplingAreasHistory" IS 'Audit trail for sampling area changes - from ruuts-api';
+COMMENT ON TABLE public."monitoringSitesHistory" IS 'Audit trail for monitoring site changes - from ruuts-api';
+COMMENT ON TABLE public."monitoringTasksHistory" IS 'Audit trail for monitoring task changes - from ruuts-api';

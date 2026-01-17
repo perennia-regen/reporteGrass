@@ -1,81 +1,73 @@
 -- Domain: Reference / Location
--- Tables for location and site related enums
+-- Tables for location-related references (from ruuts-api dump)
 
 -- Location Moved Reason
-CREATE TABLE ref_location_moved_reason (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    es_ar VARCHAR(100) NOT NULL,
-    es_py VARCHAR(100),
-    en_us VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public."refLocationMovedReason" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "en_US" character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refLocationMovedReason_pkey" PRIMARY KEY (id)
 );
-
-INSERT INTO ref_location_moved_reason (id, code, es_ar, en_us) VALUES
-    (0, 'inaccessible', 'Inaccesible', 'Inaccessible'),
-    (1, 'land_use_changed', 'Cambio de uso de terreno', 'Land Use Changed'),
-    (2, 'not_representative', 'No representativo del estrato', 'Not Representative of Stratum');
 
 -- Location Confirmation Type
-CREATE TABLE ref_location_confirmation_type (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    es_ar VARCHAR(100) NOT NULL,
-    es_py VARCHAR(100),
-    en_us VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public."refLocationConfirmationType" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "en_US" character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refLocationConfirmationType_pkey" PRIMARY KEY (id)
 );
-
-INSERT INTO ref_location_confirmation_type (id, code, es_ar, en_us) VALUES
-    (0, 'mdc', 'MDC', 'MDC'),
-    (1, 'external_gps', 'GPS Externo', 'External GPS'),
-    (2, 'manual', 'Manual', 'Manual');
 
 -- Field Relocation Method
-CREATE TABLE ref_field_relocation_method (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(50) NOT NULL UNIQUE,
-    es_ar VARCHAR(100) NOT NULL,
-    es_py VARCHAR(100),
-    en_us VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public."refFieldRelocationMethod" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_PY" character varying(255) NOT NULL,
+    "en_US" character varying(255) NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refFieldRelocationMethod_pkey" PRIMARY KEY (id)
 );
-
-INSERT INTO ref_field_relocation_method (id, code, es_ar, en_us) VALUES
-    (0, 'mdc_randomizer', 'MDC Randomizer', 'MDC Randomizer'),
-    (1, 'manual', 'Manual', 'Manual');
 
 -- Randomizer
-CREATE TABLE ref_randomizer (
-    id SERIAL PRIMARY KEY,
-    version VARCHAR(20) NOT NULL UNIQUE,
-    model VARCHAR(50),
-    es_ar VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE TABLE public."refRandomizer" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_PY" character varying(255),
+    "en_US" character varying(255),
+    version character varying(255) NOT NULL,
+    model character varying(255) NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refRandomizer_pkey" PRIMARY KEY (id)
 );
 
-INSERT INTO ref_randomizer (id, version, model) VALUES
-    (1, 'v1.0.0', 'legacy'),
-    (2, 'v2.0.0', 'improved'),
-    (3, 'v3.0.0', 'weighted'),
-    (4, 'v4.0.0', 'current');
-
--- Country
-CREATE TABLE ref_country (
-    id SERIAL PRIMARY KEY,
-    code VARCHAR(3) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+-- Countries
+CREATE TABLE public."refCountries" (
+    id integer NOT NULL,
+    "es_AR" character varying(255) NOT NULL,
+    "es_AR_long" character varying(255) NOT NULL,
+    "pt_BR" character varying(255),
+    "pt_BR_long" character varying(255),
+    "es_PY" character varying(255),
+    "es_PY_long" character varying(255),
+    "en_US" character varying(255),
+    "en_US_long" character varying(255),
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "refCountries_pkey" PRIMARY KEY (id)
 );
 
-INSERT INTO ref_country (code, name) VALUES
-    ('ARG', 'Argentina'),
-    ('URY', 'Uruguay'),
-    ('PRY', 'Paraguay'),
-    ('BRA', 'Brasil'),
-    ('CHL', 'Chile');
+COMMENT ON TABLE public."refLocationMovedReason" IS 'Location moved reasons - from ruuts-api';
+COMMENT ON TABLE public."refLocationConfirmationType" IS 'Location confirmation types - from ruuts-api';
+COMMENT ON TABLE public."refFieldRelocationMethod" IS 'Field relocation methods - from ruuts-api';
+COMMENT ON TABLE public."refRandomizer" IS 'Randomizer options - from ruuts-api';
+COMMENT ON TABLE public."refCountries" IS 'Countries reference - from ruuts-api';

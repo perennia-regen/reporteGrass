@@ -1,102 +1,84 @@
 -- Domain: SOC (Soil Organic Carbon)
--- Table: monitoring_soc_sample
--- Description: Soil Organic Carbon sampling records
+-- Tables: monitoringSOCSamples and related (from ruuts-api dump)
 
-CREATE TABLE monitoring_soc_sample (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    farm_id UUID NOT NULL REFERENCES farm(id) ON DELETE CASCADE,
-    sample_date DATE NOT NULL,
-    sampling_number_id INTEGER NOT NULL REFERENCES ref_sampling_number(id),
-    laboratory_id INTEGER REFERENCES rel_laboratory(id),
-    soc_protocol_id INTEGER NOT NULL REFERENCES rel_soc_protocol(id),
-    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
-    uncompleted_reason TEXT,
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN DEFAULT FALSE
+-- SOC Samples
+CREATE TABLE public."monitoringSOCSamples" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "farmId" uuid NOT NULL,
+    "sampleDate" date NOT NULL,
+    "samplingNumberId" integer NOT NULL,
+    "laboratoryId" integer,
+    "socProtocolId" integer NOT NULL,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "updatedBy" character varying(255),
+    "updatedAt" timestamp with time zone,
+    "createdBy" character varying(255) NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "isCompleted" boolean NOT NULL,
+    "uncompletedReason" character varying(255),
+    CONSTRAINT "monitoringSOCSamples_pkey" PRIMARY KEY (id),
+    CONSTRAINT chk_uncompleted_reason_required CHECK ((("isCompleted" = true) OR (("isCompleted" = false) AND ("uncompletedReason" IS NOT NULL) AND (("uncompletedReason")::text <> ''::text))))
+);
+
+-- SOC Sampling Area Samples (aggregated by sampling area)
+CREATE TABLE public."monitoringSOCSamplingAreaSamples" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "monitoringSOCSampleId" uuid NOT NULL,
+    "stationsName" character varying(255) NOT NULL,
+    "samplingAreaName" character varying(255) NOT NULL,
+    "samplingAreaId" uuid NOT NULL,
+    ph double precision,
+    "nitrogenPercentage" double precision,
+    "phosphorusPercentage" double precision,
+    "fineSandPercentage" double precision,
+    "coarseSandPercentage" double precision,
+    "sandPercentage" double precision,
+    "siltPercentage" double precision,
+    "clayPercentage" double precision,
+    "soilTextureTypeId" integer,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "updatedBy" character varying(255),
+    "updatedAt" timestamp with time zone,
+    "createdBy" character varying(255) NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "monitoringSOCSamplingAreaSamples_pkey" PRIMARY KEY (id)
+);
+
+-- SOC Sites Samples (per monitoring site)
+CREATE TABLE public."monitoringSOCSitesSamples" (
+    id uuid DEFAULT uuid_generate_v4() NOT NULL,
+    "monitoringSOCSampleId" uuid NOT NULL,
+    "dapMethodId" integer NOT NULL,
+    name character varying(255) NOT NULL,
+    "monitoringSOCActivityId" uuid NOT NULL,
+    "wbFirstReplicaPercentage" double precision NOT NULL,
+    "wbSecondReplicaPercentage" double precision,
+    "caFirstReplicaPercentage" double precision,
+    "caSecondReplicaPercentage" double precision,
+    "lecoFirstReplicaPercentage" double precision,
+    "lecoSecondReplicaPercentage" double precision,
+    "dryWeight" double precision,
+    "gravelWeight" double precision,
+    "gravelVolume" double precision,
+    "isDeleted" boolean DEFAULT false NOT NULL,
+    "updatedBy" character varying(255),
+    "updatedAt" timestamp with time zone,
+    "createdBy" character varying(255) NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    dap double precision NOT NULL,
+    "sampleVolume" double precision NOT NULL,
+    CONSTRAINT "monitoringSOCSitesSamples_pkey" PRIMARY KEY (id)
 );
 
 -- Indexes
-CREATE INDEX idx_monitoring_soc_sample_farm_id ON monitoring_soc_sample(farm_id);
-CREATE INDEX idx_monitoring_soc_sample_date ON monitoring_soc_sample(sample_date);
-CREATE INDEX idx_monitoring_soc_sample_not_deleted ON monitoring_soc_sample(id) WHERE is_deleted = FALSE;
+CREATE INDEX "idx_monitoringSOCSamples_farmId" ON public."monitoringSOCSamples"("farmId");
+CREATE INDEX "idx_monitoringSOCSamples_date" ON public."monitoringSOCSamples"("sampleDate");
+CREATE INDEX "idx_monitoringSOCSamples_not_deleted" ON public."monitoringSOCSamples"(id) WHERE "isDeleted" = FALSE;
+CREATE INDEX "idx_monitoringSOCSamplingAreaSamples_sampleId" ON public."monitoringSOCSamplingAreaSamples"("monitoringSOCSampleId");
+CREATE INDEX "idx_monitoringSOCSamplingAreaSamples_areaId" ON public."monitoringSOCSamplingAreaSamples"("samplingAreaId");
+CREATE INDEX "idx_monitoringSOCSitesSamples_sampleId" ON public."monitoringSOCSitesSamples"("monitoringSOCSampleId");
+CREATE INDEX "idx_monitoringSOCSitesSamples_activityId" ON public."monitoringSOCSitesSamples"("monitoringSOCActivityId");
 
--- Validation: uncompleted_reason required when is_completed = false
-ALTER TABLE monitoring_soc_sample
-ADD CONSTRAINT chk_uncompleted_reason
-CHECK (is_completed = TRUE OR uncompleted_reason IS NOT NULL);
-
-COMMENT ON TABLE monitoring_soc_sample IS 'Soil Organic Carbon sampling records';
-
--- SOC Site Sample (per monitoring site)
-CREATE TABLE monitoring_soc_site_sample (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    monitoring_soc_sample_id UUID NOT NULL REFERENCES monitoring_soc_sample(id) ON DELETE CASCADE,
-    monitoring_soc_activity_id UUID REFERENCES monitoring_activity(id),
-    name VARCHAR(255) NOT NULL,
-    -- DAP (Densidad Aparente)
-    dap_method_id INTEGER NOT NULL REFERENCES ref_dap_method(id),
-    dap DECIMAL(10, 4) NOT NULL,
-    sample_volume DECIMAL(10, 4) NOT NULL,
-    -- Replica percentages (Walkley-Black method)
-    wb_first_replica_percentage DECIMAL(5, 2) CHECK (wb_first_replica_percentage BETWEEN 0 AND 100),
-    wb_second_replica_percentage DECIMAL(5, 2) CHECK (wb_second_replica_percentage BETWEEN 0 AND 100),
-    -- Replica percentages (Combustión seca - CA method)
-    ca_first_replica_percentage DECIMAL(5, 2) CHECK (ca_first_replica_percentage BETWEEN 0 AND 100),
-    ca_second_replica_percentage DECIMAL(5, 2) CHECK (ca_second_replica_percentage BETWEEN 0 AND 100),
-    -- Replica percentages (LECO method)
-    leco_first_replica_percentage DECIMAL(5, 2) CHECK (leco_first_replica_percentage BETWEEN 0 AND 100),
-    leco_second_replica_percentage DECIMAL(5, 2) CHECK (leco_second_replica_percentage BETWEEN 0 AND 100),
-    -- Physical properties
-    dry_weight DECIMAL(10, 4),
-    gravel_weight DECIMAL(10, 4),
-    gravel_volume DECIMAL(10, 4),
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN DEFAULT FALSE
-);
-
--- Indexes
-CREATE INDEX idx_monitoring_soc_site_sample_soc_sample ON monitoring_soc_site_sample(monitoring_soc_sample_id);
-CREATE INDEX idx_monitoring_soc_site_sample_activity ON monitoring_soc_site_sample(monitoring_soc_activity_id);
-
-COMMENT ON TABLE monitoring_soc_site_sample IS 'SOC samples at monitoring sites with replica measurements';
-
--- SOC Sampling Area Sample (aggregated by sampling area)
-CREATE TABLE monitoring_soc_sampling_area_sample (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    monitoring_soc_sample_id UUID NOT NULL REFERENCES monitoring_soc_sample(id) ON DELETE CASCADE,
-    sampling_area_id UUID NOT NULL REFERENCES sampling_area(id),
-    stations_name VARCHAR(255) NOT NULL,
-    sampling_area_name VARCHAR(255) NOT NULL,
-    -- Soil chemistry
-    ph DECIMAL(4, 2),
-    nitrogen_percentage DECIMAL(5, 2) CHECK (nitrogen_percentage BETWEEN 0 AND 100),
-    phosphorus_percentage DECIMAL(5, 2) CHECK (phosphorus_percentage BETWEEN 0 AND 100),
-    -- Particle size distribution
-    fine_sand_percentage DECIMAL(5, 2) CHECK (fine_sand_percentage BETWEEN 0 AND 100),
-    coarse_sand_percentage DECIMAL(5, 2) CHECK (coarse_sand_percentage BETWEEN 0 AND 100),
-    sand_percentage DECIMAL(5, 2) CHECK (sand_percentage BETWEEN 0 AND 100),
-    silt_percentage DECIMAL(5, 2) CHECK (silt_percentage BETWEEN 0 AND 100),
-    clay_percentage DECIMAL(5, 2) CHECK (clay_percentage BETWEEN 0 AND 100),
-    -- Texture classification
-    soil_texture_type_id INTEGER REFERENCES ref_soil_texture(id),
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN DEFAULT FALSE
-);
-
--- Indexes
-CREATE INDEX idx_monitoring_soc_sa_sample_soc ON monitoring_soc_sampling_area_sample(monitoring_soc_sample_id);
-CREATE INDEX idx_monitoring_soc_sa_sample_area ON monitoring_soc_sampling_area_sample(sampling_area_id);
-
-COMMENT ON TABLE monitoring_soc_sampling_area_sample IS 'SOC samples aggregated by sampling area with soil analysis';
+COMMENT ON TABLE public."monitoringSOCSamples" IS 'SOC sampling records - from ruuts-api';
+COMMENT ON TABLE public."monitoringSOCSamplingAreaSamples" IS 'SOC samples by sampling area with soil analysis - from ruuts-api';
+COMMENT ON TABLE public."monitoringSOCSitesSamples" IS 'SOC samples at monitoring sites with replicas - from ruuts-api';

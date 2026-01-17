@@ -1,48 +1,34 @@
 -- Domain: Monitoring
--- Table: monitoring_event
+-- Table: monitoringEvents (from ruuts-api dump)
 -- Description: Monitoring campaigns/surveys on specific dates
 
-CREATE TABLE monitoring_event (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255),
-    farm_id UUID NOT NULL REFERENCES farm(id) ON DELETE CASCADE,
-    -- Timing
-    event_date DATE NOT NULL,
-    event_year INTEGER GENERATED ALWAYS AS (EXTRACT(YEAR FROM event_date)) STORED,
-    -- Status
-    task_status_id INTEGER REFERENCES ref_task_status(id),
-    completed_activities INTEGER DEFAULT 0,
-    total_activities INTEGER DEFAULT 1,
-    -- Assignment
-    assigned_to VARCHAR(255),
-    technician_names TEXT,
-    -- Workflows and areas
-    monitoring_workflow_ids INTEGER[],
-    sampling_areas UUID[],
-    monitoring_sites_ids UUID[],
-    -- Event type
-    event_type VARCHAR(50),
-    description TEXT,
-    is_backdated_event BOOLEAN DEFAULT FALSE,
-    -- Aggregated results
-    ise_result DECIMAL(5, 2),
-    -- Versioning
-    _rev UUID,
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by VARCHAR(255),
-    updated_by VARCHAR(255),
-    is_deleted BOOLEAN DEFAULT FALSE
+CREATE TABLE public."monitoringEvents" (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    name character varying(255) NOT NULL,
+    "taskStatusId" integer NOT NULL,
+    "completedActivities" integer DEFAULT 0,
+    "totalActivities" integer DEFAULT 1,
+    "farmId" uuid NOT NULL,
+    date timestamp with time zone NOT NULL,
+    "assignedTo" character varying(255),
+    "monitoringWorkflowIds" integer[] NOT NULL,
+    "samplingAreas" uuid[],
+    "monitoringSitesIds" uuid[],
+    _rev uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    "createdBy" character varying(255),
+    "updatedBy" character varying(255),
+    "isDeleted" boolean DEFAULT false,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "isBackdatedEvent" boolean,
+    CONSTRAINT "monitoringEvents_pkey" PRIMARY KEY (id)
 );
 
 -- Indexes
-CREATE INDEX idx_monitoring_event_farm_id ON monitoring_event(farm_id);
-CREATE INDEX idx_monitoring_event_date ON monitoring_event(event_date);
-CREATE INDEX idx_monitoring_event_year ON monitoring_event(event_year);
-CREATE INDEX idx_monitoring_event_status ON monitoring_event(task_status_id);
-CREATE INDEX idx_monitoring_event_not_deleted ON monitoring_event(id) WHERE is_deleted = FALSE;
+CREATE INDEX "idx_monitoringEvents_farmId" ON public."monitoringEvents"("farmId");
+CREATE INDEX "idx_monitoringEvents_date" ON public."monitoringEvents"(date);
+CREATE INDEX "idx_monitoringEvents_taskStatusId" ON public."monitoringEvents"("taskStatusId");
+CREATE INDEX "idx_monitoringEvents_not_deleted" ON public."monitoringEvents"(id) WHERE "isDeleted" = FALSE;
 
-COMMENT ON TABLE monitoring_event IS 'Monitoring campaigns/surveys on specific dates';
-COMMENT ON COLUMN monitoring_event.event_type IS 'Type: linea_base, mcp, mlp';
-COMMENT ON COLUMN monitoring_event.ise_result IS 'Aggregated ISE result for the event';
+COMMENT ON TABLE public."monitoringEvents" IS 'Monitoring campaigns/surveys - from ruuts-api';
+COMMENT ON COLUMN public."monitoringEvents"._rev IS 'Revision UUID for mobile sync';

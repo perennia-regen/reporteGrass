@@ -1,26 +1,24 @@
 -- Domain: Core
--- Table: hub
+-- Table: hubs (from ruuts-api dump)
 -- Description: Regional organization managing multiple farms
 
-CREATE TABLE hub (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    country_id INTEGER REFERENCES ref_country(id),
-    province VARCHAR(100),
-    referent_emails TEXT[],
-    logo_url TEXT,
-    hubspot_id VARCHAR(100) UNIQUE,
-    -- Audit fields
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    created_by UUID,
-    updated_by UUID,
-    is_deleted BOOLEAN DEFAULT FALSE
+CREATE TABLE public.hubs (
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    "hubspotId" character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    country character varying(255),
+    province character varying(255),
+    "createdBy" character varying(255),
+    "referentsEmails" character varying(255)[],
+    logo character varying(255),
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL,
+    "countryId" integer,
+    CONSTRAINT hubs_pkey PRIMARY KEY (id)
 );
 
 -- Indexes
-CREATE INDEX idx_hub_country_id ON hub(country_id);
-CREATE INDEX idx_hub_not_deleted ON hub(id) WHERE is_deleted = FALSE;
+CREATE INDEX idx_hubs_countryId ON public.hubs("countryId");
 
-COMMENT ON TABLE hub IS 'Regional organization managing multiple farms';
-COMMENT ON COLUMN hub.referent_emails IS 'Array of referent email addresses';
+COMMENT ON TABLE public.hubs IS 'Regional organization managing multiple farms - from ruuts-api';
+COMMENT ON COLUMN public.hubs."referentsEmails" IS 'Array of referent email addresses';
